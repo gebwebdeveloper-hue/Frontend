@@ -37,7 +37,7 @@ export default function FooterSection() {
       {/* Huge Background Text */}
 
       <h1 className="pointer-events-none absolute left-1/2 top-10 -translate-x-1/2 whitespace-nowrap text-[16vw] font-black uppercase text-white/[0.03]">
-        LEKHAK
+        LEKHAK TRIPURA
       </h1>
 
       <div className="section-shell relative">
@@ -59,7 +59,7 @@ export default function FooterSection() {
               <div>
 
                 <h2 className="text-2xl font-bold tracking-[0.3em] text-white">
-                  LEKHAK
+                  LEKHAK TRIPURA
                 </h2>
 
                 <p className="text-white/45">

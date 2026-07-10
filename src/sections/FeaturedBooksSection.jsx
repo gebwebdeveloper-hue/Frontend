@@ -120,10 +120,13 @@ export default function FeaturedBooksSection() {
             FEATURED COLLECTION
           </motion.div>
 
-          <h2 className="text-4xl font-extrabold leading-tight md:text-5xl max-w-2xl bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-indigo-500 bg-clip-text text-transparent animate-text-gradient select-none">
-            Curated ebooks built for deep reading.
+           <h2 className="text-4xl font-extrabold leading-tight md:text-5xl max-w-2xl bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-indigo-500 bg-clip-text text-transparent animate-text-gradient select-none">
+            Our Publications
           </h2>
-          <p className="mt-5 max-w-xl text-sm leading-6 text-white/60 md:text-base">
+          <h3 className="mt-3.5 text-lg font-semibold text-white/90 md:text-xl">
+            Curated ebooks built for deep reading.
+          </h3>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-white/50 md:text-base">
             Explore thoughtfully selected books crafted for developers, designers, entrepreneurs and lifelong learners.
           </p>
         </div>

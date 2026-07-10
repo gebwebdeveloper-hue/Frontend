@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Menu, X, Sparkles, LogOut, User } from "lucide-react";
+import { Menu, X, Sparkles, LogOut, User, Facebook, Instagram, Youtube } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import AuthModal from "./AuthModal.jsx";
 import { API_BASE } from "../config.js";
 
 const baseLinks = [
   { label: "Library", to: "/library" },
-  { label: "Reader", to: "/reader" },
+  { label: "Publish with us", to: "/reader" },
 ];
 
 export default function Navbar() {
@@ -110,7 +110,7 @@ export default function Navbar() {
                 className="h-11 w-11 object-contain transition duration-500 group-hover:rotate-12 group-hover:scale-110"
               />
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-[0.35em] text-white">LEKHAK</h3>
+                <h3 className="text-sm font-bold uppercase tracking-[0.35em] text-white">LEKHAK TRIPURA</h3>
                 <p className="text-xs text-white/45">Premium eBooks</p>
               </div>
             </Link>
@@ -137,6 +137,37 @@ export default function Navbar() {
                   )}
                 </NavLink>
               ))}
+
+              {/* Social Media Icons */}
+              <div className="flex items-center gap-3 border-l border-white/10 pl-4 mr-2">
+                <a
+                  href="https://www.facebook.com/share/1DLfEnitkJ/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/65 hover:text-cyan-400 transition hover:scale-110"
+                  title="Facebook"
+                >
+                  <Facebook size={16} />
+                </a>
+                <a
+                  href="https://www.instagram.com/lekhok_tripura_publishers?igsh=MTJmMTZjcnVwM3NyeQ=="
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/65 hover:text-fuchsia-400 transition hover:scale-110"
+                  title="Instagram"
+                >
+                  <Instagram size={16} />
+                </a>
+                <a
+                  href="https://youtube.com/@lekhoktripura?si=1dc97jaclcr8Gzs2"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/65 hover:text-red-500 transition hover:scale-110"
+                  title="YouTube"
+                >
+                  <Youtube size={16} />
+                </a>
+              </div>
 
               {/* Profile Avatar or Login/Register CTA */}
               {authUser ? (
@@ -214,7 +245,7 @@ export default function Navbar() {
             <div className="flex items-center justify-between border-b border-white/10 p-6">
               <div className="flex items-center gap-3">
                 <img src="/logo.png" alt="Lekhak Logo" className="h-11 w-11 object-contain" />
-                <span className="font-bold tracking-[0.25em] text-white">LEKHAK</span>
+                <span className="font-bold tracking-[0.25em] text-white">LEKHAK TRIPURA</span>
               </div>
               <button
                 onClick={() => setOpen(false)}
@@ -280,6 +311,40 @@ export default function Navbar() {
                   </button>
                 </motion.div>
               )}
+
+              {/* Mobile Social Links */}
+              <motion.div
+                variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
+                className="mt-6 flex items-center gap-6"
+              >
+                <a
+                  href="https://www.facebook.com/share/1DLfEnitkJ/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/65 hover:text-cyan-400 transition hover:scale-110"
+                  title="Facebook"
+                >
+                  <Facebook size={22} />
+                </a>
+                <a
+                  href="https://www.instagram.com/lekhok_tripura_publishers?igsh=MTJmMTZjcnVwM3NyeQ=="
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/65 hover:text-fuchsia-400 transition hover:scale-110"
+                  title="Instagram"
+                >
+                  <Instagram size={22} />
+                </a>
+                <a
+                  href="https://youtube.com/@lekhoktripura?si=1dc97jaclcr8Gzs2"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/65 hover:text-red-500 transition hover:scale-110"
+                  title="YouTube"
+                >
+                  <Youtube size={22} />
+                </a>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}
