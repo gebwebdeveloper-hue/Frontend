@@ -485,6 +485,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
             onClick={handleCloseModal}
+            data-lenis-prevent
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }}
@@ -498,6 +499,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                   : "max-w-xl"
               }`}
               onClick={(e) => e.stopPropagation()}
+              data-lenis-prevent
             >
               {/* Header */}
               <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-4">
@@ -522,7 +524,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
               )}
 
               {/* Steps Container */}
-              <div className={`flex-1 min-h-0 ${modalStep === "pdf" ? "flex flex-col h-full" : "overflow-y-auto pr-2"}`}>
+              <div className={`flex-1 min-h-0 ${modalStep === "pdf" ? "flex flex-col h-full" : "overflow-y-auto pr-2"}`} data-lenis-prevent>
                 
                 {/* 0. BOOK DETAILS & ACTIONS */}
                 {modalStep === "details" && (

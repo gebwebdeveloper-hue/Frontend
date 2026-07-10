@@ -1,38 +1,470 @@
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { BookOpen, CheckCircle2, AlertCircle, Loader2, Megaphone, Paintbrush, PencilLine, ShieldCheck, Truck, UserRoundCheck, X, BadgeCheck, FileText, WalletCards, Globe2, Sparkles, UploadCloud } from "lucide-react";
+
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
+import { API_BASE } from "../config.js";
+import { useGsapReveal } from "../hooks/useGsapReveal.js";
 
-export default function ReaderPage() {
+const plans = [
+  {
+    name: "Basic",
+    price: "₹39,990",
+    tag: "Paperback launch",
+    features: ["Publish your book as paperback", "Sell your book all over India", "ISBN guidance", "Basic interior formatting"],
+  },
+  {
+    name: "Essential",
+    price: "₹49,990",
+    tag: "Print + eBook",
+    featured: true,
+    features: ["All services of Basic package", "Publish book in print and eBook", "Cover design support", "Posters and launch creatives"],
+  },
+  {
+    name: "Popular",
+    price: "₹89,990",
+    tag: "Wide distribution",
+    features: ["All services of Essential package", "Sell your book globally", "Copy editing support", "Marketing and author branding guidance"],
+  },
+];
+
+const services = [
+  { icon: PencilLine, title: "Editorial Services", copy: "Manuscript review, clarity checks, proofreading, copy editing, and language polish." },
+  { icon: Paintbrush, title: "Designing Services", copy: "Cover design, page layout, typography, book posters, and launch-ready creatives." },
+  { icon: Megaphone, title: "Marketing Services", copy: "Promotion strategy, social media launch support, reader positioning, and visibility planning." },
+  { icon: Truck, title: "Distribution Services", copy: "Print, eBook, local reach, and wider distribution options based on your publishing plan." },
+  { icon: UserRoundCheck, title: "Author Support", copy: "Guided support from manuscript discussion to launch, updates, and post-publication next steps." },
+  { icon: ShieldCheck, title: "Legal Services", copy: "ISBN assistance, copyright guidance, publishing agreements, and basic documentation support." },
+];
+
+const processSteps = [
+  { icon: BadgeCheck, title: "Online Registration", copy: "Choose paid self publishing or submit a Free Sponsored Publishing application with your manuscript PDF." },
+  { icon: FileText, title: "Manuscript Submission", copy: "Share what your book is about, confirm manuscript readiness, and upload a PDF manuscript under 5MB." },
+  { icon: BookOpen, title: "Editorial Review", copy: "Our team checks fit, quality needs, publishing scope, and the right path for your book." },
+  { icon: WalletCards, title: "Plan Confirmation", copy: "For self publishing, confirm the plan and required services before production begins." },
+  { icon: Globe2, title: "Published & Promoted", copy: "Your book moves through design, formatting, launch preparation, and reader discovery." },
+];
+
+const advantages = ["Transparent publishing process", "Print and digital support", "Author-first guidance", "Local literary community", "Marketing-ready launch material", "Professional book presentation"];
+
+const initialForm = {
+  name: "",
+  phone: "",
+  email: "",
+  bookAbout: "",
+  manuscriptReady: "Yes",
+  note: "",
+};
+
+function Input({ label, className = "", ...props }) {
   return (
-    <PageTransition>
-      <section className="min-h-screen px-5 pb-24 pt-32">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[280px_1fr]">
-          <aside className="rounded-lg border border-white/10 bg-white/[0.055] p-5 text-white backdrop-blur-xl">
-            <p className="text-xs uppercase tracking-[0.3em] text-cyan-200/80">Reading</p>
-            <h1 className="mt-4 text-3xl font-semibold">Systems of Thought</h1>
-            <div className="mt-8 h-2 rounded-full bg-white/10"><div className="h-full w-[68%] rounded-full bg-white" /></div>
-            <p className="mt-3 text-sm text-white/[0.48]">68% complete</p>
-            <div className="mt-8 space-y-3 text-sm text-white/[0.62]">
-              <button className="w-full rounded-full bg-white px-4 py-3 font-semibold text-black">Resume page 214</button>
-              <button className="w-full rounded-full border border-white/10 px-4 py-3">Bookmarks</button>
-              <button className="w-full rounded-full border border-white/10 px-4 py-3">Reader settings</button>
-            </div>
-          </aside>
-          <article className="rounded-lg border border-white/10 bg-white/[0.055] p-4 shadow-glow backdrop-blur-xl">
-            <div className="rounded-md bg-[#f4eddf] p-8 text-black md:p-12">
-              <div className="mx-auto max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-black/[0.45]">Chapter 08</p>
-                <h2 className="mt-5 text-4xl font-black leading-tight">Designing systems that help readers stay immersed</h2>
-                <div className="mt-8 space-y-4 text-lg leading-9 text-black/[0.72]">
-                  {Array.from({ length: 8 }).map((_, index) => (
-                    <p key={index}>The best ebook interfaces reduce friction after purchase. They keep the page legible, the controls quiet, and the reader's progress always close at hand.</p>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </article>
-        </div>
-      </section>
-      <FooterSection />
-    </PageTransition>
+    <label className={`block text-sm font-bold text-white/70 ${className}`}>
+      {label}
+      <input {...props} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
+    </label>
   );
 }
+
+function Textarea({ label, className = "", ...props }) {
+  return (
+    <label className={`block text-sm font-bold text-white/70 ${className}`}>
+      {label}
+      <textarea {...props} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
+    </label>
+  );
+}
+
+export default function ReaderPage() {
+  const scope = useGsapReveal({ stagger: 0.06, y: 24 });
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("");
+  const [form, setForm] = useState(initialForm);
+  const [manuscript, setManuscript] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" });
+
+  useEffect(() => {
+    fetch(`${API_BASE}/auth/me`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data?.success || !data.user) return;
+        setForm((current) => ({
+          ...current,
+          name: current.name || data.user.name || "",
+          phone: current.phone || data.user.phone || "",
+          email: current.email || data.user.email || "",
+        }));
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!modalOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setModalOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [modalOpen]);
+
+  const setField = (key) => (event) => {
+    const value = key === "phone" ? event.target.value.replace(/[^0-9]/g, "").slice(0, 10) : event.target.value;
+    setForm((current) => ({ ...current, [key]: value }));
+  };
+
+  const openFreeModal = () => {
+    setSelectedPlan("");
+    setMessage({ type: "", text: "" });
+    setModalOpen(true);
+  };
+
+  const openPlanModal = (planName) => {
+    setSelectedPlan(planName);
+    setManuscript(null);
+    setMessage({ type: "", text: "" });
+    setForm((current) => ({ ...current, note: `I am interested in the ${planName} self-publishing plan. Please call me back with more details.` }));
+    setModalOpen(true);
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    if (!file) {
+      setManuscript(null);
+      return;
+    }
+    if (file.type !== "application/pdf" || !file.name.toLowerCase().endsWith(".pdf")) {
+      setMessage({ type: "error", text: "Please upload manuscript as PDF only." });
+      event.target.value = "";
+      setManuscript(null);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: "error", text: "Manuscript PDF must be below 5MB." });
+      event.target.value = "";
+      setManuscript(null);
+      return;
+    }
+    setMessage({ type: "", text: "" });
+    setManuscript(file);
+  };
+
+  const handleFreeSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setMessage({ type: "", text: "" });
+
+    try {
+      if (!manuscript) {
+        setMessage({ type: "error", text: "Please upload your manuscript PDF below 5MB." });
+        setLoading(false);
+        return;
+      }
+
+      const payload = new FormData();
+      Object.entries(form).forEach(([key, value]) => payload.append(key, value));
+      payload.append("manuscript", manuscript);
+
+      const res = await fetch(`${API_BASE}/publishing/free`, {
+        method: "POST",
+        body: payload,
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setMessage({
+          type: "success",
+          text: data.adminEmailSent
+            ? "Free sponsored publishing request submitted with manuscript and mailed to admin."
+            : "Request submitted. Admin email could not be confirmed.",
+        });
+        setManuscript(null);
+        setForm((current) => ({ ...initialForm, name: current.name, phone: current.phone, email: current.email }));
+      } else {
+        const errorText = data.errors?.length
+          ? data.errors.map((e) => e.message).join(", ")
+          : data.message || "Could not submit request.";
+        setMessage({ type: "error", text: errorText });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Could not submit request." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePlanSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setMessage({ type: "", text: "" });
+
+    try {
+      const res = await fetch(`${API_BASE}/publishing/plan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planName: selectedPlan,
+          name: form.name,
+          phone: form.phone,
+          email: form.email,
+          bookAbout: form.bookAbout,
+          note: form.note,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setMessage({
+          type: "success",
+          text: data.adminEmailSent
+            ? `${selectedPlan} plan request submitted and mailed to admin.`
+            : "Plan request submitted. Admin email could not be confirmed.",
+        });
+        setForm((current) => ({ ...initialForm, name: current.name, phone: current.phone, email: current.email }));
+      } else {
+        const errorText = data.errors?.length
+          ? data.errors.map((e) => e.message).join(", ")
+          : data.message || "Could not submit plan request.";
+        setMessage({ type: "error", text: errorText });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Could not submit plan request." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <PageTransition>
+      <main ref={scope} className="relative overflow-hidden pt-32">
+        <div className="pointer-events-none absolute left-[-8%] top-20 h-[34rem] w-[34rem] rounded-full bg-cyan-500/10 blur-[170px]" />
+        <div className="pointer-events-none absolute right-[-10%] top-[32rem] h-[32rem] w-[32rem] rounded-full bg-fuchsia-500/10 blur-[180px]" />
+
+        <section className="section-shell relative z-10 pb-16 text-center">
+          <motion.div data-reveal>
+            <p className="text-sm font-bold uppercase tracking-[0.5em] text-cyan-300/80">Publish with us</p>
+            <h1 className="mt-5 bg-gradient-to-r from-cyan-300 via-white to-fuchsia-300 bg-clip-text text-5xl font-black uppercase tracking-[0.06em] text-transparent md:text-7xl">
+              Bring Your Book To Readers
+            </h1>
+            <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-white/68 md:text-xl">
+              Choose a guided paid self-publishing plan or apply for Free Sponsored Publishing if financial constraints are stopping your book from reaching readers.
+            </p>
+          </motion.div>
+
+          <div className="mt-12 grid gap-5 lg:grid-cols-2">
+            <motion.div data-reveal whileHover={{ y: -6 }} className="rounded-lg border border-white/10 bg-white/[0.055] p-7 text-left shadow-card backdrop-blur-xl md:p-8">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300"><Sparkles size={24} /></div>
+              <h2 className="mt-6 text-3xl font-black text-white">Self Publishing</h2>
+              <p className="mt-4 text-white/62">Paid plans for authors who want a structured publishing team, faster production, and clear service packages.</p>
+              <a href="#self-publishing" className="mt-6 inline-flex rounded-full bg-white px-6 py-3 font-bold text-black transition hover:scale-105">View Plans</a>
+            </motion.div>
+            <motion.div data-reveal whileHover={{ y: -6 }} className="rounded-lg border border-cyan-300/20 bg-cyan-300/[0.075] p-7 text-left shadow-card backdrop-blur-xl md:p-8">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-cyan-200"><BookOpen size={24} /></div>
+              <h2 className="mt-6 text-3xl font-black text-white">Free Sponsored Publishing</h2>
+              <p className="mt-4 text-white/62">For financially challenged writers. Because talent should never be limited by financial constraints.</p>
+              <button onClick={openFreeModal} className="mt-6 inline-flex rounded-full border border-cyan-300/30 bg-cyan-300/10 px-6 py-3 font-bold text-cyan-100 transition hover:bg-cyan-300/15">Apply for Sponsorship</button>
+            </motion.div>
+          </div>
+        </section>
+
+        <section id="self-publishing" className="section-shell relative z-10 py-16">
+          <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Self Publishing Plans</h2>
+          <p data-reveal className="mx-auto mt-4 max-w-2xl text-center text-white/55">Pick the level of support you need. Final scope can be confirmed after manuscript discussion.</p>
+          <div className="mt-10 grid gap-6 lg:grid-cols-3">
+            {plans.map((plan) => (
+              <motion.article key={plan.name} data-reveal whileHover={{ y: -8 }} className={`relative rounded-lg border p-6 shadow-card backdrop-blur-xl ${plan.featured ? "border-cyan-300/35 bg-cyan-300/[0.08]" : "border-white/10 bg-white/[0.055]"}`}>
+                {plan.featured ? <div className="absolute right-5 top-5 rounded-full bg-white px-3 py-1 text-xs font-black text-black">Recommended</div> : null}
+                <p className="text-sm font-bold uppercase tracking-[0.32em] text-cyan-300/80">{plan.tag}</p>
+                <h3 className="mt-5 text-3xl font-black text-white">{plan.name}</h3>
+                <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-5">
+                  <p className="text-3xl font-black text-white">{plan.price}</p>
+                  <p className="mt-1 text-sm text-white/45">+ GST</p>
+                </div>
+                <ul className="mt-6 space-y-3 text-sm leading-6 text-white/68">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />{feature}</li>
+                  ))}
+                </ul>
+                <button type="button" onClick={() => openPlanModal(plan.name)} className="mt-7 w-full rounded-full bg-white px-5 py-3 font-bold text-black transition hover:scale-105 hover:bg-cyan-50">Choose Plan</button>
+              </motion.article>
+            ))}
+          </div>
+        </section>
+
+        <section className="section-shell relative z-10 py-16">
+          <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Our Publishing Process</h2>
+          <p data-reveal className="mx-auto mt-4 max-w-2xl text-center text-white/55">A simple, transparent path from manuscript to publication.</p>
+          <div className="relative mx-auto mt-14 max-w-4xl">
+            <div className="absolute left-6 top-0 hidden h-full w-px bg-white/10 md:block" />
+            <div className="space-y-5">
+              {processSteps.map((step, index) => {
+                const Icon = step.icon;
+                return (
+                  <motion.div key={step.title} data-reveal className="relative rounded-lg border border-white/10 bg-white/[0.055] p-6 shadow-card backdrop-blur-xl md:ml-14">
+                    <div className="absolute -left-[4.4rem] top-6 hidden h-12 w-12 items-center justify-center rounded-full border border-cyan-300/25 bg-black text-cyan-300 md:flex"><Icon size={20} /></div>
+                    <p className="text-sm font-black text-cyan-300">0{index + 1}</p>
+                    <h3 className="mt-2 text-2xl font-black text-white">{step.title}</h3>
+                    <p className="mt-3 max-w-2xl text-white/62">{step.copy}</p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="section-shell relative z-10 py-16">
+          <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">See Our Services</h2>
+          <p data-reveal className="mx-auto mt-4 max-w-2xl text-center text-white/55">Comprehensive support to bring your manuscript into a polished book.</p>
+          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {services.map((service) => {
+              const Icon = service.icon;
+              return (
+                <motion.div key={service.title} data-reveal whileHover={{ y: -5 }} className="rounded-lg border border-white/10 bg-white/[0.055] p-7 shadow-card backdrop-blur-xl">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-black"><Icon size={22} /></div>
+                  <h3 className="mt-6 text-xl font-black text-white">{service.title}</h3>
+                  <p className="mt-3 leading-7 text-white/60">{service.copy}</p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="section-shell relative z-10 py-16">
+          <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">The Lekhak Advantage</h2>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {advantages.map((item) => (
+              <motion.div key={item} data-reveal className="rounded-lg border border-white/10 bg-white/[0.055] p-5 text-white/78 shadow-card backdrop-blur-xl">
+                <CheckCircle2 className="mb-4 h-5 w-5 text-cyan-300" />
+                {item}
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {createPortal(
+          <AnimatePresence>
+            {modalOpen && (
+              <motion.div 
+                className="fixed inset-0 z-[200] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md" 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                onClick={() => setModalOpen(false)}
+                data-lenis-prevent
+              >
+                <motion.div 
+                  initial={{ y: 30, opacity: 0, scale: 0.96 }} 
+                  animate={{ y: 0, opacity: 1, scale: 1 }} 
+                  exit={{ y: 20, opacity: 0, scale: 0.96 }} 
+                  onClick={(e) => e.stopPropagation()}
+                  className="relative flex max-h-[85vh] w-full max-w-3xl flex-col rounded-3xl border border-white/10 bg-zinc-950 p-6 shadow-glow"
+                  data-lenis-prevent
+                >
+                  {/* Sticky Header */}
+                  <div className="flex shrink-0 items-start justify-between gap-4 border-b border-white/10 pb-4">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.35em] text-cyan-300">{selectedPlan ? `${selectedPlan} Plan` : "Free Sponsored Publishing"}</p>
+                      <h3 className="mt-2 text-2xl font-black text-white">{selectedPlan ? "Plan Request" : "Sponsorship Application"}</h3>
+                      <p className="mt-1 text-xs text-white/50">Name, phone, and email are prefilled when you are logged in.</p>
+                    </div>
+                    <button 
+                      onClick={() => setModalOpen(false)} 
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 text-white/60 transition hover:bg-white/10 hover:text-white" 
+                      aria-label="Close form"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {/* Scrollable Form Content */}
+                  <form onSubmit={selectedPlan ? handlePlanSubmit : handleFreeSubmit} className="flex-1 overflow-y-auto mt-4 pr-1.5 custom-scrollbar" data-lenis-prevent>
+                    {message.text && (
+                      <div className={`mb-5 flex items-start gap-3 rounded-xl border p-4 text-xs ${message.type === "success" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300" : "border-red-500/20 bg-red-500/10 text-red-300"}`}>
+                        {message.type === "success" ? <CheckCircle2 className="h-4.5 w-4.5 shrink-0" /> : <AlertCircle className="h-4.5 w-4.5 shrink-0" />}
+                        <span>{message.text}</span>
+                      </div>
+                    )}
+
+                    {selectedPlan ? (
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="md:col-span-2 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] p-4 text-sm leading-7 text-white/72">
+                          <h4 className="text-lg font-black text-white">{selectedPlan} Self Publishing Plan</h4>
+                          <p className="mt-2 text-white/65">Submit your contact details and our team will call you back about this paid publishing package.</p>
+                        </div>
+                        <Input label="Name" required value={form.name} onChange={setField("name")} placeholder="Author name" />
+                        <Input label="Phone Number" required value={form.phone} onChange={setField("phone")} placeholder="10-digit phone number" inputMode="numeric" />
+                        <Input label="Email" required type="email" value={form.email} onChange={setField("email")} placeholder="you@example.com" className="md:col-span-2" />
+                        <Textarea label="Your Book is about?" rows={4} value={form.bookAbout} onChange={setField("bookAbout")} placeholder="Tell us about your book or manuscript" className="md:col-span-2" />
+                        <Textarea label="Notes" rows={3} value={form.note} onChange={setField("note")} placeholder="Any preferred time to call or requirements?" className="md:col-span-2" />
+                      </div>
+                    ) : (
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="md:col-span-2 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] p-4 text-sm leading-7 text-white/72">
+                          <h4 className="text-lg font-black text-white">Free Sponsored Publishing</h4>
+                          <p className="mt-2 font-semibold text-cyan-100">For Financially Challenged Writers</p>
+                          <p className="mt-2 italic text-white/68">"Because talent should never be limited by financial constraints."</p>
+                          <p className="mt-4">যেসব মেধাবী লেখক শুধুমাত্র আর্থিক অসুবিধার কারণে তাঁদের বই প্রকাশ করতে পারছেন না, তাঁদের জন্য <strong className="text-white">Lekhok Tripura</strong>-এর বিশেষ <strong className="text-white">Free Sponsored Publishing</strong> উদ্যোগ।</p>
+                          <p className="mt-3">যদি আপনি আর্থিকভাবে স্বচ্ছল হন, তাহলে অনুগ্রহ করে <strong className="text-white">Paid Self Publishing</strong> অপশনটি নির্বাচন করুন। আপনার প্রকাশনার জন্য প্রদত্ত অর্থের একটি অংশ আমরা এই উদ্যোগে ব্যয় করি।</p>
+                          <p className="mt-3 font-semibold text-cyan-100">একজন লেখকের পাশে দাঁড়িয়ে আপনি আরেকজন স্বপ্নবাজ লেখকের স্বপ্ন পূরণে অবদান রাখছেন।</p>
+                        </div>
+                        <Input label="Name" required value={form.name} onChange={setField("name")} placeholder="Author name" />
+                        <Input label="Phone Number" required value={form.phone} onChange={setField("phone")} placeholder="10-digit phone number" inputMode="numeric" />
+                        <Input label="Email" required type="email" value={form.email} onChange={setField("email")} placeholder="you@example.com" className="md:col-span-2" />
+                        <Textarea label="Your Book is about?" required rows={4} value={form.bookAbout} onChange={setField("bookAbout")} placeholder="Tell us about your book, theme, genre, and why it matters" className="md:col-span-2" />
+                        <fieldset className="md:col-span-2 rounded-xl border border-white/10 bg-white/5 p-4">
+                          <legend className="px-2 text-sm font-bold text-white/70">Is your manuscript ready?</legend>
+                          <div className="mt-3 flex flex-wrap gap-3">
+                            {["Yes", "No"].map((option) => (
+                              <label key={option} className={`flex cursor-pointer items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-bold transition ${form.manuscriptReady === option ? "border-cyan-300/45 bg-cyan-300/15 text-cyan-100" : "border-white/10 bg-black/20 text-white/55 hover:text-white"}`}>
+                                <input type="radio" name="manuscriptReady" value={option} checked={form.manuscriptReady === option} onChange={setField("manuscriptReady")} className="sr-only" />
+                                {option}
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
+                        <label className="md:col-span-2 block rounded-xl border border-dashed border-white/15 bg-white/5 p-5 text-sm font-bold text-white/70 transition hover:border-cyan-300/35 hover:bg-cyan-300/10">
+                          <span className="flex items-center gap-3"><UploadCloud className="h-5 w-5 text-cyan-300" /> Submit your manuscript</span>
+                          <span className="mt-2 block text-xs font-medium text-white/45">PDF only, below 5MB.</span>
+                          <input required type="file" accept="application/pdf,.pdf" onChange={handleFileChange} className="mt-4 block w-full text-sm text-white/60 file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-bold file:text-black" />
+                          {manuscript ? <span className="mt-3 block text-xs text-cyan-200">Selected: {manuscript.name}</span> : null}
+                        </label>
+                      </div>
+                    )}
+
+                    <button 
+                      type="submit" 
+                      disabled={loading} 
+                      className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-xs font-bold text-black transition hover:scale-[1.01] hover:bg-cyan-50 disabled:opacity-60"
+                    >
+                      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {selectedPlan ? "Submit Plan Request" : "Submit Free Sponsored Publishing Request"}
+                    </button>
+                  </form>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+      </main>
+      <FooterSection />
+    </PageTransition>
+
+  );
+}
+
+
+
+
+
+
+
+
+
+

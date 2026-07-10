@@ -115,6 +115,7 @@ function PdfCanvasViewer({ pdfUrl, pageNumber, onLoaded }) {
     <div
       ref={containerRef}
       className="relative flex h-full w-full flex-col items-center justify-start overflow-y-auto bg-zinc-900/60 p-4"
+      data-lenis-prevent
     >
       {pageLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-[10] backdrop-blur-sm">
@@ -261,6 +262,7 @@ function PdfReaderModal({ bookId, bookTitle, totalPages, initialProgress, onClos
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[200] flex flex-col bg-black/95 backdrop-blur-2xl"
         style={{ fontFamily: "Inter, sans-serif" }}
+        data-lenis-prevent
       >
         {/* Header bar */}
         <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-black/60 px-5 py-3.5 backdrop-blur-xl">
