@@ -2,7 +2,7 @@ import PageTransition from "../components/PageTransition.jsx";
 import HeroSection from "../sections/HeroSection.jsx";
 import FeaturedBooksSection from "../sections/FeaturedBooksSection.jsx";
 import CategoriesSection from "../sections/CategoriesSection.jsx";
-import WhyChooseUsSection from "../sections/WhyChooseUsSection.jsx";
+import BestsellingBooksSection from "../sections/BestsellingBooksSection.jsx";
 import ReadingExperienceSection from "../sections/ReadingExperienceSection.jsx";
 import BestsellerShowcaseSection from "../sections/BestsellerShowcaseSection.jsx";
 import ReadingDevicesSection from "../sections/ReadingDevicesSection.jsx";
@@ -17,7 +17,7 @@ export default function HomePage() {
       <HeroSection />
       <FeaturedBooksSection />
       <CategoriesSection />
-      <WhyChooseUsSection />
+      <BestsellingBooksSection />
       <ReadingExperienceSection />
       <BestsellerShowcaseSection />
       <ReadingDevicesSection />

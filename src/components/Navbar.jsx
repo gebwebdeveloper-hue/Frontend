@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Menu, X, Sparkles, LogOut, User, Facebook, Instagram, Youtube } from "lucide-react";
+import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import AuthModal from "./AuthModal.jsx";
 import { API_BASE } from "../config.js";
@@ -64,6 +64,23 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
   const handleLogout = async () => {
     await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" }).catch(() => {});
     setAuthUser(false);
@@ -83,40 +100,40 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-5 z-50 px-5">
+      <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-5 sm:px-5">
         <motion.nav
           initial={{ y: -80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="relative mx-auto max-w-7xl rounded-full"
+          className="relative mx-auto max-w-7xl rounded-[1.4rem] sm:rounded-full"
         >
           {/* Animated Border */}
-          <div className="animated-nav-border absolute inset-0 rounded-full" />
+          <div className="animated-nav-border absolute inset-0 rounded-[inherit]" />
 
           {/* Glass Background */}
           <div
-            className={`absolute inset-[1.2px] rounded-full transition-all duration-500 ${
+            className={`absolute inset-[1.2px] rounded-[inherit] transition-all duration-500 ${
               scrolled ? "bg-black/70 backdrop-blur-2xl" : "bg-black/35 backdrop-blur-xl"
             }`}
           />
 
           {/* Navbar Content */}
-          <div className="relative z-10 flex items-center justify-between px-7 py-4">
+          <div className="relative z-10 flex items-center justify-between gap-3 px-4 py-3 sm:px-5 md:px-7 md:py-4">
             {/* Logo */}
-            <Link to="/" className="group flex items-center gap-3">
+            <Link to="/" className="group flex min-w-0 items-center gap-2.5 sm:gap-3">
               <img
                 src="/logo.png"
                 alt="Lekhak Logo"
-                className="h-11 w-11 object-contain transition duration-500 group-hover:rotate-12 group-hover:scale-110"
+                className="h-9 w-9 shrink-0 object-contain transition duration-500 group-hover:rotate-12 group-hover:scale-110 sm:h-11 sm:w-11"
               />
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-[0.35em] text-white">LEKHAK TRIPURA</h3>
-                <p className="text-xs text-white/45">Premium eBooks</p>
+              <div className="min-w-0">
+                <h3 className="truncate text-[11px] font-bold uppercase tracking-[0.22em] text-white sm:text-sm sm:tracking-[0.35em]">LEKHAK TRIPURA</h3>
+                <p className="truncate text-[11px] text-white/45 sm:text-xs">Premium eBooks</p>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden items-center gap-2 md:flex">
+            <div className="hidden items-center gap-2 lg:flex">
               {navLinks.map((link) => (
                 <NavLink key={link.to} to={link.to}>
                   {({ isActive }) => (
@@ -137,6 +154,20 @@ export default function Navbar() {
                   )}
                 </NavLink>
               ))}
+
+              <NavLink to="/club">
+                {({ isActive }) => (
+                  <div
+                    className={`group flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-300 ${
+                      isActive
+                        ? "bg-white text-black shadow-[0_0_28px_rgba(34,211,238,0.18)]"
+                        : "bg-white text-black hover:scale-105 hover:shadow-[0_0_28px_rgba(34,211,238,0.18)]"
+                    }`}
+                  >
+                    <Sparkles size={14} /> Join Our Club
+                  </div>
+                )}
+              </NavLink>
 
               {/* Social Media Icons */}
               <div className="flex items-center gap-3 border-l border-white/10 pl-4 mr-2">
@@ -225,7 +256,8 @@ export default function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setOpen(true)}
-              className="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-white/5 text-white md:hidden"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10 sm:h-11 sm:w-11 lg:hidden"
+              aria-label="Open navigation menu"
             >
               <Menu size={20} />
             </button>
@@ -237,31 +269,32 @@ export default function Navbar() {
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl md:hidden"
+            className="fixed inset-0 z-[100] overflow-y-auto bg-black/95 px-4 py-4 backdrop-blur-2xl lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="flex items-center justify-between border-b border-white/10 p-6">
-              <div className="flex items-center gap-3">
-                <img src="/logo.png" alt="Lekhak Logo" className="h-11 w-11 object-contain" />
-                <span className="font-bold tracking-[0.25em] text-white">LEKHAK TRIPURA</span>
+            <div className="flex items-center justify-between rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <img src="/logo.png" alt="Lekhak Logo" className="h-10 w-10 shrink-0 object-contain" />
+                <span className="truncate text-sm font-bold tracking-[0.22em] text-white sm:tracking-[0.25em]">LEKHAK TRIPURA</span>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="grid h-11 w-11 place-items-center rounded-full border border-white/10 text-white"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 text-white transition hover:bg-white/10"
+                aria-label="Close navigation menu"
               >
                 <X size={20} />
               </button>
             </div>
 
             <motion.div
-              className="mt-20 flex flex-col items-center gap-10"
+              className="mx-auto mt-10 flex max-w-sm flex-col items-stretch gap-4 pb-10 sm:mt-16 sm:max-w-md"
               initial="hidden"
               animate="visible"
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
             >
-              {[{ label: "Home", to: "/" }, ...navLinks].map((item) => (
+              {[{ label: "Home", to: "/" }, ...navLinks, { label: "Join Our Club", to: "/club" }].map((item) => (
                 <motion.div
                   key={item.to}
                   variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
@@ -269,7 +302,7 @@ export default function Navbar() {
                   <Link
                     to={item.to}
                     onClick={() => setOpen(false)}
-                    className="text-5xl font-black uppercase tracking-tight text-white transition hover:text-cyan-300"
+                    className="block rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-4 text-center text-3xl font-black uppercase tracking-tight text-white transition hover:border-cyan-300/30 hover:bg-white/[0.07] hover:text-cyan-300 sm:text-5xl"
                   >
                     {item.label}
                   </Link>
@@ -279,7 +312,7 @@ export default function Navbar() {
               {authUser ? (
                 <motion.div
                   variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
-                  className="flex flex-col items-center gap-3"
+                  className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-5"
                 >
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-indigo-500 text-2xl font-black text-black">
                     {userInitial}
@@ -295,7 +328,7 @@ export default function Navbar() {
               ) : (
                 <motion.div
                   variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
-                  className="flex flex-col items-center gap-3 mt-4"
+                  className="mt-2 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-5"
                 >
                   <button
                     onClick={() => { setAuthModalTab("login"); setShowAuthModal(true); setOpen(false); }}
@@ -315,7 +348,7 @@ export default function Navbar() {
               {/* Mobile Social Links */}
               <motion.div
                 variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
-                className="mt-6 flex items-center gap-6"
+                className="mt-4 flex items-center justify-center gap-6"
               >
                 <a
                   href="https://www.facebook.com/share/1DLfEnitkJ/"
@@ -363,3 +396,6 @@ export default function Navbar() {
     </>
   );
 }
+
+
+

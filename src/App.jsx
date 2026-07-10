@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage.jsx";
 import ReaderPage from "./pages/ReaderPage.jsx";
 import LibraryPage from "./pages/LibraryPage.jsx";
 import AdminBooksPage from "./pages/AdminBooksPage.jsx";
+import ClubPage from "./pages/ClubPage.jsx";
 import PageLoader from "./components/PageLoader.jsx";
 import CustomCursor from "./components/CustomCursor.jsx";
 import ScrollProgress from "./components/ScrollProgress.jsx";
@@ -27,9 +28,11 @@ export default function App() {
           <Route path="/library" element={<LibraryPage />} />
           <Route path="/reader" element={<ReaderPage />} />
           <Route path="/admin" element={<AdminBooksPage />} />
+          <Route path="/club" element={<ClubPage />} />
         </Routes>
       </AnimatePresence>
       <BackToTop />
     </>
   );
 }
+

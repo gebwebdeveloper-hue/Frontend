@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, BookOpen, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle } from "lucide-react";
+import { Sparkles, BookOpen, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
@@ -25,8 +25,18 @@ export default function AdminBooksPage() {
   // Purchase requests state
   const [purchasesList, setPurchasesList] = useState([]);
   const [loadingPurchases, setLoadingPurchases] = useState(false);
-  const [activeTab, setActiveTab] = useState("books"); // 'books', 'purchases'
+  const [activeTab, setActiveTab] = useState("books"); // 'books', 'purchases', 'authors'
   const [adminNotes, setAdminNotes] = useState({});
+
+  // Author management state
+  const [authorsList, setAuthorsList] = useState([]);
+  const [loadingAuthors, setLoadingAuthors] = useState(false);
+  const [authorForm, setAuthorForm] = useState({ name: "", bio: "", featured: true, order: 0 });
+  const [authorThumbnail, setAuthorThumbnail] = useState(null);
+  const [editingAuthor, setEditingAuthor] = useState(null);
+  const [authorFormError, setAuthorFormError] = useState("");
+  const [authorFormSuccess, setAuthorFormSuccess] = useState("");
+  const [submittingAuthor, setSubmittingAuthor] = useState(false);
 
   // Book form state
   const [title, setTitle] = useState("");
@@ -64,6 +74,7 @@ export default function AdminBooksPage() {
             setStep("dashboard");
             fetchBooks();
             fetchPurchases();
+            fetchAuthors();
           } else {
             setAuthError("Access denied. Admin permissions required.");
             setStep("login-email");
@@ -101,6 +112,87 @@ export default function AdminBooksPage() {
       })
       .catch((err) => console.error("Error fetching purchases:", err))
       .finally(() => setLoadingPurchases(false));
+  };
+
+  const fetchAuthors = () => {
+    setLoadingAuthors(true);
+    fetch(`${API_BASE}/authors/all`, { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setAuthorsList(data.authors || []);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingAuthors(false));
+  };
+
+  const handleAuthorFormChange = (field, value) => {
+    setAuthorForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const resetAuthorForm = () => {
+    setAuthorForm({ name: "", bio: "", featured: true, order: 0 });
+    setAuthorThumbnail(null);
+    setEditingAuthor(null);
+    setAuthorFormError("");
+    setAuthorFormSuccess("");
+  };
+
+  const handleAuthorSubmit = (e) => {
+    e.preventDefault();
+    setAuthorFormError("");
+    setAuthorFormSuccess("");
+    if (!authorForm.name.trim()) {
+      setAuthorFormError("Author name is required.");
+      return;
+    }
+    setSubmittingAuthor(true);
+    const fd = new FormData();
+    fd.append("name", authorForm.name);
+    fd.append("bio", authorForm.bio);
+    fd.append("featured", String(authorForm.featured));
+    fd.append("order", String(authorForm.order));
+    if (authorThumbnail) fd.append("thumbnail", authorThumbnail);
+
+    const url = editingAuthor ? `${API_BASE}/authors/${editingAuthor._id}` : `${API_BASE}/authors`;
+    const method = editingAuthor ? "PUT" : "POST";
+
+    fetch(url, { method, body: fd, credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setAuthorFormSuccess(editingAuthor ? "Author updated!" : "Author created!");
+          resetAuthorForm();
+          fetchAuthors();
+        } else {
+          setAuthorFormError(data.message || "Failed to save author.");
+        }
+      })
+      .catch(() => setAuthorFormError("Server error. Please try again."))
+      .finally(() => setSubmittingAuthor(false));
+  };
+
+  const handleEditAuthor = (author) => {
+    setEditingAuthor(author);
+    setAuthorForm({
+      name: author.name,
+      bio: author.bio || "",
+      featured: author.featured,
+      order: author.order || 0,
+    });
+    setAuthorThumbnail(null);
+    setAuthorFormError("");
+    setAuthorFormSuccess("");
+  };
+
+  const handleDeleteAuthor = (id) => {
+    if (!confirm("Delete this author? This cannot be undone.")) return;
+    fetch(`${API_BASE}/authors/${id}`, { method: "DELETE", credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) fetchAuthors();
+        else alert(data.message || "Failed to delete.");
+      })
+      .catch(() => alert("Error deleting author."));
   };
 
   const handleApprovePurchase = (id) => {
@@ -191,6 +283,7 @@ export default function AdminBooksPage() {
             setStep("dashboard");
             fetchBooks();
             fetchPurchases();
+            fetchAuthors();
           } else {
             setAuthError("Authentication successful, but you are not an authorized admin.");
             setStep("login-email");
@@ -209,6 +302,7 @@ export default function AdminBooksPage() {
         setUser(null);
         setStep("login-email");
         setBooksList([]);
+        setAuthorsList([]);
       })
       .catch(() => {
         setUser(null);
@@ -464,6 +558,14 @@ export default function AdminBooksPage() {
                     >
                       Purchase Requests
                     </button>
+                    <button
+                      onClick={() => setActiveTab("authors")}
+                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                        activeTab === "authors" ? "bg-white text-black" : "text-white/60 hover:text-white"
+                      }`}
+                    >
+                      Authors
+                    </button>
                   </div>
                   
                   <button
@@ -513,14 +615,26 @@ export default function AdminBooksPage() {
                         </div>
                         <div>
                           <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Author Name</label>
-                          <input
-                            type="text"
-                            required
-                            value={author}
-                            onChange={(e) => setAuthor(e.target.value)}
-                            placeholder="Mira Sen"
-                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
-                          />
+                          {authorsList.length === 0 ? (
+                            <div className="w-full rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-xs text-yellow-300">
+                              No authors added yet. Go to the <strong>Authors</strong> tab to add authors first.
+                            </div>
+                          ) : (
+                            <select
+                              required
+                              value={author}
+                              onChange={(e) => setAuthor(e.target.value)}
+                              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
+                              style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
+                            >
+                              <option value="" disabled style={{ background: "#0a0a0a" }}>Select an author...</option>
+                              {authorsList.map((a) => (
+                                <option key={a._id} value={a.name} style={{ background: "#0a0a0a" }}>
+                                  {a.name}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                         </div>
                       </div>
 
@@ -927,8 +1041,212 @@ export default function AdminBooksPage() {
             </div>
           )}
 
+          {/* TAB 3: AUTHORS */}
+          {activeTab === "authors" && (
+            <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+              {/* LEFT: Author Form */}
+              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+                <div className="border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">
+                      {editingAuthor ? "Edit Author" : "Add Author"}
+                    </h2>
+                    <p className="mt-1 text-sm text-white/55">
+                      {editingAuthor ? `Editing: ${editingAuthor.name}` : "Create a new popular author profile."}
+                    </p>
+                  </div>
+                  {editingAuthor && (
+                    <button
+                      type="button"
+                      onClick={resetAuthorForm}
+                      className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/60 hover:text-white transition"
+                    >
+                      <X size={13} /> Cancel Edit
+                    </button>
+                  )}
+                </div>
+
+                {authorFormError && (
+                  <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
+                    <AlertCircle className="h-5 w-5 shrink-0" />
+                    <span>{authorFormError}</span>
+                  </div>
+                )}
+                {authorFormSuccess && (
+                  <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-300">
+                    {authorFormSuccess}
+                  </div>
+                )}
+
+                <form onSubmit={handleAuthorSubmit} className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Author Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={authorForm.name}
+                      onChange={(e) => handleAuthorFormChange("name", e.target.value)}
+                      placeholder="Rabindranath Tagore"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Short Bio</label>
+                    <textarea
+                      rows="3"
+                      value={authorForm.bio}
+                      onChange={(e) => handleAuthorFormChange("bio", e.target.value)}
+                      placeholder="A brief description about the author..."
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none resize-none"
+                    />
+                  </div>
+
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Display Order</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={authorForm.order}
+                        onChange={(e) => handleAuthorFormChange("order", e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3 pt-7">
+                      <input
+                        type="checkbox"
+                        id="author-featured"
+                        checked={authorForm.featured}
+                        onChange={(e) => handleAuthorFormChange("featured", e.target.checked)}
+                        className="h-4 w-4 accent-cyan-400"
+                      />
+                      <label htmlFor="author-featured" className="text-sm text-white/70">Show in Popular Authors</label>
+                    </div>
+                  </div>
+
+                  {/* Thumbnail Upload */}
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Author Photo</label>
+                    <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-white/10 p-6 transition hover:border-cyan-400/30 hover:bg-white/[0.03]">
+                      {authorThumbnail ? (
+                        <>
+                          <img
+                            src={URL.createObjectURL(authorThumbnail)}
+                            alt="Preview"
+                            className="h-24 w-24 rounded-full object-cover border-2 border-cyan-400/30"
+                          />
+                          <span className="text-xs text-cyan-300">{authorThumbnail.name}</span>
+                        </>
+                      ) : editingAuthor?.thumbnail?.url ? (
+                        <>
+                          <img
+                            src={editingAuthor.thumbnail.url.startsWith("/") ? `${API_BASE.replace("/api","")}${editingAuthor.thumbnail.url}` : editingAuthor.thumbnail.url}
+                            alt="Current"
+                            className="h-24 w-24 rounded-full object-cover border-2 border-white/20"
+                          />
+                          <span className="text-xs text-white/40">Click to change photo</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={24} className="text-white/30" />
+                          <span className="text-xs text-white/40">Click to upload author photo (JPG, PNG, WebP)</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(e) => setAuthorThumbnail(e.target.files[0] || null)}
+                      />
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submittingAuthor}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-semibold text-black transition-all hover:scale-[1.02] disabled:opacity-50"
+                  >
+                    {submittingAuthor ? <Loader2 className="h-5 w-5 animate-spin" /> : editingAuthor ? "Update Author" : "Create Author"}
+                  </button>
+                </form>
+              </div>
+
+              {/* RIGHT: Authors List */}
+              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+                <div className="border-b border-white/10 pb-6 mb-6">
+                  <h2 className="text-xl font-bold text-white">All Authors</h2>
+                  <p className="mt-1 text-sm text-white/55">{authorsList.length} author{authorsList.length !== 1 ? "s" : ""} on the platform.</p>
+                </div>
+
+                {loadingAuthors ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
+                  </div>
+                ) : authorsList.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <User size={36} className="mb-3 text-white/20" />
+                    <p className="text-sm text-white/40">No authors added yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {authorsList.map((author) => {
+                      const thumb = author.thumbnail?.url
+                        ? author.thumbnail.url.startsWith("/")
+                          ? `${API_BASE.replace("/api","")}${author.thumbnail.url}`
+                          : author.thumbnail.url
+                        : null;
+                      return (
+                        <div
+                          key={author._id}
+                          className="flex items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4"
+                        >
+                          {/* Thumb */}
+                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-white/10">
+                            {thumb ? (
+                              <img src={thumb} alt={author.name} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center bg-white/5">
+                                <User size={18} className="text-white/30" />
+                              </div>
+                            )}
+                          </div>
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="truncate text-sm font-semibold text-white">{author.name}</p>
+                            <p className="text-[10px] text-white/40">
+                              Order: {author.order ?? 0} &bull; {author.featured ? "Featured" : "Hidden"}
+                            </p>
+                          </div>
+                          {/* Actions */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEditAuthor(author)}
+                              className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:border-cyan-400/30 hover:bg-cyan-400/10 hover:text-cyan-300"
+                            >
+                              <Pencil size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteAuthor(author._id)}
+                              className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </PageTransition>
   );
 }
+
