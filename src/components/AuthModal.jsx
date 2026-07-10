@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Mail, Lock, Eye, EyeOff, User, Phone, MapPin,
+  X, Mail, Lock, Eye, EyeOff, User, Phone,
   KeyRound, CheckCircle2, AlertCircle, Loader2, ArrowLeft
 } from "lucide-react";
 
@@ -128,8 +128,7 @@ function RegisterForm({ onSuccess, onLogin }) {
   const [otpSent, setOtpSent] = useState(false);
 
   const [form, setForm] = useState({
-    name: "", email: "", phone: "", co: "", country: "India",
-    district: "", block: "", pin: "", postOffice: "", nearbyLocation: "",
+    name: "", email: "", phone: "", age: "",
     password: "", confirmPassword: ""
   });
   const [otp, setOtp] = useState("");
@@ -169,10 +168,7 @@ function RegisterForm({ onSuccess, onLogin }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: form.email, password: form.password, otp,
-          name: form.name, co: form.co, phone: form.phone,
-          country: form.country, district: form.district,
-          block: form.block, pin: form.pin,
-          postOffice: form.postOffice, nearbyLocation: form.nearbyLocation
+          name: form.name, phone: form.phone, age: form.age
         }),
         credentials: "include"
       });
@@ -233,35 +229,17 @@ function RegisterForm({ onSuccess, onLogin }) {
     <form onSubmit={handleSendOtp} className="space-y-4">
       <Alert type="error" msg={error} />
 
-      {/* Name + Email */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <InputField label="Full Name *" id="reg-name" value={form.name} onChange={set("name")} placeholder="Kiran Samanta" required icon={User} />
         <InputField label="Email Address *" id="reg-email" type="email" value={form.email} onChange={set("email")} placeholder="you@example.com" required icon={Mail} autoComplete="email" />
       </div>
 
-      {/* Phone + C/O */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <InputField label="Phone Number *" id="reg-phone" type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value.replace(/[^0-9]/g, "") }))} placeholder="9876543210" required icon={Phone} />
-        <InputField label="C/O (Care Of)" id="reg-co" value={form.co} onChange={set("co")} placeholder="S/O Mr. Smith" />
+        <InputField label="Age *" id="reg-age" type="number" value={form.age} onChange={e => setForm(f => ({ ...f, age: e.target.value.replace(/[^0-9]/g, "") }))} placeholder="25" required icon={User} />
       </div>
 
-      {/* District + Block */}
-      <div className="grid grid-cols-2 gap-3">
-        <InputField label="District" id="reg-district" value={form.district} onChange={set("district")} placeholder="West Tripura" icon={MapPin} />
-        <InputField label="Block" id="reg-block" value={form.block} onChange={set("block")} placeholder="Jirania" />
-      </div>
-
-      {/* PIN + Post Office */}
-      <div className="grid grid-cols-2 gap-3">
-        <InputField label="PIN Code" id="reg-pin" value={form.pin} onChange={e => setForm(f => ({ ...f, pin: e.target.value.replace(/[^0-9]/g, "") }))} placeholder="799001" />
-        <InputField label="Post Office" id="reg-po" value={form.postOffice} onChange={set("postOffice")} placeholder="Jirania P.O." />
-      </div>
-
-      {/* Nearby Location */}
-      <InputField label="Nearby Location (school / bank / temple)" id="reg-nearby" value={form.nearbyLocation} onChange={set("nearbyLocation")} placeholder="Near SBI Bank, Jirania" />
-
-      {/* Password */}
-      <div className="grid grid-cols-2 gap-3 border-t border-white/5 pt-4">
+      <div className="grid gap-3 border-t border-white/5 pt-4 sm:grid-cols-2">
         <PasswordField label="Create Password *" id="reg-pwd" value={form.password} onChange={set("password")} placeholder="Min 8 characters" autoComplete="new-password" />
         <PasswordField label="Confirm Password *" id="reg-confirm" value={form.confirmPassword} onChange={set("confirmPassword")} placeholder="Re-enter password" autoComplete="new-password" />
       </div>
@@ -526,3 +504,7 @@ export default function AuthModal({ onClose, initialTab = "login" }) {
     </AnimatePresence>
   );
 }
+
+
+
+

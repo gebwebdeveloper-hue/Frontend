@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { ArrowUpRight, Star, Loader2, AlertCircle, CheckCircle2, Copy, Smartphone, Mail, KeyRound, ShieldCheck, Coins, X } from "lucide-react";
+import { Star, Loader2, AlertCircle, CheckCircle2, Copy, Smartphone, Mail, KeyRound, ShieldCheck, Coins, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE, SERVER_URL } from "../config.js";
 import AuthModal from "./AuthModal.jsx";
 
-export default function BookCard({ book }) {
+export default function BookCard({ book, onAuthorClick, isAuthorActive = false }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [showReader, setShowReader] = useState(false);
@@ -17,8 +17,24 @@ export default function BookCard({ book }) {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authReturnAction, setAuthReturnAction] = useState("ebook");
   const [accessStatus, setAccessStatus] = useState("loading"); // 'loading', 'unauthenticated', 'no_purchase', 'pending', 'approved'
   const [accessCheckLoading, setAccessCheckLoading] = useState(true);
+  const [showPhysicalOrder, setShowPhysicalOrder] = useState(false);
+  const [physicalFormat, setPhysicalFormat] = useState("paperback");
+  const [physicalLoading, setPhysicalLoading] = useState(false);
+  const [physicalError, setPhysicalError] = useState("");
+  const [physicalSuccess, setPhysicalSuccess] = useState("");
+  const [deliveryForm, setDeliveryForm] = useState({
+    co: "",
+    country: "India",
+    district: "",
+    block: "",
+    pin: "",
+    postOffice: "",
+    nearbyLocation: ""
+  });
+
 
   // Registration form fields
   const [name, setName] = useState("");
@@ -130,6 +146,7 @@ export default function BookCard({ book }) {
   const handleDetailsPurchaseAction = () => {
     if (accessStatus === "unauthenticated") {
       setShowReader(false);
+      setAuthReturnAction("ebook");
       setShowAuthModal(true);
     } else if (accessStatus === "no_purchase") {
       setModalStep("pay");
@@ -315,15 +332,72 @@ export default function BookCard({ book }) {
   const cleanPrice = typeof book.price === "number" ? book.price : String(book.price).replace(/[^0-9]/g, "");
   const upiUrl = `upi://pay?pa=${upiConfig.upiId}&pn=Lekhak%20Tripura&am=${cleanPrice}&cu=INR&tn=Ebook%20Access%20Request`;
   const isMobile = typeof navigator !== "undefined" && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const openPhysicalOrder = async (format) => {
+    setPhysicalFormat(format);
+    setPhysicalError("");
+    setPhysicalSuccess("");
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
+      if (!res.ok) {
+        setAuthReturnAction(`physical:${format}`);
+        setShowAuthModal(true);
+        return;
+      }
+      setShowPhysicalOrder(true);
+    } catch {
+      setPhysicalError("Could not check your login status. Please try again.");
+      setShowPhysicalOrder(true);
+    }
+  };
+
+  const submitPhysicalOrder = async (e) => {
+    e.preventDefault();
+    setPhysicalLoading(true);
+    setPhysicalError("");
+    setPhysicalSuccess("");
+
+    try {
+      const formData = new FormData();
+      formData.append("bookId", book._id || book.id);
+      formData.append("format", physicalFormat);
+      formData.append("note", `${physicalFormat} delivery request for ${book.title}`);
+      Object.entries(deliveryForm).forEach(([key, value]) => formData.append(key, value));
+
+      const res = await fetch(`${API_BASE}/purchase`, {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
+      const data = await res.json();
+
+      if (res.status === 401) {
+        setShowPhysicalOrder(false);
+        setAuthReturnAction(`physical:${physicalFormat}`);
+        setShowAuthModal(true);
+        return;
+      }
+
+      if (data.success) {
+        setPhysicalSuccess(data.adminEmailSent ? `Your ${physicalFormat} request has been submitted and mailed to admin.` : `Your ${physicalFormat} request has been submitted. Admin email could not be confirmed.`);
+      } else {
+        setPhysicalError(data.message || "Could not submit delivery request.");
+      }
+    } catch {
+      setPhysicalError("Could not submit delivery request.");
+    } finally {
+      setPhysicalLoading(false);
+    }
+  };
 
   return (
     <>
       <motion.article
-        className="premium-book-card group relative overflow-hidden rounded-lg p-4 animate-fade-in"
+        className="premium-book-card group relative overflow-hidden rounded-lg p-3 animate-fade-in"
         whileHover={{ y: -10, rotateX: 4, rotateY: -4, scale: 1.02 }}
         transition={{ type: "spring", stiffness: 220, damping: 18 }}
       >
-        <div className="book-cover-frame relative mb-5 aspect-[3/4] overflow-hidden rounded-md bg-zinc-900">
+        <div className="book-cover-frame relative mb-3 aspect-[3/4] overflow-hidden rounded-md bg-zinc-900">
           {book.cover?.url ? (
             <img
               src={book.cover.url.startsWith("http") ? book.cover.url : `${SERVER_URL}${book.cover.url}`}
@@ -343,23 +417,61 @@ export default function BookCard({ book }) {
         </div>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h3 className="truncate text-xl font-semibold text-white transition-colors duration-300 group-hover:text-cyan-50">{book.title}</h3>
-            <p className="mt-1 text-sm text-white/[0.52]">{book.author}</p>
+            <h3 className="truncate text-base font-bold text-white transition-colors duration-300 group-hover:text-cyan-50">{book.title}</h3>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAuthorClick?.(book.author);
+              }}
+              className={`mt-1 max-w-full truncate text-left text-xs font-semibold transition ${
+                isAuthorActive
+                  ? "text-fuchsia-200 drop-shadow-[0_0_14px_rgba(217,70,239,0.48)]"
+                  : "text-cyan-200/85 hover:text-fuchsia-200 hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.5)]"
+              }`}
+            >
+              {book.author}
+            </button>
           </div>
-          <p className="shrink-0 text-lg font-semibold text-cyan-200 drop-shadow-[0_0_14px_rgba(103,232,249,0.45)]">
+          <p className="shrink-0 text-sm font-bold text-cyan-200 drop-shadow-[0_0_14px_rgba(103,232,249,0.45)]">
             {formatPrice(book.price)}
           </p>
         </div>
-        <div className="mt-4 flex items-center justify-between text-sm text-white/[0.58]">
-          <span className="book-rating-pill flex items-center gap-1 text-amber-100"><Star size={14} fill="currentColor" /> {book.rating || "4.9"}</span>
+        <div className="mt-2 flex items-center justify-between text-xs text-white/[0.58]">
+          <span className="book-rating-pill flex items-center gap-1 text-amber-100"><Star size={12} fill="currentColor" /> {book.rating || "4.9"}</span>
           <span>{book.pages} pages</span>
         </div>
-        <button 
-          onClick={handleOpenPreview}
-          className="book-card-action mt-5 flex w-full items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-black opacity-0 transition group-hover:opacity-100 hover:scale-[1.03] active:scale-[0.98]"
-        >
-          Open Preview <ArrowUpRight size={15} />
-        </button>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={handleOpenPreview}
+            className="book-card-action flex items-center justify-center rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-black transition hover:scale-[1.03] active:scale-[0.98]"
+          >
+            E-BOOK
+          </button>
+          <button
+            type="button"
+            onClick={() => openPhysicalOrder("paperback")}
+            className="book-format-button book-format-button-active flex items-center justify-center rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white/80 transition hover:text-white"
+          >
+            Paperback
+          </button>
+          <button
+            type="button"
+            onClick={() => openPhysicalOrder("hardcover")}
+            className="book-format-button book-format-button-active flex items-center justify-center rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white/80 transition hover:text-white"
+          >
+            Hardcover
+          </button>
+          <button
+            type="button"
+            disabled
+            className="book-format-button flex items-center justify-center rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.04em] text-white/55"
+            title="YouTube listening option is not available yet"
+          >
+            Listen in YouTube
+          </button>
+        </div>
       </motion.article>
 
       {/* Gated Preview Modal Overlay */}
@@ -843,22 +955,129 @@ export default function BookCard({ book }) {
         )}
       </AnimatePresence>
 
-      {/* Auth gate: shown when unauthenticated user clicks Open Preview */}
+      <AnimatePresence>
+        {showPhysicalOrder && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
+            onClick={() => setShowPhysicalOrder(false)}
+          >
+            <motion.form
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              onSubmit={submitPhysicalOrder}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-zinc-950 p-6 shadow-glow custom-scrollbar"
+            >
+              <div className="mb-5 flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-300">Delivery Request</p>
+                  <h3 className="mt-1 text-xl font-bold capitalize text-white">{physicalFormat} order</h3>
+                  <p className="mt-1 text-xs text-white/45">{book.title}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPhysicalOrder(false)}
+                  className="rounded-full p-2 text-white/50 transition hover:bg-white/10 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {physicalError && (
+                <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-xs text-red-300">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{physicalError}</span>
+                </div>
+              )}
+
+              {physicalSuccess && (
+                <div className="mb-4 flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-xs text-emerald-300">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{physicalSuccess}</span>
+                </div>
+              )}
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/50">C/O (Care Of)</label>
+                  <input value={deliveryForm.co} onChange={(e) => setDeliveryForm((f) => ({ ...f, co: e.target.value }))} placeholder="S/O Mr. Smith" className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/50">Country</label>
+                  <input value={deliveryForm.country} onChange={(e) => setDeliveryForm((f) => ({ ...f, country: e.target.value }))} className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/50">District *</label>
+                  <input required value={deliveryForm.district} onChange={(e) => setDeliveryForm((f) => ({ ...f, district: e.target.value }))} placeholder="West Tripura" className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/50">Block *</label>
+                  <input required value={deliveryForm.block} onChange={(e) => setDeliveryForm((f) => ({ ...f, block: e.target.value }))} placeholder="Jirania" className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/50">PIN Code *</label>
+                  <input required value={deliveryForm.pin} onChange={(e) => setDeliveryForm((f) => ({ ...f, pin: e.target.value.replace(/[^0-9]/g, "") }))} placeholder="799001" className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/50">Post Office</label>
+                  <input value={deliveryForm.postOffice} onChange={(e) => setDeliveryForm((f) => ({ ...f, postOffice: e.target.value }))} placeholder="Jirania P.O." className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/50">Nearby Landmark *</label>
+                  <input required value={deliveryForm.nearbyLocation} onChange={(e) => setDeliveryForm((f) => ({ ...f, nearbyLocation: e.target.value }))} placeholder="Near SBI Bank, school, temple, etc." className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none" />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={physicalLoading || Boolean(physicalSuccess)}
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-xs font-bold text-black transition hover:bg-cyan-50 disabled:opacity-50"
+              >
+                {physicalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : physicalSuccess ? "Request Submitted" : "Submit Delivery Request"}
+              </button>
+            </motion.form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Auth gate: shown when unauthenticated user clicks E-BOOK */}
       {showAuthModal && (
         <AuthModal
           initialTab="login"
           onClose={(user) => {
             setShowAuthModal(false);
-            if (user) {
-              // Re-run the preview check now that they're logged in
-              handleOpenPreview({ stopPropagation: () => {} });
+            if (!user) return;
+
+            if (authReturnAction.startsWith("physical:")) {
+              const format = authReturnAction.split(":")[1] || "paperback";
+              setPhysicalFormat(format);
+              setPhysicalError("");
+              setPhysicalSuccess("");
+              setShowPhysicalOrder(true);
+              return;
             }
+
+            handleOpenPreview({ stopPropagation: () => {} });
           }}
         />
       )}
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

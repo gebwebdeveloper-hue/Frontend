@@ -466,3 +466,29 @@ a {
 }
 
 
+
+.book-format-button {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.06);
+  cursor: default;
+}
+
+.book-format-button:disabled {
+  opacity: 0.78;
+}
+
+.book-format-button-active {
+  cursor: pointer;
+}
+
+.book-format-button-active:hover {
+  border-color: rgba(125, 249, 255, 0.3);
+  background: rgba(34, 211, 238, 0.1);
+  box-shadow: 0 0 22px rgba(34, 211, 238, 0.12), inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.book-format-button:disabled {
+  cursor: not-allowed;
+}
+

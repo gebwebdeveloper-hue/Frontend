@@ -45,7 +45,7 @@ export default function LibraryPage() {
               <p className="text-sm mt-2">Admin can upload books from the Admin panel.</p>
             </div>
           ) : (
-            <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-12 grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
               {books.filter(b => b._id).map((book) => (
                 <BookCard 
                   book={book} 
