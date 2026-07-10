@@ -6,10 +6,134 @@ import { Link } from "react-router-dom";
 import { API_BASE, SERVER_URL } from "../config.js";
 
 /* ─────────────────────────────────────────────
+   PDF Canvas Page-by-Page Renderer (for Mobile & Desktop)
+───────────────────────────────────────────── */
+function PdfCanvasViewer({ pdfUrl, pageNumber, onLoaded }) {
+  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [pdfDoc, setPdfDoc] = useState(null);
+  const renderTaskRef = useRef(null);
+
+  // Dynamic script loader for PDF.js
+  useEffect(() => {
+    let active = true;
+    const loadPdf = async () => {
+      if (!window.pdfjsLib) {
+        const script = document.createElement("script");
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js";
+        script.async = true;
+        document.body.appendChild(script);
+        await new Promise((resolve) => {
+          script.onload = resolve;
+        });
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+      }
+
+      if (!active) return;
+      const loadingTask = window.pdfjsLib.getDocument(pdfUrl);
+      const pdf = await loadingTask.promise;
+      
+      if (!active) return;
+      setPdfDoc(pdf);
+      onLoaded?.();
+    };
+
+    loadPdf().catch((err) => console.error("PDFJS Loading error:", err));
+
+    return () => {
+      active = false;
+    };
+  }, [pdfUrl, onLoaded]);
+
+  // Render current page when pageNumber or pdfDoc changes
+  useEffect(() => {
+    if (!pdfDoc) return;
+    let active = true;
+
+    const renderPage = async () => {
+      setPageLoading(true);
+      try {
+        const page = await pdfDoc.getPage(pageNumber);
+        if (!active) return;
+
+        // Cancel previous render if any
+        if (renderTaskRef.current) {
+          renderTaskRef.current.cancel();
+        }
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const context = canvas.getContext("2d");
+
+        // Responsive scaling - calculate viewport size to match container width
+        const containerWidth = containerRef.current?.clientWidth || window.innerWidth || 360;
+        const unscaledViewport = page.getViewport({ scale: 1.0 });
+        // Account for paddings/margins in container
+        const padWidth = Math.max(containerWidth - 24, 280);
+        const scale = padWidth / unscaledViewport.width;
+        const viewport = page.getViewport({ scale: Math.min(scale, 1.8) });
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport,
+        };
+
+        const renderTask = page.render(renderContext);
+        renderTaskRef.current = renderTask;
+        await renderTask.promise;
+        
+        if (active) setPageLoading(false);
+      } catch (err) {
+        if (err.name !== "RenderingCancelledException") {
+          console.error("PDF Page Render Error:", err);
+        }
+      }
+    };
+
+    renderPage();
+
+    // Listen to resize events to make page responsive
+    const handleResize = () => {
+      renderPage();
+    };
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      active = false;
+      window.removeEventListener("resize", handleResize);
+      if (renderTaskRef.current) {
+        renderTaskRef.current.cancel();
+      }
+    };
+  }, [pdfDoc, pageNumber]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative flex h-full w-full flex-col items-center justify-start overflow-y-auto bg-zinc-900/60 p-4"
+    >
+      {pageLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-[10] backdrop-blur-sm">
+          <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+        </div>
+      )}
+      <canvas
+        ref={canvasRef}
+        className="mx-auto rounded-lg shadow-2xl bg-white max-w-full select-none"
+        onContextMenu={(e) => e.preventDefault()}
+      />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    PDF Reader Modal
 ───────────────────────────────────────────── */
 function PdfReaderModal({ bookId, bookTitle, totalPages, initialProgress, onClose, onProgressUpdate }) {
-  const iframeRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [pdfUrl, setPdfUrl] = useState(null);
@@ -218,13 +342,10 @@ function PdfReaderModal({ bookId, bookTitle, totalPages, initialProgress, onClos
           )}
 
           {pdfUrl && !error && (
-            <iframe
-              ref={iframeRef}
-              src={`${pdfUrl}#page=${currentPage}`}
-              title={bookTitle}
-              onLoad={() => setLoading(false)}
-              className="h-full w-full border-0"
-              style={{ background: "#1a1a1a" }}
+            <PdfCanvasViewer
+              pdfUrl={pdfUrl}
+              pageNumber={currentPage}
+              onLoaded={() => setLoading(false)}
             />
           )}
         </div>
