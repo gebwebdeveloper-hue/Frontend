@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Star, Loader2, AlertCircle, CheckCircle2, Copy, Smartphone, Mail, KeyRound, ShieldCheck, Coins, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -475,9 +476,10 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
       </motion.article>
 
       {/* Gated Preview Modal Overlay */}
-      <AnimatePresence>
-        {showReader && (
-          <motion.div
+      {createPortal(
+        <AnimatePresence>
+          {showReader && (
+            <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -953,8 +955,11 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
 
+    {createPortal(
       <AnimatePresence>
         {showPhysicalOrder && (
           <motion.div
@@ -1042,9 +1047,11 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
             </motion.form>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
       {/* Auth gate: shown when unauthenticated user clicks E-BOOK */}
-      {showAuthModal && (
+      {showAuthModal && createPortal(
         <AuthModal
           initialTab="login"
           onClose={(user) => {
@@ -1062,7 +1069,8 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
 
             handleOpenPreview({ stopPropagation: () => {} });
           }}
-        />
+        />,
+        document.body
       )}
     </>
   );
