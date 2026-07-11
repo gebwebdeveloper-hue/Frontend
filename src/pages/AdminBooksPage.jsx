@@ -43,13 +43,14 @@ export default function AdminBooksPage() {
   const [author, setAuthor] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("10");
-  const [category, setCategory] = useState("AI");
+  const [category, setCategory] = useState("Story");
   const [pages, setPages] = useState("100");
   const [language, setLanguage] = useState("English");
   const [tags, setTags] = useState("");
   const [featured, setFeatured] = useState(false);
   const [trending, setTrending] = useState(false);
   const [ourPublication, setOurPublication] = useState(false);
+  const [editingBook, setEditingBook] = useState(null);
 
   // File states
   const [coverFile, setCoverFile] = useState(null);
@@ -329,6 +330,48 @@ export default function AdminBooksPage() {
       .catch(() => alert("Failed to complete delete request."));
   };
 
+  const resetBookForm = () => {
+    setTitle("");
+    setAuthor("");
+    setDescription("");
+    setPrice("10");
+    setCategory("Story");
+    setPages("100");
+    setLanguage("English");
+    setTags("");
+    setFeatured(false);
+    setTrending(false);
+    setOurPublication(false);
+    setCoverFile(null);
+    setPdfFile(null);
+    setPreviewPdfFile(null);
+    setPreviewImagesFiles([]);
+    setEditingBook(null);
+  };
+
+  const handleEditBook = (book) => {
+    setFormError("");
+    setFormSuccess("");
+    setEditingBook(book);
+
+    setTitle(book.title || "");
+    setAuthor(book.author || "");
+    setDescription(book.description || "");
+    setPrice(String(book.price || "0"));
+    setCategory(book.category || "AI");
+    setPages(String(book.pages || "1"));
+    setLanguage(book.language || "English");
+    setTags(book.tags ? book.tags.join(", ") : "");
+    setFeatured(book.featured || false);
+    setTrending(book.trending || false);
+    setOurPublication(book.ourPublication || false);
+
+    setCoverFile(null);
+    setPdfFile(null);
+    setPreviewPdfFile(null);
+    setPreviewImagesFiles([]);
+  };
+
   const handleCreateBook = (e) => {
     e.preventDefault();
     setFormError("");
@@ -338,11 +381,11 @@ export default function AdminBooksPage() {
       setFormError("All basic book metadata fields are required.");
       return;
     }
-    if (!coverFile) {
+    if (!editingBook && !coverFile) {
       setFormError("A cover image is required.");
       return;
     }
-    if (!pdfFile) {
+    if (!editingBook && !pdfFile) {
       setFormError("A full PDF document is required.");
       return;
     }
@@ -362,8 +405,12 @@ export default function AdminBooksPage() {
     formData.append("trending", String(trending));
     formData.append("ourPublication", String(ourPublication));
 
-    formData.append("cover", coverFile);
-    formData.append("pdf", pdfFile);
+    if (coverFile) {
+      formData.append("cover", coverFile);
+    }
+    if (pdfFile) {
+      formData.append("pdf", pdfFile);
+    }
     if (previewPdfFile) {
       formData.append("previewPdf", previewPdfFile);
     }
@@ -371,37 +418,25 @@ export default function AdminBooksPage() {
       formData.append("previewImages", file);
     });
 
-    fetch(`${API_BASE}/books`, {
-      method: "POST",
+    const url = editingBook ? `${API_BASE}/books/${editingBook._id}` : `${API_BASE}/books`;
+    const method = editingBook ? "PUT" : "POST";
+
+    fetch(url, {
+      method,
       body: formData,
       credentials: "include"
     })
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
-          setFormSuccess("Book uploaded successfully!");
-          // Reset form fields
-          setTitle("");
-          setAuthor("");
-          setDescription("");
-          setPrice("10");
-          setCategory("AI");
-          setPages("100");
-          setTags("");
-          setFeatured(false);
-          setTrending(false);
-          setOurPublication(false);
-          setCoverFile(null);
-          setPdfFile(null);
-          setPreviewPdfFile(null);
-          setPreviewImagesFiles([]);
-          // Refresh list
+          setFormSuccess(editingBook ? "Book updated successfully!" : "Book uploaded successfully!");
+          resetBookForm();
           fetchBooks();
         } else {
           const detailsStr = data.details
             ? " Details: " + data.details.map((d) => `${d.path}: ${d.message}`).join(", ")
             : "";
-          setFormError((data.message || "Failed to upload book.") + detailsStr);
+          setFormError((data.message || (editingBook ? "Failed to update book." : "Failed to upload book.")) + detailsStr);
         }
       })
       .catch(() => setFormError("Failed to upload book. Check connection to server."))
@@ -585,9 +620,24 @@ export default function AdminBooksPage() {
                 <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
                   {/* LEFT: BOOK UPLOADER */}
                   <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
-                    <div className="border-b border-white/10 pb-6 mb-8">
-                      <h2 className="text-2xl font-bold text-white">Upload Ebook</h2>
-                      <p className="mt-1 text-sm text-white/55">Add a new book to the platform database.</p>
+                    <div className="border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-bold text-white">
+                          {editingBook ? "Edit Ebook" : "Upload Ebook"}
+                        </h2>
+                        <p className="mt-1 text-sm text-white/55">
+                          {editingBook ? `Editing details for: ${editingBook.title}` : "Add a new book to the platform database."}
+                        </p>
+                      </div>
+                      {editingBook && (
+                        <button
+                          type="button"
+                          onClick={resetBookForm}
+                          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/60 hover:text-white transition"
+                        >
+                          <X size={13} /> Cancel Edit
+                        </button>
+                      )}
                     </div>
 
                     {formError && (
@@ -612,7 +662,7 @@ export default function AdminBooksPage() {
                             required
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            placeholder="Systems of Thought"
+                            placeholder="e.g. Pather Panchali"
                             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
                           />
                         </div>
@@ -681,15 +731,18 @@ export default function AdminBooksPage() {
                           <select
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-[#151515] px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
+                            style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
                           >
-                            <option value="AI">AI</option>
-                            <option value="Business">Business</option>
-                            <option value="Design">Design</option>
-                            <option value="Finance">Finance</option>
-                            <option value="Programming">Programming</option>
-                            <option value="Cyber Security">Cyber Security</option>
-                            <option value="Self Improvement">Self Improvement</option>
+                            <option value="Story" style={{ background: "#0a0a0a" }}>Story</option>
+                            <option value="Poem" style={{ background: "#0a0a0a" }}>Poem</option>
+                            <option value="Folklore" style={{ background: "#0a0a0a" }}>Folklore</option>
+                            <option value="Novel" style={{ background: "#0a0a0a" }}>Novel</option>
+                            <option value="Drama" style={{ background: "#0a0a0a" }}>Drama</option>
+                            <option value="Biography" style={{ background: "#0a0a0a" }}>Biography</option>
+                            <option value="Essay" style={{ background: "#0a0a0a" }}>Essay</option>
+                            <option value="Children Literature" style={{ background: "#0a0a0a" }}>Children Literature</option>
+                            <option value="Other" style={{ background: "#0a0a0a" }}>Other</option>
                           </select>
                         </div>
                         <div>
@@ -723,7 +776,7 @@ export default function AdminBooksPage() {
                               onChange={(e) => setFeatured(e.target.checked)}
                               className="h-5 w-5 rounded border-white/10 bg-white/5 text-cyan-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
                             />
-                            Featured Book
+                            Bestselling Book
                           </label>
                           <label className="flex items-center gap-3 cursor-pointer text-sm text-white/80">
                             <input
@@ -753,7 +806,7 @@ export default function AdminBooksPage() {
                           <div className="relative flex items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-center hover:bg-white/10 transition">
                             <input
                               type="file"
-                              required
+                              required={!editingBook}
                               accept="image/*"
                               onChange={(e) => setCoverFile(e.target.files[0])}
                               className="absolute inset-0 opacity-0 cursor-pointer"
@@ -770,7 +823,7 @@ export default function AdminBooksPage() {
                           <div className="relative flex items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-center hover:bg-white/10 transition">
                             <input
                               type="file"
-                              required
+                              required={!editingBook}
                               accept="application/pdf"
                               onChange={(e) => setPdfFile(e.target.files[0])}
                               className="absolute inset-0 opacity-0 cursor-pointer"
@@ -826,11 +879,11 @@ export default function AdminBooksPage() {
                       >
                         {submittingBook ? (
                           <>
-                            <Loader2 className="h-5 w-5 animate-spin" /> Uploading & Processing...
+                            <Loader2 className="h-5 w-5 animate-spin" /> {editingBook ? "Saving Changes..." : "Uploading & Processing..."}
                           </>
                         ) : (
                           <>
-                            <Upload size={18} /> Upload Ebook
+                            <Upload size={18} /> {editingBook ? "Save Changes" : "Upload Ebook"}
                           </>
                         )}
                       </button>
@@ -876,12 +929,22 @@ export default function AdminBooksPage() {
                                 {book.category}
                               </span>
                             </div>
-                            <button
-                              onClick={() => handleDeleteBook(book._id)}
-                              className="grid h-9 w-9 place-items-center rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleEditBook(book)}
+                                className="grid h-9 w-9 place-items-center rounded-xl bg-cyan-400/10 text-cyan-300 hover:bg-cyan-400 hover:text-black transition"
+                                title="Edit Ebook details"
+                              >
+                                <Pencil size={15} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteBook(book._id)}
+                                className="grid h-9 w-9 place-items-center rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition"
+                                title="Delete Ebook"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>

@@ -9,7 +9,7 @@ export default function LibraryFeaturedSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/books?featured=true&limit=20`)
+    fetch(`${API_BASE}/books?trending=true&limit=20`)
       .then((r) => r.json())
       .then((data) => {
         if (data.success) setBooks(data.books || []);
@@ -38,8 +38,8 @@ export default function LibraryFeaturedSection() {
       {/* Header */}
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-fuchsia-300/80">Curated Picks</p>
-          <h2 className="mt-1 text-xl font-bold text-white">Featured eBooks</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-fuchsia-300/80">Trending Now</p>
+          <h2 className="mt-1 text-xl font-bold text-white">Trending eBooks</h2>
         </div>
       </div>
 

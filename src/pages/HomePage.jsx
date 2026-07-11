@@ -3,9 +3,6 @@ import HeroSection from "../sections/HeroSection.jsx";
 import FeaturedBooksSection from "../sections/FeaturedBooksSection.jsx";
 import CategoriesSection from "../sections/CategoriesSection.jsx";
 import BestsellingBooksSection from "../sections/BestsellingBooksSection.jsx";
-import ReadingExperienceSection from "../sections/ReadingExperienceSection.jsx";
-import BestsellerShowcaseSection from "../sections/BestsellerShowcaseSection.jsx";
-import ReadingDevicesSection from "../sections/ReadingDevicesSection.jsx";
 import TestimonialsSection from "../sections/TestimonialsSection.jsx";
 import FaqSection from "../sections/FaqSection.jsx";
 import CtaSection from "../sections/CtaSection.jsx";
@@ -18,9 +15,6 @@ export default function HomePage() {
       <FeaturedBooksSection />
       <CategoriesSection />
       <BestsellingBooksSection />
-      <ReadingExperienceSection />
-      <BestsellerShowcaseSection />
-      <ReadingDevicesSection />
       <TestimonialsSection />
       <div id="faq"><FaqSection /></div>
       <CtaSection />

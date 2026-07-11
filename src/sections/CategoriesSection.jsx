@@ -15,14 +15,14 @@ export default function CategoriesSection() {
   const scope = useGsapReveal({ stagger: 0.06, y: 24 });
 
   return (
-    <section ref={scope} className="section-shell relative overflow-hidden">
+    <section ref={scope} className="section-shell relative overflow-hidden !pt-8 md:!pt-12 !pb-8 md:!pb-12">
       <div className="pointer-events-none absolute left-0 top-20 h-80 w-80 rounded-full bg-cyan-500/10 blur-[140px]" />
       <div className="pointer-events-none absolute right-0 bottom-0 h-80 w-80 rounded-full bg-fuchsia-500/10 blur-[150px]" />
 
       <div className="relative z-10 rounded-lg border border-white/10 bg-white/[0.045] p-6 text-center shadow-card backdrop-blur-xl md:p-10">
         <motion.div data-reveal>
           <p className="text-sm font-bold uppercase tracking-[0.5em] text-cyan-300/75">Lekhok Tripura Club</p>
-          <h2 className="mt-5 bg-gradient-to-r from-cyan-300 via-white to-fuchsia-300 bg-clip-text text-4xl font-black uppercase tracking-[0.08em] text-transparent md:text-6xl">
+          <h2 className="mt-5 bg-gradient-to-r from-cyan-300 via-white to-fuchsia-300 bg-clip-text text-4xl font-black uppercase tracking-[0.08em] text-transparent md:text-6xl animate-text-gradient select-none">
             Readers & Writers Club
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/65 md:text-lg">

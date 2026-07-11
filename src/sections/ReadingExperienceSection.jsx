@@ -39,7 +39,7 @@ const features = [
 
 export default function ReadingExperienceSection() {
   return (
-    <section className="relative overflow-hidden py-28">
+    <section className="relative overflow-hidden py-0">
 
       {/* Background Glow */}
 
@@ -47,7 +47,7 @@ export default function ReadingExperienceSection() {
 
       <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-violet-500/10 blur-[170px]" />
 
-      <div className="section-shell">
+      <div className="section-shell !pt-8 md:!pt-12">
 
         <SectionHeading
           eyebrow="Premium Reader"

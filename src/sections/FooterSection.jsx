@@ -1,7 +1,7 @@
 import {
-  Github,
+  Facebook,
   Instagram,
-  Linkedin,
+  Youtube,
   Send,
   ArrowUpRight,
   BookOpen,
@@ -11,16 +11,16 @@ import { motion } from "framer-motion";
 
 const social = [
   {
-    icon: Github,
-    href: "#",
+    icon: Facebook,
+    href: "https://www.facebook.com/share/1DLfEnitkJ/",
   },
   {
     icon: Instagram,
-    href: "#",
+    href: "https://www.instagram.com/lekhok_tripura_publishers?igsh=MTJmMTZjcnVwM3NyeQ==",
   },
   {
-    icon: Linkedin,
-    href: "#",
+    icon: Youtube,
+    href: "https://youtube.com/@lekhoktripura?si=1dc97jaclcr8Gzs2",
   },
 ];
 
@@ -109,23 +109,22 @@ export default function FooterSection() {
             <div className="space-y-4">
 
               {[
-                "Library",
-                "Reader",
-                "Categories",
-                "Bestsellers",
+                { name: "Library", to: "/library" },
+                { name: "Publish with Us", to: "/reader" },
+                { name: "Admin Dashboard", to: "/admin" }
               ].map((item) => (
 
                 <Link
-                  key={item}
-                  to="/library"
-                  className="group flex items-center justify-between text-white/60 transition hover:text-white"
+                  key={item.name}
+                  to={item.to}
+                  className="group flex items-center justify-between text-white/60 transition hover:text-cyan-400"
                 >
 
-                  {item}
+                  {item.name}
 
                   <ArrowUpRight
                     size={16}
-                    className="opacity-0 transition group-hover:opacity-100"
+                    className="opacity-0 transition group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                   />
 
                 </Link>
@@ -235,7 +234,7 @@ export default function FooterSection() {
         <div className="flex flex-col gap-6 text-sm text-white/45 md:flex-row md:items-center md:justify-between">
 
           <p>
-            © 2026 LEKHAK. All rights reserved.
+            © 2026 LEKHAK TRIPURA. All rights reserved.
           </p>
 
           <div className="flex gap-8">

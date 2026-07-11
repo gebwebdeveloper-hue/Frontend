@@ -60,14 +60,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
   };
 
   const handleOpenPreview = async (e) => {
-    e.stopPropagation();
     if (e && e.stopPropagation) e.stopPropagation();
-    
-    // Redirect to library page if not already there
-    if (location.pathname !== "/library") {
-      navigate("/library");
-      return;
-    }
     
     // Show Details modal immediately!
     setShowReader(true);
@@ -394,11 +387,12 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
   return (
     <>
       <motion.article
-        className="premium-book-card group relative overflow-hidden rounded-lg p-3 animate-fade-in"
+        className="premium-book-card group relative overflow-hidden rounded-lg p-3 animate-fade-in cursor-pointer select-none"
         whileHover={{ y: -10, rotateX: 4, rotateY: -4, scale: 1.02 }}
         transition={{ type: "spring", stiffness: 220, damping: 18 }}
+        onClick={handleOpenPreview}
       >
-        <div className="book-cover-frame relative mb-3 aspect-[3/4] overflow-hidden rounded-md bg-zinc-900">
+        <div className="book-cover-frame relative mb-3 aspect-[3/4] overflow-hidden rounded-md bg-zinc-900 shadow-md">
           {book.cover?.url ? (
             <img
               src={book.cover.url.startsWith("http") ? book.cover.url : `${SERVER_URL}${book.cover.url}`}
@@ -415,6 +409,12 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
               </div>
             </div>
           )}
+          {/* Hover overlay details button */}
+          <div className="absolute inset-0 bg-black/60 opacity-0 transition-all duration-300 group-hover:opacity-100 flex items-center justify-center pointer-events-none">
+            <span className="rounded-full bg-white/95 px-5 py-2.5 text-[11px] font-extrabold uppercase tracking-wider text-black shadow-glow transform translate-y-3 transition-all duration-300 group-hover:translate-y-0">
+              Preview Ebook
+            </span>
+          </div>
         </div>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -441,37 +441,6 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
         <div className="mt-2 flex items-center justify-between text-xs text-white/[0.58]">
           <span className="book-rating-pill flex items-center gap-1 text-amber-100"><Star size={12} fill="currentColor" /> {book.rating || "4.9"}</span>
           <span>{book.pages} pages</span>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={handleOpenPreview}
-            className="book-card-action flex items-center justify-center rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-black transition hover:scale-[1.03] active:scale-[0.98]"
-          >
-            E-BOOK
-          </button>
-          <button
-            type="button"
-            onClick={() => openPhysicalOrder("paperback")}
-            className="book-format-button book-format-button-active flex items-center justify-center rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white/80 transition hover:text-white"
-          >
-            Paperback
-          </button>
-          <button
-            type="button"
-            onClick={() => openPhysicalOrder("hardcover")}
-            className="book-format-button book-format-button-active flex items-center justify-center rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white/80 transition hover:text-white"
-          >
-            Hardcover
-          </button>
-          <button
-            type="button"
-            disabled
-            className="book-format-button flex items-center justify-center rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.04em] text-white/55"
-            title="YouTube listening option is not available yet"
-          >
-            Listen in YouTube
-          </button>
         </div>
       </motion.article>
 
@@ -577,34 +546,69 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                         </div>
                       </div>
 
-                      {/* Action buttons */}
+                      {/* Available Formats Grid */}
                       <div className="mt-6 border-t border-white/5 pt-4">
-                        {accessCheckLoading ? (
-                          <button disabled className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 py-3.5 text-sm font-semibold text-white/40">
-                            <Loader2 className="h-4 w-4 animate-spin" /> Verifying Access...
-                          </button>
-                        ) : accessStatus === "approved" ? (
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-3">Available Formats</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* E-BOOK */}
+                          {accessCheckLoading ? (
+                            <button disabled className="flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 py-3 text-xs font-semibold text-white/40">
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-400" /> Verifying Access...
+                            </button>
+                          ) : accessStatus === "approved" ? (
+                            <button
+                              type="button"
+                              onClick={() => setModalStep("pdf")}
+                              className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 py-3 text-xs font-bold text-black hover:scale-[1.01] transition shadow-lg shadow-cyan-500/10"
+                            >
+                              Read E-Book
+                            </button>
+                          ) : accessStatus === "pending" ? (
+                            <button
+                              type="button"
+                              onClick={() => setModalStep("pending")}
+                              className="flex items-center justify-center gap-2 rounded-xl bg-amber-400/10 border border-amber-400/20 py-3 text-xs font-bold text-amber-300 hover:bg-amber-400/20 transition"
+                            >
+                              E-Book Pending
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleDetailsPurchaseAction}
+                              className="flex items-center justify-center gap-2 rounded-xl bg-white py-3 text-xs font-bold text-black hover:bg-cyan-50 transition"
+                            >
+                              E-Book ({formatPrice(book.price)})
+                            </button>
+                          )}
+
+                          {/* Paperback */}
                           <button
-                            onClick={() => setModalStep("pdf")}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 py-3.5 text-sm font-bold text-black hover:scale-[1.01] transition shadow-lg shadow-cyan-500/10"
+                            type="button"
+                            onClick={() => openPhysicalOrder("paperback")}
+                            className="book-format-button book-format-button-active flex items-center justify-center rounded-xl border border-white/10 bg-white/5 py-3 text-xs font-bold uppercase tracking-[0.04em] text-white/80 transition hover:bg-white/10 hover:text-white"
                           >
-                            Start Reading Ebook Now
+                            Paperback
                           </button>
-                        ) : accessStatus === "pending" ? (
+
+                          {/* Hardcover */}
                           <button
-                            onClick={() => setModalStep("pending")}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-400/10 border border-amber-400/20 py-3.5 text-sm font-bold text-amber-300 hover:bg-amber-400/20 transition"
+                            type="button"
+                            onClick={() => openPhysicalOrder("hardcover")}
+                            className="book-format-button book-format-button-active flex items-center justify-center rounded-xl border border-white/10 bg-white/5 py-3 text-xs font-bold uppercase tracking-[0.04em] text-white/80 transition hover:bg-white/10 hover:text-white"
                           >
-                            Access Request Pending (View Details)
+                            Hardcover
                           </button>
-                        ) : (
+
+                          {/* Listen in YouTube */}
                           <button
-                            onClick={handleDetailsPurchaseAction}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3.5 text-sm font-bold text-black hover:bg-cyan-50 transition"
+                            type="button"
+                            disabled
+                            className="book-format-button flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/40 cursor-not-allowed"
+                            title="YouTube listening option is not available yet"
                           >
-                            Purchase Now for {formatPrice(book.price)}
+                            Listen in YouTube
                           </button>
-                        )}
+                        </div>
                       </div>
                     </div>
                   </div>

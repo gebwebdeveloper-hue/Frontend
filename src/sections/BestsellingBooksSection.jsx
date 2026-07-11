@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { ArrowRight, Star, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import BookCard from "../components/BookCard.jsx";
@@ -9,19 +9,13 @@ import { API_BASE } from "../config.js";
 export default function BestsellingBooksSection() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedAuthor, setSelectedAuthor] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/books?trending=true`)
+    fetch(`${API_BASE}/books?featured=true`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.books) {
           setBooks(data.books);
-          // Find first available author
-          const firstAuthor = data.books.find((b) => b.author)?.author;
-          if (firstAuthor) {
-            setSelectedAuthor(firstAuthor);
-          }
         }
       })
       .catch(() => {})
@@ -30,25 +24,6 @@ export default function BestsellingBooksSection() {
       });
   }, []);
 
-  const authors = useMemo(() => {
-    const authorMap = new Map();
-    books.forEach((book) => {
-      if (!book.author) return;
-      const current = authorMap.get(book.author) || 0;
-      authorMap.set(book.author, current + 1);
-    });
-    return Array.from(authorMap, ([name, count]) => ({ name, count }));
-  }, [books]);
-
-  const displayedBooks = useMemo(() => {
-    if (!selectedAuthor) return [];
-    return books.filter((book) => book.author === selectedAuthor);
-  }, [books, selectedAuthor]);
-
-  const handleAuthorClick = (author) => {
-    setSelectedAuthor(author);
-  };
-
   const scope = useGsapReveal({
     stagger: 0.08,
   });
@@ -56,13 +31,13 @@ export default function BestsellingBooksSection() {
   return (
     <section
       ref={scope}
-      className="relative w-full overflow-hidden border-t border-white/5 py-24"
+      className="relative w-full overflow-hidden border-t border-white/5 py-0"
     >
       {/* Background Glow */}
       <div className="pointer-events-none absolute left-0 top-24 h-72 w-72 rounded-full bg-indigo-500/10 blur-[120px]" />
       <div className="pointer-events-none absolute right-0 bottom-0 h-80 w-80 rounded-full bg-cyan-500/10 blur-[140px]" />
 
-      <div className="section-shell relative">
+      <div className="section-shell relative !pt-8 md:!pt-12">
         {/* Top Header */}
         <div className="mb-16 flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -97,102 +72,43 @@ export default function BestsellingBooksSection() {
           </div>
         </div>
 
-        {/* Authors Selector */}
-        <div className="mb-12">
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-indigo-200/75">Select Author</p>
-              <h3 className="mt-2 text-2xl font-bold text-white md:text-3xl">Choose an author to view bestselling books</h3>
-            </div>
-            {selectedAuthor && (
-              <button
-                type="button"
-                onClick={() => setSelectedAuthor(null)}
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-cyan-300/30 hover:bg-white/15"
-              >
-                <X size={15} /> Clear selection
-              </button>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-4">
-            {loading && (
-              <div className="rounded-full border border-white/10 bg-white/[0.055] px-6 py-3 text-sm font-semibold text-white/50">
-                Loading authors...
+        {/* Books Carousel Row */}
+        <div className="relative rounded-[2.5rem] border border-white/5 bg-white/[0.015] p-8 md:p-10 backdrop-blur-3xl overflow-hidden shadow-2xl">
+          {/* Subtle Grid Pattern Overlay */}
+          <div className="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-overlay bg-[linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:24px_24px]" />
+          
+          {/* Glowing Gradient blob behind books */}
+          <div className="pointer-events-none absolute -inset-10 bg-[radial-gradient(circle_at_50%_110%,rgba(99,102,241,0.12),rgba(6,182,212,0.08)_40%,transparent_70%)] opacity-90 blur-3xl" />
+          
+          <div className="relative z-10">
+            {loading ? (
+              <div className="flex gap-7 overflow-x-auto pb-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-[380px] w-[210px] shrink-0 animate-pulse rounded-2xl bg-white/5 sm:w-[245px]" />
+                ))}
               </div>
-            )}
-
-            {!loading && authors.length === 0 && (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.045] px-5 py-4 text-sm text-white/55">
-                No bestselling books available yet.
+            ) : books.length === 0 ? (
+              <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-6 py-12 text-center">
+                <BookOpen size={32} className="mx-auto mb-4 text-white/20" />
+                <p className="text-base font-semibold text-white/60">No bestselling books added yet</p>
+                <p className="mt-1 text-sm text-white/35">Trending books uploaded by admin will appear here.</p>
               </div>
-            )}
-
-            {!loading &&
-              authors.map((author) => {
-                const isActive = selectedAuthor === author.name;
-
-                return (
-                  <motion.button
-                    key={author.name}
-                    type="button"
-                    whileHover={{ y: -5, scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleAuthorClick(author.name)}
-                    className={`group relative overflow-hidden rounded-full border px-6 py-3 text-left text-base font-bold transition md:text-lg ${
-                      isActive
-                        ? "border-cyan-300/45 bg-cyan-300/15 text-cyan-100 shadow-[0_0_34px_rgba(34,211,238,0.22)]"
-                        : "border-indigo-300/20 bg-white/[0.055] text-indigo-100 hover:border-indigo-200/45 hover:bg-indigo-300/10 hover:shadow-[0_0_30px_rgba(99,102,241,0.18)]"
-                    }`}
+            ) : (
+              <div className="flex gap-7 overflow-x-auto pb-4 custom-scrollbar">
+                {books.map((book) => (
+                  <motion.div
+                    key={book._id || book.title}
+                    whileHover={{ y: -10 }}
+                    transition={{ type: "spring", stiffness: 220 }}
+                    className="w-[210px] shrink-0 sm:w-[245px]"
                   >
-                    <span className="relative z-10">{author.name}</span>
-                    <span className="relative z-10 ml-3 align-middle text-xs font-semibold text-white/45">
-                      {author.count} {author.count === 1 ? "book" : "books"}
-                    </span>
-                    <span className="absolute inset-x-4 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-200/80 to-transparent opacity-0 transition group-hover:opacity-100" />
-                  </motion.button>
-                );
-              })}
+                    <BookCard book={book} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Books List for Selected Author */}
-        {selectedAuthor && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.06] px-5 py-4 backdrop-blur-xl">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200/75">Bestselling Author</p>
-                <h3 className="mt-1 text-2xl font-bold text-white">
-                  <span className="text-cyan-200 drop-shadow-[0_0_16px_rgba(34,211,238,0.48)]">{selectedAuthor}</span>
-                </h3>
-              </div>
-              <span className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm font-semibold text-white/60">
-                {displayedBooks.length} {displayedBooks.length === 1 ? "title" : "titles"}
-              </span>
-            </div>
-
-            <div className="flex gap-7 overflow-x-auto pb-4 custom-scrollbar">
-              {displayedBooks.map((book) => (
-                <motion.div
-                  key={book._id || book.title}
-                  whileHover={{ y: -10 }}
-                  transition={{ type: "spring", stiffness: 220 }}
-                  className="w-[210px] shrink-0 sm:w-[245px]"
-                >
-                  <BookCard
-                    book={book}
-                    onAuthorClick={handleAuthorClick}
-                    isAuthorActive={selectedAuthor === book.author}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
       </div>
     </section>
   );

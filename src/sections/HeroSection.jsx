@@ -41,7 +41,7 @@ export default function HeroSection() {
         playsInline
         className="absolute inset-0 h-full w-full object-cover opacity-20 pointer-events-none z-0"
       >
-        <source src="/Persons_sitting_library_reading_…_202607101234.mp4" type="video/mp4" />
+        <source src="/Animated_map_zooming_into_book_202607112222.mp4" type="video/mp4" />
       </video>
 
       <div className="absolute left-0 top-0 h-[700px] w-[700px] rounded-full bg-cyan-500/10 blur-[180px] pointer-events-none" />
@@ -152,9 +152,9 @@ export default function HeroSection() {
         >
           <Link
             to="/library"
-            className="group flex items-center gap-2 rounded-full bg-white px-7 py-4 font-semibold text-black transition hover:scale-105"
+            className="group flex items-center gap-2 rounded-full bg-white px-8 py-4 font-bold text-black shadow-[0_0_24px_rgba(255,255,255,0.12)] transition hover:scale-105 hover:bg-cyan-50 hover:shadow-[0_0_36px_rgba(34,211,238,0.3)]"
           >
-            Explore Library
+            Read Books
 
             <ArrowRight
               size={18}
@@ -164,11 +164,11 @@ export default function HeroSection() {
 
           <Link
             to="/reader"
-            className="group flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-7 py-4 font-semibold text-white backdrop-blur-xl transition hover:bg-white/10"
+            className="group flex items-center gap-2.5 rounded-full border border-cyan-400/30 bg-cyan-400/5 px-8 py-4 font-bold text-cyan-200 transition hover:scale-105 hover:bg-cyan-400/10 hover:border-cyan-400/50 hover:text-white shadow-[0_0_20px_rgba(34,211,238,0.05)] hover:shadow-[0_0_30px_rgba(34,211,238,0.15)]"
           >
-            <Play size={18} />
+            <Sparkles size={16} className="text-cyan-300 transition group-hover:scale-110 group-hover:rotate-6" />
 
-            Live Demo
+            Publish your books
           </Link>
         </motion.div>
 

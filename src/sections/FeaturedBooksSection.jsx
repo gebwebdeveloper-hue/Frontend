@@ -73,7 +73,7 @@ export default function FeaturedBooksSection() {
       <div className="pointer-events-none absolute left-0 top-24 h-72 w-72 rounded-full bg-cyan-500/10 blur-[120px]" />
       <div className="pointer-events-none absolute right-0 bottom-0 h-80 w-80 rounded-full bg-fuchsia-500/10 blur-[140px]" />
 
-      <div className="section-shell">
+      <div className="section-shell !pb-8 md:!pb-12">
         {/* Top */}
         <div className="mb-16 flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -149,39 +149,42 @@ export default function FeaturedBooksSection() {
         </div>
 
         {/* Books Carousel Row */}
-        <div className="mb-14">
-          {loading ? (
-            <div className="flex gap-7 overflow-x-auto pb-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-[380px] w-[210px] shrink-0 animate-pulse rounded-2xl bg-white/5 sm:w-[245px]" />
-              ))}
-            </div>
-          ) : books.length === 0 ? (
-            <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-6 py-12 text-center">
-              <BookOpen size={32} className="mx-auto mb-4 text-white/20" />
-              <p className="text-base font-semibold text-white/60">No publications added yet</p>
-              <p className="mt-1 text-sm text-white/35">Featured books uploaded by admin will appear here.</p>
-            </div>
-          ) : (
-            <div className="flex gap-7 overflow-x-auto pb-4 custom-scrollbar">
-              {books.map((book) => (
-                <motion.div
-                  key={book._id || book.title}
-                  data-reveal
-                  whileHover={{
-                    y: -8,
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 220,
-                  }}
-                  className="w-[210px] shrink-0 sm:w-[245px]"
-                >
-                  <BookCard book={book} />
-                </motion.div>
-              ))}
-            </div>
-          )}
+        <div className="relative rounded-[2.5rem] border border-white/5 bg-white/[0.015] p-8 md:p-10 backdrop-blur-3xl overflow-hidden shadow-2xl mb-14">
+          {/* Subtle Grid Pattern Overlay */}
+          <div className="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-overlay bg-[linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:24px_24px]" />
+          
+          {/* Glowing Gradient blob behind books */}
+          <div className="pointer-events-none absolute -inset-10 bg-[radial-gradient(circle_at_50%_110%,rgba(99,102,241,0.12),rgba(6,182,212,0.08)_40%,transparent_70%)] opacity-90 blur-3xl" />
+          
+          <div className="relative z-10">
+            {loading ? (
+              <div className="flex gap-7 overflow-x-auto pb-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-[380px] w-[210px] shrink-0 animate-pulse rounded-2xl bg-white/5 sm:w-[245px]" />
+                ))}
+              </div>
+            ) : books.length === 0 ? (
+              <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-6 py-12 text-center">
+                <BookOpen size={32} className="mx-auto mb-4 text-white/20" />
+                <p className="text-base font-semibold text-white/60">No publications added yet</p>
+                <p className="mt-1 text-sm text-white/35">Featured books uploaded by admin will appear here.</p>
+              </div>
+            ) : (
+              <div className="flex gap-7 overflow-x-auto pb-4 custom-scrollbar">
+                {books.map((book) => (
+                  <motion.div
+                    key={book._id || book.title}
+                    data-reveal
+                    whileHover={{ y: -8 }}
+                    transition={{ type: "spring", stiffness: 220 }}
+                    className="w-[210px] shrink-0 sm:w-[245px]"
+                  >
+                    <BookCard book={book} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Bottom CTA */}
