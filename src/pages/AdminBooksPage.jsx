@@ -49,6 +49,7 @@ export default function AdminBooksPage() {
   const [tags, setTags] = useState("");
   const [featured, setFeatured] = useState(false);
   const [trending, setTrending] = useState(false);
+  const [ourPublication, setOurPublication] = useState(false);
 
   // File states
   const [coverFile, setCoverFile] = useState(null);
@@ -359,6 +360,7 @@ export default function AdminBooksPage() {
     formData.append("tags", tags);
     formData.append("featured", String(featured));
     formData.append("trending", String(trending));
+    formData.append("ourPublication", String(ourPublication));
 
     formData.append("cover", coverFile);
     formData.append("pdf", pdfFile);
@@ -388,6 +390,7 @@ export default function AdminBooksPage() {
           setTags("");
           setFeatured(false);
           setTrending(false);
+          setOurPublication(false);
           setCoverFile(null);
           setPdfFile(null);
           setPreviewPdfFile(null);
@@ -730,6 +733,15 @@ export default function AdminBooksPage() {
                               className="h-5 w-5 rounded border-white/10 bg-white/5 text-cyan-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
                             />
                             Trending Book
+                          </label>
+                          <label className="flex items-center gap-3 cursor-pointer text-sm text-white/80">
+                            <input
+                              type="checkbox"
+                              checked={ourPublication}
+                              onChange={(e) => setOurPublication(e.target.checked)}
+                              className="h-5 w-5 rounded border-white/10 bg-white/5 text-cyan-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
+                            />
+                            Our Publication
                           </label>
                         </div>
                       </div>
