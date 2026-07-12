@@ -52,7 +52,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
   // Transaction fields
   const [otp, setOtp] = useState("");
   const [transactionNumber, setTransactionNumber] = useState("");
-  const [upiConfig, setUpiConfig] = useState({ upiId: "kiransamanta88@okaxis", upiQrImageUrl: "" });
+  const [upiConfig, setUpiConfig] = useState({ upiId: "pritamchakrabrty@slc", upiQrImageUrl: "" });
 
   const formatPrice = (price) => {
     if (typeof price === "number") return `₹${price}`;
@@ -161,7 +161,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
         .then(data => {
           if (data.success) {
             setUpiConfig({
-              upiId: data.upiId || "kiransamanta88@okaxis",
+              upiId: data.upiId || "pritamchakrabrty@slc",
               upiQrImageUrl: data.upiQrImageUrl || ""
             });
           }
@@ -848,7 +848,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                               />
                             ) : (
                               <img 
-                                src="/Gpay-QR.jpeg" 
+                                src="/QR.jpeg" 
                                 alt="UPI QR" 
                                 className="h-32 w-32 object-contain rounded-xl border border-white/10 bg-white p-1" 
                               />

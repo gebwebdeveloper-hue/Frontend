@@ -302,7 +302,7 @@ export default function ReaderPage() {
         <section className="section-shell relative z-10 pb-16 text-center">
           <motion.div data-reveal>
             <p className="text-sm font-bold uppercase tracking-[0.5em] text-cyan-300/80">Publish with us</p>
-            <h1 className="mt-5 bg-gradient-to-r from-cyan-300 via-white to-fuchsia-300 bg-clip-text text-5xl font-black uppercase tracking-[0.06em] text-transparent md:text-7xl">
+            <h1 className="mt-5 bg-gradient-to-r from-cyan-300 via-white to-fuchsia-300 bg-clip-text text-5xl font-black uppercase tracking-[0.06em] text-transparent md:text-7xl animate-text-gradient">
               Bring Your Book To Readers
             </h1>
             <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-white/68 md:text-xl">

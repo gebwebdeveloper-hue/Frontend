@@ -30,6 +30,14 @@ export default function AdminBooksPage() {
   const [activeTab, setActiveTab] = useState("books"); // 'books', 'purchases', 'authors'
   const [adminNotes, setAdminNotes] = useState({});
 
+  // Payment configuration state
+  const [upiIdInput, setUpiIdInput] = useState("");
+  const [qrImageFile, setQrImageFile] = useState(null);
+  const [currentQrUrl, setCurrentQrUrl] = useState("");
+  const [loadingConfig, setLoadingConfig] = useState(false);
+  const [configSuccess, setConfigSuccess] = useState("");
+  const [configError, setConfigError] = useState("");
+
   // Author management state
   const [authorsList, setAuthorsList] = useState([]);
   const [loadingAuthors, setLoadingAuthors] = useState(false);
@@ -93,6 +101,7 @@ export default function AdminBooksPage() {
             fetchBooks();
             fetchPurchases();
             fetchAuthors();
+            fetchPaymentConfig();
           } else {
             setAuthError("Access denied. Admin permissions required.");
             setStep("login-email");
@@ -152,6 +161,59 @@ export default function AdminBooksPage() {
       })
       .catch(() => {})
       .finally(() => setLoadingAuthors(false));
+  };
+
+  const fetchPaymentConfig = () => {
+    fetch(`${API_BASE}/purchase/config`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setUpiIdInput(data.upiId || "");
+          setCurrentQrUrl(data.upiQrImageUrl || "");
+        }
+      })
+      .catch((err) => console.error("Error fetching payment config:", err));
+  };
+
+  const handleUpdatePaymentConfig = (e) => {
+    e.preventDefault();
+    setConfigSuccess("");
+    setConfigError("");
+    if (!upiIdInput.trim()) {
+      setConfigError("UPI ID is required.");
+      return;
+    }
+    setLoadingConfig(true);
+
+    const fd = new FormData();
+    fd.append("upiId", upiIdInput);
+    if (qrImageFile) {
+      fd.append("upiQrImage", qrImageFile);
+    }
+
+    fetch(`${API_BASE}/purchase/config`, {
+      method: "PUT",
+      body: fd,
+      credentials: "include"
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setConfigSuccess(data.message || "Payment configuration updated!");
+          setQrImageFile(null);
+          if (data.config) {
+            setUpiIdInput(data.config.upiId || "");
+            setCurrentQrUrl(data.config.upiQrImageUrl || "");
+          }
+        } else {
+          setConfigError(data.message || "Failed to update configuration.");
+        }
+      })
+      .catch((err) => {
+        console.error("Error updating payment config:", err);
+        setConfigError("Server error. Please try again.");
+      })
+      .finally(() => setLoadingConfig(false));
   };
 
   const handleAuthorFormChange = (field, value) => {
@@ -1046,11 +1108,13 @@ export default function AdminBooksPage() {
 
               {/* TAB 2: PURCHASE REQUESTS */}
               {activeTab === "purchases" && (
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
-                  <div className="border-b border-white/10 pb-6 mb-8">
-                    <h2 className="text-2xl font-bold text-white">Access Requests</h2>
-                    <p className="mt-1 text-sm text-white/55">Verify transaction numbers and approve ebook access for readers.</p>
-                  </div>
+                <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+                  {/* LEFT: Access Requests */}
+                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+                    <div className="border-b border-white/10 pb-6 mb-8">
+                      <h2 className="text-2xl font-bold text-white">Access Requests</h2>
+                      <p className="mt-1 text-sm text-white/55">Verify transaction numbers and approve ebook access for readers.</p>
+                    </div>
 
                   {loadingPurchases ? (
                     <div className="flex flex-col items-center justify-center py-16">
@@ -1203,7 +1267,86 @@ export default function AdminBooksPage() {
                     </div>
                   )}
                 </div>
-              )}
+
+                {/* RIGHT: Payment Config Settings */}
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl h-fit">
+                  <div className="border-b border-white/10 pb-6 mb-6">
+                    <h2 className="text-2xl font-bold text-white">Payment Configuration</h2>
+                    <p className="mt-1 text-sm text-white/55">Configure the active UPI ID and scanner QR code image.</p>
+                  </div>
+
+                  {configError && (
+                    <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-xs text-red-300">
+                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                      <span>{configError}</span>
+                    </div>
+                  )}
+
+                  {configSuccess && (
+                    <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-xs text-emerald-300">
+                      <span>{configSuccess}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleUpdatePaymentConfig} className="space-y-5">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Active UPI ID</label>
+                      <input
+                        type="text"
+                        required
+                        value={upiIdInput}
+                        onChange={(e) => setUpiIdInput(e.target.value)}
+                        placeholder="e.g. name@upi"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Scanner QR Code Image</label>
+                      
+                      {/* Current Scanner Image display */}
+                      {currentQrUrl && (
+                        <div className="mb-4 flex items-center justify-center p-3 rounded-xl border border-white/10 bg-white/5">
+                          <img
+                            src={currentQrUrl.startsWith("http") ? currentQrUrl : `${SERVER_URL}${currentQrUrl}`}
+                            alt="Current QR Code"
+                            className="h-32 w-32 object-contain rounded-lg bg-white p-1"
+                          />
+                        </div>
+                      )}
+
+                      <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-white/10 p-6 transition hover:border-cyan-400/30 hover:bg-white/[0.03]">
+                        {qrImageFile ? (
+                          <>
+                            <Upload size={20} className="text-cyan-300" />
+                            <span className="text-xs text-cyan-300 truncate max-w-full">{qrImageFile.name}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload size={20} className="text-white/30" />
+                            <span className="text-xs text-white/40">Select new QR image (JPEG/PNG/WEBP)</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={(e) => setQrImageFile(e.target.files[0] || null)}
+                        />
+                      </label>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loadingConfig}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black transition-all hover:scale-[1.02] disabled:opacity-50"
+                    >
+                      {loadingConfig ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : "Save Payment Config"}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
             </div>
           )}
 

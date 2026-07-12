@@ -7,7 +7,6 @@ import AdminBooksPage from "./pages/AdminBooksPage.jsx";
 import AdminDatabasePage from "./pages/AdminDatabasePage.jsx";
 import ClubPage from "./pages/ClubPage.jsx";
 import PageLoader from "./components/PageLoader.jsx";
-import CustomCursor from "./components/CustomCursor.jsx";
 import ScrollProgress from "./components/ScrollProgress.jsx";
 import BackToTop from "./components/BackToTop.jsx";
 import ScrollToTop from "./components/ScrollToTop.jsx";
@@ -22,7 +21,6 @@ export default function App() {
     <>
       <ScrollToTop />
       <PageLoader />
-      <CustomCursor />
       <ScrollProgress />
       <Navbar />
       <AnimatePresence mode="wait">
