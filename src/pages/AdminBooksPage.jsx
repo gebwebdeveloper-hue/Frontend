@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, BookOpen, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
 
 export default function AdminBooksPage() {
+  const location = useLocation();
   // Auth state
   const [user, setUser] = useState(null);
   const [step, setStep] = useState("check-auth"); // check-auth, login-email, login-otp, dashboard
@@ -103,6 +104,16 @@ export default function AdminBooksPage() {
         setStep("login-email");
       });
   }, []);
+
+  useEffect(() => {
+    if (location.state?.editBookId && booksList.length > 0) {
+      const bookToEdit = booksList.find((b) => b._id === location.state.editBookId);
+      if (bookToEdit) {
+        setActiveTab("books");
+        handleEditBook(bookToEdit);
+      }
+    }
+  }, [location.state?.editBookId, booksList]);
 
   const fetchBooks = () => {
     setLoadingBooks(true);
@@ -996,65 +1007,35 @@ export default function AdminBooksPage() {
                     </form>
                   </div>
 
-                  {/* RIGHT: DATABASE LISTING */}
-                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl flex flex-col h-full">
-                    <h2 className="text-2xl font-bold text-white border-b border-white/10 pb-6 mb-6">Database Ebooks</h2>
+                  {/* RIGHT: QUICK LINK TO DATABASE */}
+                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl flex flex-col gap-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-white mb-2">Database Ebooks</h2>
+                      <p className="text-sm text-white/45 leading-relaxed">
+                        Browse, search, and manage all published ebooks in the platform database.
+                        Filter by author name, category, or flags like Trending, Bestselling, Coming Soon, and Our Publication.
+                      </p>
+                    </div>
 
-                    {loadingBooks ? (
-                      <div className="flex flex-col items-center justify-center py-12 flex-1">
-                        <Loader2 className="h-8 w-8 animate-spin text-white/40 mb-3" />
-                        <p className="text-sm text-white/55">Loading books...</p>
+                    <div className="space-y-3">
+                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 flex items-center gap-3">
+                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cyan-400/10">
+                          <BookOpen size={16} className="text-cyan-300" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">{booksList.length} Books</p>
+                          <p className="text-xs text-white/40">currently in database</p>
+                        </div>
                       </div>
-                    ) : booksList.length === 0 ? (
-                      <div className="text-center py-12 flex-1 flex flex-col items-center justify-center text-white/40">
-                        <BookOpen size={48} className="mb-4 text-white/10" />
-                        <p>No books uploaded to the database yet.</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2 flex-1">
-                        {booksList.map((book) => (
-                          <div
-                            key={book._id}
-                            className="flex items-center gap-4 rounded-2xl border border-white/5 bg-white/5 p-4 transition hover:bg-white/[0.08]"
-                          >
-                            <div className="h-16 w-12 shrink-0 overflow-hidden rounded-md bg-zinc-900">
-                              {book.cover?.url ? (
-                                <img
-                                  src={book.cover.url.startsWith("http") ? book.cover.url : `${SERVER_URL}${book.cover.url}`}
-                                  alt={book.title}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <div className="h-full w-full bg-cyan-900" />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <h4 className="truncate font-semibold text-white">{book.title}</h4>
-                              <p className="truncate text-xs text-white/50">by {book.author}</p>
-                              <span className="mt-1 inline-block rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/70">
-                                {book.category}
-                              </span>
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleEditBook(book)}
-                                className="grid h-9 w-9 place-items-center rounded-xl bg-cyan-400/10 text-cyan-300 hover:bg-cyan-400 hover:text-black transition"
-                                title="Edit Ebook details"
-                              >
-                                <Pencil size={15} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteBook(book._id)}
-                                className="grid h-9 w-9 place-items-center rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition"
-                                title="Delete Ebook"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+
+                      <Link
+                        to="/admin/database"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 py-4 font-bold text-black hover:opacity-90 transition shadow-lg shadow-cyan-500/20 text-sm"
+                      >
+                        <BookOpen size={17} />
+                        Open Book Database
+                      </Link>
+                    </div>
                   </div>
                 </div>
               )}
