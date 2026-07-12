@@ -50,6 +50,7 @@ export default function AdminBooksPage() {
   const [featured, setFeatured] = useState(false);
   const [trending, setTrending] = useState(false);
   const [ourPublication, setOurPublication] = useState(false);
+  const [comingSoon, setComingSoon] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
 
   // File states
@@ -60,6 +61,19 @@ export default function AdminBooksPage() {
   const [formSuccess, setFormSuccess] = useState("");
   const [formError, setFormError] = useState("");
 
+  const MAX_FILE_MB = 10;
+  const MAX_FILE_SIZE = MAX_FILE_MB * 1024 * 1024; // 10 MB in bytes
+  const [fileSizeErrors, setFileSizeErrors] = useState({});
+
+  const checkFileSize = (file, key) => {
+    if (!file) return true;
+    if (file.size > MAX_FILE_SIZE) {
+      setFileSizeErrors((prev) => ({ ...prev, [key]: `File exceeds ${MAX_FILE_MB}MB limit (${(file.size / 1024 / 1024).toFixed(1)}MB)` }));
+      return false;
+    }
+    setFileSizeErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
+    return true;
+  };
 
 
   // Check authentication on mount
@@ -342,6 +356,7 @@ export default function AdminBooksPage() {
     setFeatured(false);
     setTrending(false);
     setOurPublication(false);
+    setComingSoon(false);
     setCoverFile(null);
     setPdfFile(null);
     setPreviewPdfFile(null);
@@ -365,6 +380,7 @@ export default function AdminBooksPage() {
     setFeatured(book.featured || false);
     setTrending(book.trending || false);
     setOurPublication(book.ourPublication || false);
+    setComingSoon(book.comingSoon || false);
 
     setCoverFile(null);
     setPdfFile(null);
@@ -385,8 +401,8 @@ export default function AdminBooksPage() {
       setFormError("A cover image is required.");
       return;
     }
-    if (!editingBook && !pdfFile) {
-      setFormError("A full PDF document is required.");
+    if (!editingBook && !comingSoon && !pdfFile) {
+      setFormError("A full PDF document is required (unless marked as Coming Soon).");
       return;
     }
 
@@ -396,14 +412,15 @@ export default function AdminBooksPage() {
     formData.append("title", title);
     formData.append("author", author);
     formData.append("description", description);
-    formData.append("price", price);
+    formData.append("price", comingSoon ? "0" : price);
     formData.append("category", category);
-    formData.append("pages", pages);
+    formData.append("pages", comingSoon ? "0" : pages);
     formData.append("language", language);
     formData.append("tags", tags);
     formData.append("featured", String(featured));
     formData.append("trending", String(trending));
     formData.append("ourPublication", String(ourPublication));
+    formData.append("comingSoon", String(comingSoon));
 
     if (coverFile) {
       formData.append("cover", coverFile);
@@ -705,25 +722,35 @@ export default function AdminBooksPage() {
 
                       <div className="grid gap-6 md:grid-cols-4">
                         <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Price (₹)</label>
+                          <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 transition-colors ${comingSoon ? "text-white/20" : "text-white/50"}`}>Price (₹)</label>
                           <input
                             type="number"
-                            required
+                            required={!comingSoon}
                             min="0"
-                            value={price}
+                            value={comingSoon ? "" : price}
+                            disabled={comingSoon}
                             onChange={(e) => setPrice(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                            className={`w-full rounded-xl border px-4 py-3 text-sm focus:outline-none transition-all ${
+                              comingSoon
+                                ? "border-white/5 bg-white/[0.02] text-white/20 cursor-not-allowed"
+                                : "border-white/10 bg-white/5 text-white focus:border-cyan-400/40 focus:bg-white/10"
+                            }`}
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Pages</label>
+                          <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 transition-colors ${comingSoon ? "text-white/20" : "text-white/50"}`}>Pages</label>
                           <input
                             type="number"
-                            required
+                            required={!comingSoon}
                             min="1"
-                            value={pages}
+                            value={comingSoon ? "" : pages}
+                            disabled={comingSoon}
                             onChange={(e) => setPages(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                            className={`w-full rounded-xl border px-4 py-3 text-sm focus:outline-none transition-all ${
+                              comingSoon
+                                ? "border-white/5 bg-white/[0.02] text-white/20 cursor-not-allowed"
+                                : "border-white/10 bg-white/5 text-white focus:border-cyan-400/40 focus:bg-white/10"
+                            }`}
                           />
                         </div>
                         <div>
@@ -747,13 +774,36 @@ export default function AdminBooksPage() {
                         </div>
                         <div>
                           <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Language</label>
-                          <input
-                            type="text"
-                            required
+                          <select
                             value={language}
                             onChange={(e) => setLanguage(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
-                          />
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
+                            style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
+                          >
+                            <option value="English" style={{ background: "#0a0a0a" }}>English</option>
+                            <option value="Bengali" style={{ background: "#0a0a0a" }}>Bengali (বাংলা)</option>
+                            <option value="Hindi" style={{ background: "#0a0a0a" }}>Hindi (हिन्दी)</option>
+                            <option value="Assamese" style={{ background: "#0a0a0a" }}>Assamese (অসমীয়া)</option>
+                            <option value="Gujarati" style={{ background: "#0a0a0a" }}>Gujarati (ગુજરાતી)</option>
+                            <option value="Kannada" style={{ background: "#0a0a0a" }}>Kannada (ಕನ್ನಡ)</option>
+                            <option value="Konkani" style={{ background: "#0a0a0a" }}>Konkani (कोंकणी)</option>
+                            <option value="Maithili" style={{ background: "#0a0a0a" }}>Maithili (मैथिली)</option>
+                            <option value="Malayalam" style={{ background: "#0a0a0a" }}>Malayalam (മലയാളം)</option>
+                            <option value="Manipuri" style={{ background: "#0a0a0a" }}>Manipuri (মণিপুরী)</option>
+                            <option value="Marathi" style={{ background: "#0a0a0a" }}>Marathi (मराठी)</option>
+                            <option value="Nepali" style={{ background: "#0a0a0a" }}>Nepali (नेपाली)</option>
+                            <option value="Odia" style={{ background: "#0a0a0a" }}>Odia (ଓଡ଼ିଆ)</option>
+                            <option value="Punjabi" style={{ background: "#0a0a0a" }}>Punjabi (ਪੰਜਾਬੀ)</option>
+                            <option value="Sanskrit" style={{ background: "#0a0a0a" }}>Sanskrit (संस्कृतम्)</option>
+                            <option value="Santali" style={{ background: "#0a0a0a" }}>Santali (ᱥᱟᱱᱛᱟᱲᱤ)</option>
+                            <option value="Sindhi" style={{ background: "#0a0a0a" }}>Sindhi (سنڌي)</option>
+                            <option value="Tamil" style={{ background: "#0a0a0a" }}>Tamil (தமிழ்)</option>
+                            <option value="Telugu" style={{ background: "#0a0a0a" }}>Telugu (తెలుగు)</option>
+                            <option value="Urdu" style={{ background: "#0a0a0a" }}>Urdu (اردو)</option>
+                            <option value="Bodo" style={{ background: "#0a0a0a" }}>Bodo (बड़ो)</option>
+                            <option value="Dogri" style={{ background: "#0a0a0a" }}>Dogri (डोगरी)</option>
+                            <option value="Kashmiri" style={{ background: "#0a0a0a" }}>Kashmiri (کٲشُر)</option>
+                          </select>
                         </div>
                       </div>
 
@@ -768,7 +818,7 @@ export default function AdminBooksPage() {
                             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
                           />
                         </div>
-                        <div className="flex gap-6 items-end h-full py-2">
+                        <div className="flex gap-4 flex-wrap items-end h-full py-2">
                           <label className="flex items-center gap-3 cursor-pointer text-sm text-white/80">
                             <input
                               type="checkbox"
@@ -796,41 +846,71 @@ export default function AdminBooksPage() {
                             />
                             Our Publication
                           </label>
+                          <label className="flex items-center gap-3 cursor-pointer text-sm text-amber-300/90">
+                            <input
+                              type="checkbox"
+                              checked={comingSoon}
+                              onChange={(e) => setComingSoon(e.target.checked)}
+                              className="h-5 w-5 rounded border-amber-400/20 bg-amber-400/5 text-amber-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
+                            />
+                            Coming Soon
+                          </label>
                         </div>
                       </div>
 
                       {/* File Upload Fields */}
                       <div className="grid gap-6 md:grid-cols-2 border-t border-white/10 pt-6">
                         <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Cover Image (JPEG/PNG/WEBP)</label>
-                          <div className="relative flex items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-center hover:bg-white/10 transition">
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Cover Image (JPEG/PNG/WEBP) <span className="text-white/30 normal-case font-normal">· Max {MAX_FILE_MB}MB</span></label>
+                          <div className={`relative flex items-center justify-center rounded-xl border border-dashed p-6 text-center transition ${fileSizeErrors.cover ? "border-red-400/40 bg-red-400/5" : "border-white/20 bg-white/5 hover:bg-white/10"}`}>
                             <input
                               type="file"
                               required={!editingBook}
                               accept="image/*"
-                              onChange={(e) => setCoverFile(e.target.files[0])}
+                              onChange={(e) => { const f = e.target.files[0]; if (checkFileSize(f, "cover")) setCoverFile(f); else { setCoverFile(null); e.target.value = ""; } }}
                               className="absolute inset-0 opacity-0 cursor-pointer"
                             />
                             <div className="space-y-1">
-                              <Upload className="mx-auto h-8 w-8 text-white/40" />
-                              <p className="text-xs text-white/60">{coverFile ? coverFile.name : "Select cover image file"}</p>
+                              <Upload className={`mx-auto h-8 w-8 ${fileSizeErrors.cover ? "text-red-400/60" : "text-white/40"}`} />
+                              {fileSizeErrors.cover ? (
+                                <p className="text-xs text-red-400 font-semibold">{fileSizeErrors.cover}</p>
+                              ) : (
+                                <>
+                                  <p className="text-xs text-white/60">{coverFile ? coverFile.name : "Select cover image file"}</p>
+                                  {coverFile && <p className="text-[10px] text-white/30">{(coverFile.size / 1024 / 1024).toFixed(2)}MB</p>}
+                                  {!coverFile && <p className="text-[10px] text-white/25">JPEG · PNG · WEBP · Max {MAX_FILE_MB}MB</p>}
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Full PDF Ebook (PDF)</label>
-                          <div className="relative flex items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-center hover:bg-white/10 transition">
+                          <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 transition-colors ${comingSoon ? "text-white/20" : "text-white/50"}`}>
+                            Full PDF Ebook (PDF) {!comingSoon && <span className="text-white/30 normal-case font-normal">· Max {MAX_FILE_MB}MB</span>}
+                          </label>
+                          <div className={`relative flex items-center justify-center rounded-xl border border-dashed p-6 text-center transition ${
+                            comingSoon ? "border-white/5 bg-white/[0.02] cursor-not-allowed opacity-40" : fileSizeErrors.pdf ? "border-red-400/40 bg-red-400/5" : "border-white/20 bg-white/5 hover:bg-white/10"
+                          }`}>
                             <input
                               type="file"
-                              required={!editingBook}
+                              required={!editingBook && !comingSoon}
                               accept="application/pdf"
-                              onChange={(e) => setPdfFile(e.target.files[0])}
-                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              disabled={comingSoon}
+                              onChange={(e) => { const f = e.target.files[0]; if (checkFileSize(f, "pdf")) setPdfFile(f); else { setPdfFile(null); e.target.value = ""; } }}
+                              className={`absolute inset-0 opacity-0 ${comingSoon ? "pointer-events-none" : "cursor-pointer"}`}
                             />
                             <div className="space-y-1">
-                              <Upload className="mx-auto h-8 w-8 text-white/40" />
-                              <p className="text-xs text-white/60">{pdfFile ? pdfFile.name : "Select full PDF document"}</p>
+                              <Upload className={`mx-auto h-8 w-8 ${comingSoon ? "text-white/20" : fileSizeErrors.pdf ? "text-red-400/60" : "text-white/40"}`} />
+                              {fileSizeErrors.pdf && !comingSoon ? (
+                                <p className="text-xs text-red-400 font-semibold">{fileSizeErrors.pdf}</p>
+                              ) : (
+                                <>
+                                  <p className={`text-xs ${comingSoon ? "text-white/20" : "text-white/60"}`}>{pdfFile && !comingSoon ? pdfFile.name : comingSoon ? "N/A — Coming Soon" : "Select full PDF document"}</p>
+                                  {pdfFile && !comingSoon && <p className="text-[10px] text-white/30">{(pdfFile.size / 1024 / 1024).toFixed(2)}MB</p>}
+                                  {!pdfFile && !comingSoon && <p className="text-[10px] text-white/25">PDF only · Max {MAX_FILE_MB}MB</p>}
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -839,34 +919,60 @@ export default function AdminBooksPage() {
                       {/* Optional File Fields */}
                       <div className="grid gap-6 md:grid-cols-2">
                         <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Preview PDF (Optional)</label>
-                          <div className="relative flex items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 p-4 text-center hover:bg-white/10 transition">
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Preview PDF (Optional) <span className="text-white/30 normal-case font-normal">· Max {MAX_FILE_MB}MB</span></label>
+                          <div className={`relative flex items-center justify-center rounded-xl border border-dashed p-4 text-center transition ${fileSizeErrors.previewPdf ? "border-red-400/40 bg-red-400/5" : "border-white/20 bg-white/5 hover:bg-white/10"}`}>
                             <input
                               type="file"
                               accept="application/pdf"
-                              onChange={(e) => setPreviewPdfFile(e.target.files[0])}
+                              onChange={(e) => { const f = e.target.files[0]; if (checkFileSize(f, "previewPdf")) setPreviewPdfFile(f); else { setPreviewPdfFile(null); e.target.value = ""; } }}
                               className="absolute inset-0 opacity-0 cursor-pointer"
                             />
                             <div className="space-y-1">
-                              <Upload className="mx-auto h-6 w-6 text-white/40" />
-                              <p className="text-xs text-white/60">{previewPdfFile ? previewPdfFile.name : "Select preview PDF"}</p>
+                              <Upload className={`mx-auto h-6 w-6 ${fileSizeErrors.previewPdf ? "text-red-400/60" : "text-white/40"}`} />
+                              {fileSizeErrors.previewPdf ? (
+                                <p className="text-xs text-red-400 font-semibold">{fileSizeErrors.previewPdf}</p>
+                              ) : (
+                                <>
+                                  <p className="text-xs text-white/60">{previewPdfFile ? previewPdfFile.name : "Select preview PDF"}</p>
+                                  {previewPdfFile && <p className="text-[10px] text-white/30">{(previewPdfFile.size / 1024 / 1024).toFixed(2)}MB</p>}
+                                  {!previewPdfFile && <p className="text-[10px] text-white/25">PDF only · Max {MAX_FILE_MB}MB</p>}
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Preview Images (Optional)</label>
-                          <div className="relative flex items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/5 p-4 text-center hover:bg-white/10 transition">
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Preview Images (Optional) <span className="text-white/30 normal-case font-normal">· Max {MAX_FILE_MB}MB each</span></label>
+                          <div className={`relative flex items-center justify-center rounded-xl border border-dashed p-4 text-center transition ${fileSizeErrors.previewImages ? "border-red-400/40 bg-red-400/5" : "border-white/20 bg-white/5 hover:bg-white/10"}`}>
                             <input
                               type="file"
                               multiple
                               accept="image/*"
-                              onChange={(e) => setPreviewImagesFiles(Array.from(e.target.files))}
+                              onChange={(e) => {
+                                const files = Array.from(e.target.files);
+                                const oversized = files.filter((f) => f.size > MAX_FILE_SIZE);
+                                if (oversized.length > 0) {
+                                  setFileSizeErrors((prev) => ({ ...prev, previewImages: `${oversized.length} file(s) exceed ${MAX_FILE_MB}MB limit` }));
+                                  setPreviewImagesFiles([]);
+                                  e.target.value = "";
+                                } else {
+                                  setFileSizeErrors((prev) => { const n = { ...prev }; delete n.previewImages; return n; });
+                                  setPreviewImagesFiles(files);
+                                }
+                              }}
                               className="absolute inset-0 opacity-0 cursor-pointer"
                             />
                             <div className="space-y-1">
-                              <Upload className="mx-auto h-6 w-6 text-white/40" />
-                              <p className="text-xs text-white/60">{previewImagesFiles.length > 0 ? `${previewImagesFiles.length} files selected` : "Select preview slide images"}</p>
+                              <Upload className={`mx-auto h-6 w-6 ${fileSizeErrors.previewImages ? "text-red-400/60" : "text-white/40"}`} />
+                              {fileSizeErrors.previewImages ? (
+                                <p className="text-xs text-red-400 font-semibold">{fileSizeErrors.previewImages}</p>
+                              ) : (
+                                <>
+                                  <p className="text-xs text-white/60">{previewImagesFiles.length > 0 ? `${previewImagesFiles.length} file(s) selected` : "Select preview slide images"}</p>
+                                  {!previewImagesFiles.length && <p className="text-[10px] text-white/25">JPEG · PNG · WEBP · Max {MAX_FILE_MB}MB each</p>}
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
