@@ -37,7 +37,7 @@ export default function FooterSection() {
       {/* Huge Background Text */}
 
       <h1 className="pointer-events-none absolute left-1/2 top-10 -translate-x-1/2 whitespace-nowrap text-[16vw] font-black uppercase text-white/[0.03]">
-        LEKHAK TRIPURA
+        LEKHOK TRIPURA
       </h1>
 
       <div className="section-shell relative">
@@ -52,14 +52,14 @@ export default function FooterSection() {
 
               <img
                 src="/logo.png"
-                alt="Lekhak"
+                alt="Lekhok"
                 className="h-14 w-14"
               />
 
               <div>
 
                 <h2 className="text-2xl font-bold tracking-[0.3em] text-white">
-                  LEKHAK TRIPURA
+                  LEKHOK TRIPURA
                 </h2>
 
                 <p className="text-white/45">
@@ -234,7 +234,7 @@ export default function FooterSection() {
         <div className="flex flex-col gap-6 text-sm text-white/45 md:flex-row md:items-center md:justify-between">
 
           <p>
-            © 2026 LEKHAK TRIPURA. All rights reserved.
+            © 2026 LEKHOK TRIPURA. All rights reserved.
           </p>
 
           <div className="flex gap-8">

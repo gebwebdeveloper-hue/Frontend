@@ -87,6 +87,17 @@ export default function Navbar() {
     navigate("/");
   };
 
+  const handleLogoClick = (e) => {
+    if (window.location.pathname === "/") {
+      e.preventDefault();
+      if (window.lenis) {
+        window.lenis.scrollTo(0);
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+  };
+
   const navLinks = authUser?.role === "admin"
     ? [...baseLinks, { label: "Admin", to: "/admin" }]
     : baseLinks;
@@ -119,14 +130,14 @@ export default function Navbar() {
           {/* Navbar Content */}
           <div className="relative z-10 flex items-center justify-between gap-3 px-4 py-3 sm:px-5 md:px-7 md:py-4">
             {/* Logo */}
-            <Link to="/" className="group flex min-w-0 items-center gap-2.5 sm:gap-3">
+            <Link to="/" onClick={handleLogoClick} className="group flex min-w-0 items-center gap-2.5 sm:gap-3">
               <img
                 src="/logo.png"
-                alt="Lekhak Logo"
+                alt="Lekhok Logo"
                 className="h-9 w-9 shrink-0 object-contain transition duration-500 group-hover:rotate-12 group-hover:scale-110 sm:h-11 sm:w-11"
               />
               <div className="min-w-0">
-                <h3 className="truncate text-[11px] font-bold uppercase tracking-[0.22em] text-white sm:text-sm sm:tracking-[0.35em]">LEKHAK TRIPURA</h3>
+                <h3 className="truncate text-[11px] font-bold uppercase tracking-[0.22em] text-white sm:text-sm sm:tracking-[0.35em]">LEKHOK TRIPURA</h3>
                 <p className="truncate text-[11px] text-white/45 sm:text-xs">Premium eBooks</p>
               </div>
             </Link>
@@ -294,8 +305,8 @@ export default function Navbar() {
           >
             <div className="flex items-center justify-between rounded-3xl border border-white/10 bg-white/[0.04] p-4">
               <div className="flex min-w-0 items-center gap-3">
-                <img src="/logo.png" alt="Lekhak Logo" className="h-10 w-10 shrink-0 object-contain" />
-                <span className="truncate text-sm font-bold tracking-[0.22em] text-white sm:tracking-[0.25em]">LEKHAK TRIPURA</span>
+                <img src="/logo.png" alt="Lekhok Logo" className="h-10 w-10 shrink-0 object-contain" />
+                <span className="truncate text-sm font-bold tracking-[0.22em] text-white sm:tracking-[0.25em]">LEKHOK TRIPURA</span>
               </div>
               <button
                 onClick={() => setOpen(false)}
