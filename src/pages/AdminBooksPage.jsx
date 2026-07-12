@@ -22,6 +22,7 @@ export default function AdminBooksPage() {
 
   // Books listing
   const [booksList, setBooksList] = useState([]);
+  const [booksTotal, setBooksTotal] = useState(0);
 
   // Purchase requests state
   const [purchasesList, setPurchasesList] = useState([]);
@@ -117,11 +118,12 @@ export default function AdminBooksPage() {
 
   const fetchBooks = () => {
     setLoadingBooks(true);
-    fetch(`${API_BASE}/books`, { credentials: "include" })
+    fetch(`${API_BASE}/books?limit=2000`, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
           setBooksList(data.books || []);
+          setBooksTotal(data.pagination?.total || data.books?.length || 0);
         }
       })
       .catch((err) => console.error("Error fetching books:", err))
@@ -1023,7 +1025,7 @@ export default function AdminBooksPage() {
                           <BookOpen size={16} className="text-cyan-300" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-white">{booksList.length} Books</p>
+                          <p className="text-sm font-semibold text-white">{booksTotal} Books</p>
                           <p className="text-xs text-white/40">currently in database</p>
                         </div>
                       </div>

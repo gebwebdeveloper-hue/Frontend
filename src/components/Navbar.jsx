@@ -7,7 +7,6 @@ import { API_BASE } from "../config.js";
 
 const baseLinks = [
   { label: "Library", to: "/library" },
-  { label: "Publish with us", to: "/reader" },
 ];
 
 export default function Navbar() {
@@ -158,13 +157,32 @@ export default function Navbar() {
               <NavLink to="/club">
                 {({ isActive }) => (
                   <div
-                    className={`group flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-300 ${
+                    className={`flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
                       isActive
-                        ? "bg-white text-black shadow-[0_0_28px_rgba(34,211,238,0.18)]"
-                        : "bg-white text-black hover:scale-105 hover:shadow-[0_0_28px_rgba(34,211,238,0.18)]"
+                        ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-300"
+                        : "border-white/10 bg-white/5 text-white/80 hover:border-white/25 hover:bg-white/10 hover:text-white"
                     }`}
                   >
-                    <Sparkles size={14} /> Join Our Club
+                    Join Our Club
+                  </div>
+                )}
+              </NavLink>
+
+              <NavLink to="/reader">
+                {({ isActive }) => (
+                  <div
+                    className={`relative rounded-full px-5 py-3 text-sm font-medium transition-all duration-300 ${
+                      isActive ? "text-white" : "text-white/65 hover:text-white"
+                    }`}
+                  >
+                    Publish with us
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-pill"
+                        className="absolute inset-0 -z-10 rounded-full bg-white/10"
+                        transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                      />
+                    )}
                   </div>
                 )}
               </NavLink>
@@ -294,7 +312,7 @@ export default function Navbar() {
               animate="visible"
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
             >
-              {[{ label: "Home", to: "/" }, ...navLinks, { label: "Join Our Club", to: "/club" }].map((item) => (
+              {[{ label: "Home", to: "/" }, ...navLinks, { label: "Join Our Club", to: "/club" }, { label: "Publish with us", to: "/reader" }].map((item) => (
                 <motion.div
                   key={item.to}
                   variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}

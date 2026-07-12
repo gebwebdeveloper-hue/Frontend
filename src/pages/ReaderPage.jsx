@@ -11,22 +11,75 @@ import { useGsapReveal } from "../hooks/useGsapReveal.js";
 const plans = [
   {
     name: "Basic",
-    price: "₹39,990",
-    tag: "Paperback launch",
-    features: ["Publish your book as paperback", "Sell your book all over India", "ISBN guidance", "Basic interior formatting"],
+    price: "₹4,999",
+    tag: "E-Book + Paperback Launch",
+    features: [
+      "Publish your book as E-BOOK",
+      "Publish your book as paperback",
+      "Sell your book all over India",
+      "ISBN registration",
+      "Simple COVER design",
+      "Basic interior formatting",
+      "2 Promotional Posters",
+      "2 Mockups",
+      "5 free author copies",
+      "Available on Amazon & Flipkart",
+      "Available on Meesho, Playbook & Kindle",
+    ],
   },
   {
     name: "Essential",
-    price: "₹49,990",
-    tag: "Print + eBook",
+    price: "₹14,999",
+    tag: "eBook + Paperback with artist design",
     featured: true,
-    features: ["All services of Basic package", "Publish book in print and eBook", "Cover design support", "Posters and launch creatives"],
+    features: [
+      "Publish your book as E-BOOK & paperback",
+      "Sell your book all over India",
+      "ISBN registration",
+      "Cover design with artist",
+      "Basic interior formatting",
+      "5 Promotional Posters",
+      "3 Mockups",
+      "20 free author copies",
+      "Available on Amazon & Flipkart",
+      "Available on Meesho, Playbook & Kindle",
+    ],
   },
   {
     name: "Popular",
-    price: "₹89,990",
-    tag: "Wide distribution",
-    features: ["All services of Essential package", "Sell your book globally", "Copy editing support", "Marketing and author branding guidance"],
+    price: "₹49,999",
+    tag: "Global Print & digital package",
+    features: [
+      "Publish your book as E-BOOK & paperback",
+      "Sell your book all over the World",
+      "ISBN registration",
+      "Premium Cover design with artist",
+      "Premium interior formatting",
+      "20 Promotional Posters + 1 week social media marketing",
+      "5 Mockups",
+      "100 free author copies",
+      "Available on Amazon & Flipkart",
+      "Available on Meesho, Playbook & Kindle",
+    ],
+  },
+  {
+    name: "Premium",
+    price: "₹99,999",
+    tag: "Complete publishing & branding",
+    features: [
+      "Publish your book as E-BOOK & Hardcover",
+      "Sell your book all over the World",
+      "ISBN registration",
+      "Premium Cover design with artist",
+      "Premium interior formatting",
+      "20 Promotional Posters + 1 month social media marketing",
+      "5 Mockups",
+      "200 free author copies",
+      "Media & podcast invitation",
+      "Worldwide distribution",
+      "Available on Amazon & Flipkart",
+      "Available on Meesho, Playbook & Kindle",
+    ],
   },
 ];
 
@@ -276,7 +329,7 @@ export default function ReaderPage() {
         <section id="self-publishing" className="section-shell relative z-10 py-16">
           <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Self Publishing Plans</h2>
           <p data-reveal className="mx-auto mt-4 max-w-2xl text-center text-white/55">Pick the level of support you need. Final scope can be confirmed after manuscript discussion.</p>
-          <div className="mt-10 grid gap-6 lg:grid-cols-3">
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
             {plans.map((plan) => (
               <motion.article key={plan.name} data-reveal whileHover={{ y: -8 }} className={`relative rounded-lg border p-6 shadow-card backdrop-blur-xl ${plan.featured ? "border-cyan-300/35 bg-cyan-300/[0.08]" : "border-white/10 bg-white/[0.055]"}`}>
                 {plan.featured ? <div className="absolute right-5 top-5 rounded-full bg-white px-3 py-1 text-xs font-black text-black">Recommended</div> : null}
