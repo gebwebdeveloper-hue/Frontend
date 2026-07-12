@@ -33,7 +33,7 @@ export default function AdminBooksPage() {
   // Author management state
   const [authorsList, setAuthorsList] = useState([]);
   const [loadingAuthors, setLoadingAuthors] = useState(false);
-  const [authorForm, setAuthorForm] = useState({ name: "", bio: "", featured: true, order: 0 });
+  const [authorForm, setAuthorForm] = useState({ name: "", bio: "", featured: true, ourPublicationAuthor: false, order: 0 });
   const [authorThumbnail, setAuthorThumbnail] = useState(null);
   const [editingAuthor, setEditingAuthor] = useState(null);
   const [authorFormError, setAuthorFormError] = useState("");
@@ -159,7 +159,7 @@ export default function AdminBooksPage() {
   };
 
   const resetAuthorForm = () => {
-    setAuthorForm({ name: "", bio: "", featured: true, order: 0 });
+    setAuthorForm({ name: "", bio: "", featured: true, ourPublicationAuthor: false, order: 0 });
     setAuthorThumbnail(null);
     setEditingAuthor(null);
     setAuthorFormError("");
@@ -179,6 +179,7 @@ export default function AdminBooksPage() {
     fd.append("name", authorForm.name);
     fd.append("bio", authorForm.bio);
     fd.append("featured", String(authorForm.featured));
+    fd.append("ourPublicationAuthor", String(authorForm.ourPublicationAuthor));
     fd.append("order", String(authorForm.order));
     if (authorThumbnail) fd.append("thumbnail", authorThumbnail);
 
@@ -206,6 +207,7 @@ export default function AdminBooksPage() {
       name: author.name,
       bio: author.bio || "",
       featured: author.featured,
+      ourPublicationAuthor: author.ourPublicationAuthor || false,
       order: author.order || 0,
     });
     setAuthorThumbnail(null);
@@ -1266,7 +1268,7 @@ export default function AdminBooksPage() {
                     />
                   </div>
 
-                  <div className="grid gap-5 md:grid-cols-2">
+                  <div className="grid gap-5 md:grid-cols-3">
                     <div>
                       <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Display Order</label>
                       <input
@@ -1286,6 +1288,16 @@ export default function AdminBooksPage() {
                         className="h-4 w-4 accent-cyan-400"
                       />
                       <label htmlFor="author-featured" className="text-sm text-white/70">Show in Popular Authors</label>
+                    </div>
+                    <div className="flex items-center gap-3 pt-7">
+                      <input
+                        type="checkbox"
+                        id="author-ourPublicationAuthor"
+                        checked={authorForm.ourPublicationAuthor}
+                        onChange={(e) => handleAuthorFormChange("ourPublicationAuthor", e.target.checked)}
+                        className="h-4 w-4 accent-cyan-400"
+                      />
+                      <label htmlFor="author-ourPublicationAuthor" className="text-sm text-white/70">Show in Publication's Authors</label>
                     </div>
                   </div>
 

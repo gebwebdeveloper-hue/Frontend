@@ -2,6 +2,7 @@ import PageTransition from "../components/PageTransition.jsx";
 import HeroSection from "../sections/HeroSection.jsx";
 import FeaturedBooksSection from "../sections/FeaturedBooksSection.jsx";
 import CategoriesSection from "../sections/CategoriesSection.jsx";
+import ClubJoinSection from "../sections/ClubJoinSection.jsx";
 import BestsellingBooksSection from "../sections/BestsellingBooksSection.jsx";
 import TestimonialsSection from "../sections/TestimonialsSection.jsx";
 import FaqSection from "../sections/FaqSection.jsx";
@@ -14,6 +15,7 @@ export default function HomePage() {
       <HeroSection />
       <FeaturedBooksSection />
       <CategoriesSection />
+      <ClubJoinSection />
       <BestsellingBooksSection />
       <TestimonialsSection />
       <div id="faq"><FaqSection /></div>

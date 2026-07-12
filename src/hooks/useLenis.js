@@ -11,6 +11,7 @@ export function useLenis() {
     });
 
     lenis.on("scroll", ScrollTrigger.update);
+    window.lenis = lenis;
 
     let rafId;
     const raf = (time) => {

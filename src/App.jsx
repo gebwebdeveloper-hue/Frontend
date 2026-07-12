@@ -10,6 +10,7 @@ import PageLoader from "./components/PageLoader.jsx";
 import CustomCursor from "./components/CustomCursor.jsx";
 import ScrollProgress from "./components/ScrollProgress.jsx";
 import BackToTop from "./components/BackToTop.jsx";
+import ScrollToTop from "./components/ScrollToTop.jsx";
 import { useLenis } from "./hooks/useLenis.js";
 import Navbar from "./components/Navbar.jsx";
 
@@ -19,6 +20,7 @@ export default function App() {
 
   return (
     <>
+      <ScrollToTop />
       <PageLoader />
       <CustomCursor />
       <ScrollProgress />

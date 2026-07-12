@@ -5,6 +5,7 @@ import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import ContinueReadingSection from "../sections/ContinueReadingSection.jsx";
 import PopularAuthorsSection from "../sections/PopularAuthorsSection.jsx";
+import PublicationsAuthorsSection from "../sections/PublicationsAuthorsSection.jsx";
 import LibraryFeaturedSection from "../sections/LibraryFeaturedSection.jsx";
 import { API_BASE } from "../config.js";
 
@@ -161,6 +162,16 @@ export default function LibraryPage() {
             transition={{ duration: 0.5 }}
           >
             <PopularAuthorsSection />
+          </motion.div>
+
+          {/* ─────────── PUBLICATIONS AUTHORS ─────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <PublicationsAuthorsSection />
           </motion.div>
 
           {/* ─────────── FEATURED EBOOKS ─────────── */}

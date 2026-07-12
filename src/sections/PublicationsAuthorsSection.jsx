@@ -61,7 +61,7 @@ function AuthorCard({ author, isSelected, onViewBooks }) {
       {/* Bottom active indicator */}
       {isSelected && (
         <motion.div
-          layoutId="author-indicator"
+          layoutId="pub-author-indicator"
           className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-400"
         />
       )}
@@ -69,7 +69,7 @@ function AuthorCard({ author, isSelected, onViewBooks }) {
   );
 }
 
-export default function PopularAuthorsSection() {
+export default function PublicationsAuthorsSection() {
   const [authors, setAuthors] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState(null);
   const [authorBooks, setAuthorBooks] = useState([]);
@@ -81,8 +81,7 @@ export default function PopularAuthorsSection() {
       .then((r) => r.json())
       .then((data) => {
         if (data.success && data.authors?.length) {
-          setAuthors(data.authors.filter((a) => a.featured));
-          // No auto-select — wait for "View Books" click
+          setAuthors(data.authors.filter((a) => a.ourPublicationAuthor));
         }
       })
       .catch(() => {})
@@ -90,7 +89,6 @@ export default function PopularAuthorsSection() {
   }, []);
 
   const handleViewBooks = (author) => {
-    // Toggle off if same author clicked again
     if (selectedAuthor?._id === author._id) {
       setSelectedAuthor(null);
       setAuthorBooks([]);
@@ -127,8 +125,8 @@ export default function PopularAuthorsSection() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-300/80">Explore Authors</p>
-          <h2 className="mt-1 text-xl font-bold text-white">Popular Authors</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300/80">Our Publications</p>
+          <h2 className="mt-1 text-xl font-bold text-white">Publication's Authors</h2>
         </div>
         {selectedAuthor && (
           <button
@@ -153,7 +151,7 @@ export default function PopularAuthorsSection() {
         ))}
       </div>
 
-      {/* Books for selected author — only shown after clicking View Books */}
+      {/* Books for selected author */}
       <AnimatePresence mode="wait">
         {selectedAuthor && (
           <motion.div
@@ -165,11 +163,11 @@ export default function PopularAuthorsSection() {
             className="mt-8"
           >
             {/* Author label bar */}
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-indigo-300/15 bg-indigo-300/[0.05] px-5 py-3.5 backdrop-blur-xl">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.05] px-5 py-3.5 backdrop-blur-xl">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-bold text-white">
                   Books by{" "}
-                  <span className="bg-gradient-to-r from-indigo-300 to-cyan-300 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-cyan-300 to-indigo-300 bg-clip-text text-transparent">
                     {selectedAuthor.name}
                   </span>
                 </span>
