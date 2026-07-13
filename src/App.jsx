@@ -12,6 +12,9 @@ import BackToTop from "./components/BackToTop.jsx";
 import ScrollToTop from "./components/ScrollToTop.jsx";
 import { useLenis } from "./hooks/useLenis.js";
 import Navbar from "./components/Navbar.jsx";
+import NewsletterListingPage from "./pages/NewsletterListingPage.jsx";
+import NewsletterReaderPage from "./pages/NewsletterReaderPage.jsx";
+
 
 export default function App() {
   const location = useLocation();
@@ -31,7 +34,10 @@ export default function App() {
           <Route path="/admin" element={<AdminBooksPage />} />
           <Route path="/admin/database" element={<AdminDatabasePage />} />
           <Route path="/club" element={<ClubPage />} />
+          <Route path="/newsletter" element={<NewsletterListingPage />} />
+          <Route path="/newsletter/:slug" element={<NewsletterReaderPage />} />
         </Routes>
+
       </AnimatePresence>
       <BackToTop />
     </>

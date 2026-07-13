@@ -1,9 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, BookOpen, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
+import JoditEditor from "jodit-react";
+
+
 
 export default function AdminBooksPage() {
   const location = useLocation();
@@ -75,6 +78,28 @@ export default function AdminBooksPage() {
   const MAX_FILE_SIZE = MAX_FILE_MB * 1024 * 1024; // 10 MB in bytes
   const [fileSizeErrors, setFileSizeErrors] = useState({});
 
+  // Newsletter management state
+  const [newsletterList, setNewsletterList] = useState([]);
+  const [loadingNewsletters, setLoadingNewsletters] = useState(false);
+  const [newsletterForm, setNewsletterForm] = useState({
+    title: "",
+    description: "",
+    content: "",
+    author: "Lekhok Tripura",
+    status: "draft",
+    publishedAt: new Date().toISOString().split("T")[0],
+    fontFamily: "Outfit"
+  });
+  const [newsletterCover, setNewsletterCover] = useState(null);
+  const [editingNewsletter, setEditingNewsletter] = useState(null);
+  const [newsletterFormError, setNewsletterFormError] = useState("");
+  const [newsletterFormSuccess, setNewsletterFormSuccess] = useState("");
+  const [submittingNewsletter, setSubmittingNewsletter] = useState(false);
+  const quillRef = useRef(null);
+
+
+
+
   const checkFileSize = (file, key) => {
     if (!file) return true;
     if (file.size > MAX_FILE_SIZE) {
@@ -102,6 +127,7 @@ export default function AdminBooksPage() {
             fetchPurchases();
             fetchAuthors();
             fetchPaymentConfig();
+            fetchNewsletters();
           } else {
             setAuthError("Access denied. Admin permissions required.");
             setStep("login-email");
@@ -161,6 +187,17 @@ export default function AdminBooksPage() {
       })
       .catch(() => {})
       .finally(() => setLoadingAuthors(false));
+  };
+
+  const fetchNewsletters = () => {
+    setLoadingNewsletters(true);
+    fetch(`${API_BASE}/newsletter?all=true`, { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setNewsletterList(data.newsletters || []);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingNewsletters(false));
   };
 
   const fetchPaymentConfig = () => {
@@ -286,6 +323,76 @@ export default function AdminBooksPage() {
         else alert(data.message || "Failed to delete.");
       })
       .catch(() => alert("Error deleting author."));
+  };
+
+  const handleNewsletterFormChange = (field, value) => {
+    setNewsletterForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const resetNewsletterForm = () => {
+    setNewsletterForm({ title: "", description: "", content: "", author: "Lekhok Tripura", status: "draft", publishedAt: new Date().toISOString().split("T")[0], fontFamily: "Outfit" });
+    setNewsletterCover(null);
+    setEditingNewsletter(null);
+    setNewsletterFormError("");
+    setNewsletterFormSuccess("");
+  };
+
+  const handleNewsletterSubmit = (e) => {
+    e.preventDefault();
+    setNewsletterFormError("");
+    setNewsletterFormSuccess("");
+    if (!newsletterForm.title || !newsletterForm.content) {
+      setNewsletterFormError("Title and Content are required.");
+      return;
+    }
+    setSubmittingNewsletter(true);
+    const fd = new FormData();
+    Object.entries(newsletterForm).forEach(([k, v]) => fd.append(k, v));
+    if (newsletterCover) fd.append("cover", newsletterCover);
+
+    const url = editingNewsletter ? `${API_BASE}/newsletter/${editingNewsletter._id}` : `${API_BASE}/newsletter`;
+    const method = editingNewsletter ? "PUT" : "POST";
+
+    fetch(url, { method, body: fd, credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setNewsletterFormSuccess(editingNewsletter ? "Story updated!" : "Story posted!");
+          resetNewsletterForm();
+          fetchNewsletters();
+        } else {
+          setNewsletterFormError(data.message || "Failed to save story.");
+        }
+      })
+      .catch(() => setNewsletterFormError("Server error."))
+      .finally(() => setSubmittingNewsletter(false));
+  };
+
+  const handleEditNewsletter = (n) => {
+    setEditingNewsletter(n);
+    setNewsletterForm({
+      title: n.title,
+      description: n.description || "",
+      content: n.content || "",
+      author: n.author || "Lekhok Tripura",
+      status: n.status || "draft",
+      publishedAt: n.publishedAt ? n.publishedAt.split("T")[0] : new Date().toISOString().split("T")[0],
+      fontFamily: n.fontFamily || "Outfit"
+    });
+    setNewsletterCover(null);
+    setNewsletterFormError("");
+    setNewsletterFormSuccess("");
+  };
+
+
+
+
+  const handleDeleteNewsletter = (id) => {
+    if (!confirm("Delete this story?")) return;
+    fetch(`${API_BASE}/newsletter/${id}`, { method: "DELETE", credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => { if (data.success) fetchNewsletters(); })
+      .catch(() => alert("Error deleting."));
   };
 
   const handleApprovePurchase = (id) => {
@@ -537,6 +644,49 @@ export default function AdminBooksPage() {
       .finally(() => setSubmittingBook(false));
   };
 
+  const joditConfig = useMemo(() => ({
+    readonly: false,
+    placeholder: "Write your masterpiece story here...",
+    height: 400,
+    theme: "dark",
+    uploader: {
+      insertImageAsBase64URI: false,
+      withCredentials: true,
+      url: `${API_BASE}/newsletter/upload-inline`,
+      format: 'json',
+      prepareData: function (formdata) {
+        const file = formdata.get('files[0]');
+        formdata.delete('files[0]');
+        formdata.append('image', file);
+      },
+      isSuccess: function (resp) {
+        return resp.success === true;
+      },
+      process: function (resp) {
+        return {
+          files: [resp.url],
+          error: resp.success ? 0 : 1,
+          msg: resp.success ? 'Success' : 'Error'
+        };
+      },
+      defaultHandlerSuccess: function (data) {
+        const imgUrl = data.files[0].startsWith("http") ? data.files[0] : `${SERVER_URL}${data.files[0]}`;
+        this.selection.insertImage(imgUrl);
+      }
+    },
+    buttons: [
+      "source", "|",
+      "bold", "italic", "underline", "strikethrough", "|",
+      "superscript", "subscript", "|",
+      "ul", "ol", "|",
+      "outdent", "indent", "|",
+      "font", "fontsize", "brush", "paragraph", "|",
+      "image", "video", "table", "link", "|",
+      "align", "undo", "redo", "|",
+      "hr", "eraser", "fullsize"
+    ]
+  }), []);
+
   return (
     <PageTransition>
       <div className="min-h-screen px-6 py-28 relative overflow-hidden">
@@ -698,6 +848,15 @@ export default function AdminBooksPage() {
                     >
                       Authors
                     </button>
+                    <button
+                      onClick={() => setActiveTab("newsletter")}
+                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                        activeTab === "newsletter" ? "bg-white text-black" : "text-white/60 hover:text-white"
+                      }`}
+                    >
+                      Newsletter
+                    </button>
+
                   </div>
                   
                   <button
@@ -1563,9 +1722,271 @@ export default function AdminBooksPage() {
             </div>
           )}
 
+          {/* TAB 4: NEWSLETTERS */}
+          {activeTab === "newsletter" && (
+            <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+              {/* Dark styles to adapt Jodit for Dark Theme */}
+              <style>{`
+                .jodit-editor-container .jodit-container {
+                  border: none !important;
+                }
+                .jodit-editor-container .jodit-wysiwyg {
+                  background-color: #09090b !important;
+                  color: #ffffff !important;
+                }
+                .jodit-editor-container .jodit-workplace {
+                  background-color: #09090b !important;
+                }
+              `}</style>
+
+              {/* LEFT: Newsletter Editor Form */}
+              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+                <div className="border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">
+                      {editingNewsletter ? "Edit Story" : "Write Story"}
+                    </h2>
+                    <p className="mt-1 text-sm text-white/55">
+                      {editingNewsletter ? `Editing: ${editingNewsletter.title}` : "Write a weekly article or story to post on Friday/Sunday."}
+                    </p>
+                  </div>
+                  {editingNewsletter && (
+                    <button
+                      type="button"
+                      onClick={resetNewsletterForm}
+                      className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/60 hover:text-white transition"
+                    >
+                      <X size={13} /> Cancel Edit
+                    </button>
+                  )}
+                </div>
+
+                {newsletterFormError && (
+                  <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
+                    <AlertCircle className="h-5 w-5 shrink-0" />
+                    <span>{newsletterFormError}</span>
+                  </div>
+                )}
+                {newsletterFormSuccess && (
+                  <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-300">
+                    {newsletterFormSuccess}
+                  </div>
+                )}
+
+                <form onSubmit={handleNewsletterSubmit} className="space-y-5">
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Story Title *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newsletterForm.title}
+                        onChange={(e) => handleNewsletterFormChange("title", e.target.value)}
+                        placeholder="e.g. The Call of the Hills"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Author *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newsletterForm.author}
+                        onChange={(e) => handleNewsletterFormChange("author", e.target.value)}
+                        placeholder="e.g. Lekhok Tripura"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Short Description (Snippet) *</label>
+                    <textarea
+                      rows="2"
+                      required
+                      value={newsletterForm.description}
+                      onChange={(e) => handleNewsletterFormChange("description", e.target.value)}
+                      placeholder="A brief summary for the cards on the list page..."
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none resize-none"
+                    />
+                  </div>
+
+                  <div className="grid gap-5 md:grid-cols-3">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Publish Date *</label>
+                      <input
+                        type="date"
+                        required
+                        value={newsletterForm.publishedAt}
+                        onChange={(e) => handleNewsletterFormChange("publishedAt", e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Status *</label>
+                      <select
+                        value={newsletterForm.status}
+                        onChange={(e) => handleNewsletterFormChange("status", e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
+                        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
+                      >
+                        <option value="draft" style={{ background: "#0a0a0a" }}>Draft</option>
+                        <option value="published" style={{ background: "#0a0a0a" }}>Published</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Story Font Style *</label>
+                      <select
+                        value={newsletterForm.fontFamily}
+                        onChange={(e) => handleNewsletterFormChange("fontFamily", e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
+                        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
+                      >
+                        <option value="Outfit" style={{ background: "#0a0a0a" }}>Outfit (Sans-Serif)</option>
+                        <option value="Lora" style={{ background: "#0a0a0a" }}>Lora (Elegant Serif)</option>
+                        <option value="Merriweather" style={{ background: "#0a0a0a" }}>Merriweather (Classic Serif)</option>
+                        <option value="Playfair Display" style={{ background: "#0a0a0a" }}>Playfair Display (Dramatic Serif)</option>
+                        <option value="Inter" style={{ background: "#0a0a0a" }}>Inter (Neutral Sans-Serif)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Cover image upload */}
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Cover Image</label>
+                    <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-white/10 p-4 transition hover:border-cyan-400/30 hover:bg-white/[0.03]">
+                      {newsletterCover ? (
+                        <span className="text-xs text-cyan-300 font-semibold">{newsletterCover.name}</span>
+                      ) : editingNewsletter?.cover?.url ? (
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={editingNewsletter.cover.url.startsWith("http") ? editingNewsletter.cover.url : `${SERVER_URL}${editingNewsletter.cover.url}`}
+                            alt="Cover preview"
+                            className="h-12 w-20 object-cover rounded-lg border border-white/15"
+                          />
+                          <span className="text-xs text-white/45">Click to change cover image</span>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload size={20} className="text-white/30" />
+                          <span className="text-xs text-white/40">Select story cover image (JPG, PNG, WebP)</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => setNewsletterCover(e.target.files[0] || null)}
+                      />
+                    </label>
+                  </div>
+
+                  {/* Jodit Editor */}
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Content (Jodit Rich Text Experience) *</label>
+                    <div
+                      onWheel={(e) => e.stopPropagation()}
+                      onTouchMove={(e) => e.stopPropagation()}
+                      className="jodit-editor-container border border-white/10 rounded-2xl overflow-hidden bg-zinc-950"
+                    >
+                      <JoditEditor
+                        ref={quillRef}
+                        value={newsletterForm.content}
+                        config={joditConfig}
+                        onBlur={(newContent) => handleNewsletterFormChange("content", newContent)}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submittingNewsletter}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-semibold text-black transition-all hover:scale-[1.02] disabled:opacity-50"
+                  >
+                    {submittingNewsletter ? <Loader2 className="h-5 w-5 animate-spin" /> : editingNewsletter ? "Update Story" : "Post Story"}
+                  </button>
+                </form>
+              </div>
+
+              {/* RIGHT: Newsletters List */}
+              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+                <div className="border-b border-white/10 pb-6 mb-6">
+                  <h2 className="text-xl font-bold text-white">All Newsletter Stories</h2>
+                  <p className="mt-1 text-sm text-white/55">{newsletterList.length} stor{newsletterList.length !== 1 ? "ies" : "y"} written.</p>
+                </div>
+
+                {loadingNewsletters ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
+                  </div>
+                ) : newsletterList.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <BookOpen size={36} className="mb-3 text-white/20" />
+                    <p className="text-sm text-white/40">No stories posted yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
+                    {newsletterList.map((story) => {
+                      const coverUrl = story.cover?.url
+                        ? story.cover.url.startsWith("http")
+                          ? story.cover.url
+                          : `${SERVER_URL}${story.cover.url}`
+                        : null;
+                      return (
+                        <div
+                          key={story._id}
+                          className="flex items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 hover:border-cyan-500/20 transition-all"
+                        >
+                          {/* Cover preview */}
+                          <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                            {coverUrl ? (
+                              <img src={coverUrl} alt={story.title} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center">
+                                <BookOpen size={16} className="text-white/20" />
+                              </div>
+                            )}
+                          </div>
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="truncate text-sm font-semibold text-white">{story.title}</p>
+                            <p className="text-[10px] text-white/45 flex items-center gap-1.5">
+                              <span>{story.author}</span>
+                              <span>&bull;</span>
+                              <span className={`font-semibold uppercase ${story.status === "published" ? "text-emerald-400" : "text-yellow-400"}`}>
+                                {story.status}
+                              </span>
+                              <span>&bull;</span>
+                              <span>{new Date(story.publishedAt).toLocaleDateString()}</span>
+                            </p>
+                          </div>
+                          {/* Actions */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEditNewsletter(story)}
+                              className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:border-cyan-400/30 hover:bg-cyan-400/10 hover:text-cyan-300"
+                            >
+                              <Pencil size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteNewsletter(story._id)}
+                              className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </PageTransition>
   );
 }
-

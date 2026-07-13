@@ -7,6 +7,7 @@ import { API_BASE } from "../config.js";
 
 const baseLinks = [
   { label: "Library", to: "/library" },
+  { label: "Newsletter", to: "/newsletter" },
 ];
 
 export default function Navbar() {

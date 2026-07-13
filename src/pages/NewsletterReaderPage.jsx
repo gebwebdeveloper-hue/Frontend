@@ -1,0 +1,250 @@
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Calendar, Clock, ArrowLeft, Loader2, Sparkles, User } from "lucide-react";
+import PageTransition from "../components/PageTransition.jsx";
+import { API_BASE, SERVER_URL } from "../config.js";
+
+export default function NewsletterReaderPage() {
+  const { slug } = useParams();
+  const [story, setStory] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${API_BASE}/newsletter/${slug}`, { credentials: "include" })
+      .then((res) => {
+        if (!res.ok) {
+          if (res.status === 403) {
+            throw new Error("This newsletter is currently a draft and can only be viewed by administrators.");
+          }
+          throw new Error("Story not found.");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data.success) {
+          setStory(data.newsletter);
+        } else {
+          setError(data.message || "Failed to load the story.");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(err.message || "Something went wrong while fetching the story.");
+      })
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  const getCoverUrl = (cover) => {
+    if (!cover || !cover.url) return "";
+    if (cover.url.startsWith("http")) return cover.url;
+    return `${SERVER_URL}${cover.url}`;
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  return (
+    <PageTransition>
+      {/* Dynamic Scoped CSS for Rich-Text HTML formatting */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+
+        .newsletter-content {
+          font-family: '${story?.fontFamily || "Outfit"}', 'Outfit', 'Inter', serif, sans-serif;
+          color: rgba(255, 255, 255, 0.85);
+          font-size: 1.125rem;
+          line-height: 1.8;
+        }
+        .newsletter-content p {
+          margin-bottom: 1.75rem;
+        }
+        .newsletter-content h1, 
+        .newsletter-content h2, 
+        .newsletter-content h3, 
+        .newsletter-content h4 {
+          color: #ffffff;
+          font-weight: 750;
+          line-height: 1.3;
+          margin-top: 2.5rem;
+          margin-bottom: 1.25rem;
+        }
+        .newsletter-content h1 { font-size: 2.25rem; }
+        .newsletter-content h2 { font-size: 1.875rem; }
+        .newsletter-content h3 { font-size: 1.5rem; }
+        .newsletter-content h4 { font-size: 1.25rem; }
+        
+        .newsletter-content img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 1.25rem;
+          margin: 2.5rem auto;
+          display: block;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        .newsletter-content blockquote {
+          border-left: 4px solid #22d3ee;
+          background: rgba(34, 211, 238, 0.03);
+          padding: 1.5rem 2rem;
+          font-style: italic;
+          color: #e2e8f0;
+          margin: 2rem 0;
+          border-radius: 0 1rem 1rem 0;
+          font-size: 1.25rem;
+        }
+        .newsletter-content ul {
+          list-style-type: disc;
+          padding-left: 2rem;
+          margin-bottom: 1.75rem;
+        }
+        .newsletter-content ol {
+          list-style-type: decimal;
+          padding-left: 2rem;
+          margin-bottom: 1.75rem;
+        }
+        .newsletter-content li {
+          margin-bottom: 0.625rem;
+        }
+        .newsletter-content strong {
+          color: #ffffff;
+          font-weight: 700;
+        }
+        .newsletter-content a {
+          color: #22d3ee;
+          text-decoration: underline;
+          transition: color 0.2s;
+        }
+        .newsletter-content a:hover {
+          color: #67e8f9;
+        }
+        /* Custom image alignment classes matching standard Quill outputs */
+        .newsletter-content .ql-align-center { text-align: center; }
+        .newsletter-content .ql-align-right { text-align: right; }
+        .newsletter-content .ql-align-left { text-align: left; }
+      `}</style>
+
+      <div className="min-h-screen bg-black pt-32 pb-24 text-white relative overflow-hidden">
+        {/* Glow Effects */}
+        <div className="pointer-events-none absolute left-[-250px] top-[10%] -z-10 h-[600px] w-[600px] rounded-full bg-cyan-500/10 blur-[180px] opacity-70" />
+        <div className="pointer-events-none absolute right-[-250px] top-[35%] -z-10 h-[600px] w-[600px] rounded-full bg-fuchsia-500/8 blur-[180px] opacity-70" />
+        <div className="pointer-events-none absolute left-[-200px] bottom-[15%] -z-10 h-[500px] w-[500px] rounded-full bg-cyan-500/5 blur-[150px] opacity-50" />
+        <div className="pointer-events-none absolute right-[-200px] bottom-[5%] -z-10 h-[500px] w-[500px] rounded-full bg-blue-500/5 blur-[150px] opacity-50" />
+
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          {/* Back button */}
+          <Link
+            to="/newsletter"
+            className="group mb-8 inline-flex items-center gap-2 text-sm font-medium text-white/55 hover:text-cyan-400 transition-colors"
+          >
+            <ArrowLeft size={16} className="transition-transform duration-250 group-hover:-translate-x-1" />
+            Back to Newsletter
+          </Link>
+
+          {/* Loader */}
+          {loading && (
+            <div className="flex h-96 flex-col items-center justify-center gap-4 text-cyan-400">
+              <Loader2 className="h-10 w-10 animate-spin" />
+              <p className="text-sm font-medium text-white/55">Opening story...</p>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && !loading && (
+            <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-8 text-center">
+              <h2 className="text-xl font-bold text-red-400 mb-2">Error</h2>
+              <p className="text-white/60 mb-6">{error}</p>
+              <Link
+                to="/newsletter"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 font-semibold text-black hover:scale-105 transition"
+              >
+                Return to Listing
+              </Link>
+            </div>
+          )}
+
+          {/* Story Content */}
+          {!loading && !error && story && (
+            <article>
+              {/* Header */}
+              <header className="mb-10">
+                <div className="mb-4 flex flex-wrap items-center gap-4 text-sm text-white/45">
+                  <div className="flex items-center gap-1.5">
+                    <User size={14} className="text-cyan-400" />
+                    <span className="font-semibold text-white/80">{story.author}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Calendar size={14} />
+                    <span>{formatDate(story.publishedAt)}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={14} />
+                    <span>{story.readingTime} min read</span>
+                  </div>
+                  {story.status === "draft" && (
+                    <span className="rounded-full bg-yellow-500/10 border border-yellow-500/20 px-2.5 py-0.5 text-xs font-semibold text-yellow-400">
+                      Draft Preview
+                    </span>
+                  )}
+                </div>
+
+                <h1 className="text-3xl font-black tracking-tight sm:text-5xl sm:leading-[1.15]">
+                  {story.title}
+                </h1>
+
+                {story.description && (
+                  <p className="mt-6 text-lg sm:text-xl leading-relaxed text-white/50 border-l-2 border-cyan-400/35 pl-4 italic">
+                    {story.description}
+                  </p>
+                )}
+              </header>
+
+              {/* Cover Image */}
+              {getCoverUrl(story.cover) && (
+                <div className="mb-12 max-w-2xl mx-auto overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5 shadow-xl">
+                  <img
+                    src={getCoverUrl(story.cover)}
+                    alt={story.title}
+                    className="w-full object-cover aspect-[16/10] max-h-[360px]"
+                  />
+                </div>
+              )}
+
+              {/* Story body */}
+              <div
+                className="newsletter-content"
+                dangerouslySetInnerHTML={{ __html: story.content }}
+              />
+
+              {/* Newsletter footer CTA */}
+              <div className="mt-16 rounded-3xl border border-white/10 bg-white/[0.02] p-8 text-center sm:p-12">
+                <Sparkles className="mx-auto mb-4 text-cyan-400" size={32} />
+                <h3 className="text-2xl font-bold">Love our stories?</h3>
+                <p className="mx-auto mt-2 max-w-md text-sm text-white/60">
+                  Stay updated with our publications, reader discussions, and new book releases by subscribing to Lekhok Tripura.
+                </p>
+                <div className="mt-6 flex justify-center">
+                  <Link
+                    to="/club"
+                    className="rounded-full bg-cyan-400 px-6 py-2.5 text-sm font-semibold text-black transition hover:scale-105 hover:bg-cyan-300"
+                  >
+                    Join the Club
+                  </Link>
+                </div>
+              </div>
+            </article>
+          )}
+        </div>
+      </div>
+    </PageTransition>
+  );
+}
