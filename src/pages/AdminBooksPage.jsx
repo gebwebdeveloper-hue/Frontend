@@ -1869,7 +1869,7 @@ export default function AdminBooksPage() {
                       ) : (
                         <>
                           <Upload size={20} className="text-white/30" />
-                          <span className="text-xs text-white/40">Select story cover image (JPG, PNG, WebP)</span>
+                          <span className="text-xs text-white/40 text-center">Select story cover image<br/><span className="text-[10px] text-white/30">(Recommended: 1280 x 800 px &bull; 16:10 Ratio)</span></span>
                         </>
                       )}
                       <input
@@ -1879,6 +1879,9 @@ export default function AdminBooksPage() {
                         onChange={(e) => setNewsletterCover(e.target.files[0] || null)}
                       />
                     </label>
+                    <p className="mt-1.5 text-[10px] text-white/35">
+                      * Recommended dimensions: 1280x800 px (16:10). The full image will be displayed to users without cropping.
+                    </p>
                   </div>
 
                   {/* Jodit Editor */}

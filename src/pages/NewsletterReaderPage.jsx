@@ -214,7 +214,7 @@ export default function NewsletterReaderPage() {
                   <img
                     src={getCoverUrl(story.cover)}
                     alt={story.title}
-                    className="w-full object-cover aspect-[16/10] max-h-[360px]"
+                    className="w-full h-auto max-h-[400px] object-contain block mx-auto"
                   />
                 </div>
               )}
