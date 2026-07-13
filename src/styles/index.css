@@ -12,12 +12,19 @@ html {
   background: #030303;
   color: #ffffff;
   scroll-behavior: auto;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
-body {
+body,
+#root {
   margin: 0;
   min-width: 320px;
   overflow-x: hidden;
+  max-width: 100%;
+}
+
+body {
   background-color: #030303;
   /* Premium futuristic grid overlay + soft radial gradients */
   background-image: 

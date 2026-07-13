@@ -70,7 +70,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: .8 }}
-            className="text-7xl font-black uppercase leading-[0.82] tracking-[-4px] text-white md:text-8xl xl:text-[8.5rem]"
+            className="text-5xl font-black uppercase leading-[0.82] tracking-[-2px] text-white sm:text-7xl md:text-8xl xl:text-[8.5rem]"
           >
             READ
           </motion.h1>
@@ -79,7 +79,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: .15, duration: .8 }}
-            className="text-7xl font-black uppercase leading-[0.82] tracking-[-4px] text-white md:text-8xl xl:text-[8.5rem]"
+            className="text-5xl font-black uppercase leading-[0.82] tracking-[-2px] text-white sm:text-7xl md:text-8xl xl:text-[8.5rem]"
           >
             WITHOUT
           </motion.h1>
@@ -88,7 +88,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: .3, duration: .8 }}
-            className="bg-gradient-to-r from-cyan-300 via-white to-fuchsia-400 bg-clip-text text-7xl font-black uppercase leading-[0.82] tracking-[-4px] text-transparent md:text-8xl xl:text-[8.5rem] animate-text-gradient"
+            className="bg-gradient-to-r from-cyan-300 via-white to-fuchsia-400 bg-clip-text text-5xl font-black uppercase leading-[0.82] tracking-[-2px] text-transparent sm:text-7xl md:text-8xl xl:text-[8.5rem] animate-text-gradient"
           >
             LIMITS
           </motion.h1>
