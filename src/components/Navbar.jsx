@@ -175,7 +175,7 @@ export default function Navbar() {
                         : "border-white/10 bg-white/5 text-white/80 hover:border-white/25 hover:bg-white/10 hover:text-white"
                     }`}
                   >
-                    Join Our Club
+                    Join Club
                   </div>
                 )}
               </NavLink>
@@ -303,6 +303,8 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between rounded-3xl border border-white/10 bg-white/[0.04] p-4">
               <div className="flex min-w-0 items-center gap-3">
@@ -324,7 +326,7 @@ export default function Navbar() {
               animate="visible"
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
             >
-              {[{ label: "Home", to: "/" }, ...navLinks, { label: "Join Our Club", to: "/club" }, { label: "Publish with us", to: "/reader" }].map((item) => (
+              {[{ label: "Home", to: "/" }, ...navLinks, { label: "Join Club", to: "/club" }, { label: "Publish with us", to: "/reader" }].map((item) => (
                 <motion.div
                   key={item.to}
                   variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}

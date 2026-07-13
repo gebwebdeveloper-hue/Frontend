@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { API_BASE } from "../config.js";
 import { useGsapReveal } from "../hooks/useGsapReveal.js";
+import FooterSection from "../sections/FooterSection.jsx";
+
 
 const stats = [
   { icon: Users, value: "250+", label: "Members" },
@@ -259,9 +261,10 @@ export default function ClubPage() {
         </div>
       </section>
 
-      <div className="section-shell pt-0">
+      <div className="section-shell pt-0 pb-16">
         <Link to="/" className="text-sm font-semibold text-white/45 transition hover:text-cyan-300">Back to home</Link>
       </div>
+      <FooterSection />
     </main>
   );
 }
