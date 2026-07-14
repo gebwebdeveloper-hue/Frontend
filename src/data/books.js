@@ -61,19 +61,19 @@ export const categories = [
 
 export const testimonials = [
   {
-    name: "Riya M.",
-    role: "Product Designer",
-    quote: "The reader feels fast, elegant, and focused. It made dense technical books easier to finish."
+    name: "S. Debbarma",
+    role: "Reader & Student, Agartala",
+    quote: "Finding Kokborok and Bengali ebooks in one place used to be impossible. Lekhok Tripura has made local literature easily accessible to everyone."
   },
   {
-    name: "James L.",
-    role: "Founder",
-    quote: "Instant access after purchase changed the way our team shares premium learning material."
+    name: "Pratima Sen",
+    role: "Poet & Writer, Udaipur",
+    quote: "I published my first poetry book using their self-publishing plan. The process was transparent, and the online reader is absolutely beautiful."
   },
   {
-    name: "Aisha K.",
-    role: "Engineering Lead",
-    quote: "Bookmarks, progress, and the dark reading mode are exactly what a serious ebook platform needs."
+    name: "Subhajit Dey",
+    role: "Literature Enthusiast, Dharmanagar",
+    quote: "The distraction-free reader and progress tracking are perfect for reading long novels online. No clutter, just pure reading bliss."
   }
 ];
 
