@@ -9,10 +9,10 @@ import FooterSection from "../sections/FooterSection.jsx";
 
 
 const stats = [
-  { icon: Users, value: "250+", label: "Members" },
-  { icon: PenLine, value: "100+", label: "Writers" },
-  { icon: CalendarDays, value: "40+", label: "Events" },
-  { icon: BookOpen, value: "50+", label: "Books" },
+  { icon: Users, value: "5", label: "Members" },
+  { icon: PenLine, value: "7", label: "Writers" },
+  { icon: CalendarDays, value: "2", label: "Events" },
+  { icon: BookOpen, value: "5", label: "Books" },
 ];
 
 const members = [

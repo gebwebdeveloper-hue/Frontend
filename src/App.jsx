@@ -34,8 +34,8 @@ export default function App() {
           <Route path="/admin" element={<AdminBooksPage />} />
           <Route path="/admin/database" element={<AdminDatabasePage />} />
           <Route path="/club" element={<ClubPage />} />
-          <Route path="/newsletter" element={<NewsletterListingPage />} />
-          <Route path="/newsletter/:slug" element={<NewsletterReaderPage />} />
+          <Route path="/free-stories" element={<NewsletterListingPage />} />
+          <Route path="/free-stories/:slug" element={<NewsletterReaderPage />} />
         </Routes>
 
       </AnimatePresence>

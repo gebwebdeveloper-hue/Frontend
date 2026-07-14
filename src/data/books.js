@@ -80,14 +80,30 @@ export const testimonials = [
 export const faqItems = [
   {
     question: "Can users download purchased ebooks?",
-    answer: "Downloads can be disabled by the platform owner, while purchased readers still get secure online PDF access."
+    answer: "Downloads are disabled to protect copyright; instead, approved purchases unlock lifetime online reading in our secure digital PDF reader."
   },
   {
     question: "Does the reader save progress?",
-    answer: "Yes. The experience is designed around reading progress, bookmarks, and quick resume behavior."
+    answer: "Yes. The custom online reader automatically tracks your reading progress, lets you manage bookmarks, and resumes exactly where you left off."
   },
   {
-    question: "Is this an online bookstore?",
-    answer: "No. The site is positioned as a premium ebook reading platform where purchase leads into online reading."
+    question: "How do I purchase and unlock an ebook?",
+    answer: "Pay securely using the displayed UPI details or QR code, then copy the payment transaction reference ID and submit it. The administrator will manually verify and approve your request to instantly unlock access."
+  },
+  {
+    question: "Can I order physical copies of books?",
+    answer: "Yes! For books that support print editions, you can order physical paperback or hardcover copies directly from the book details by submitting your shipping address."
+  },
+  {
+    question: "How can I publish my book on Lekhok Tripura?",
+    answer: "You can visit the 'Publish with Us' page to choose from our self-publishing packages (Basic, Essential, Popular, Premium) or apply for Free Sponsored Publishing by uploading your manuscript."
+  },
+  {
+    question: "What is Lekhok Tripura Club and how do I join?",
+    answer: "It is a literary community for readers and writers in Tripura. Members receive custom ID cards, club diaries, invitations to book discussions, workshops, and publication opportunities. You can apply to join via the Club page."
+  },
+  {
+    question: "Are there free stories to read on the platform?",
+    answer: "Yes! In our 'Free Stories' section, we publish weekly stories, essays, and literary discussions every Friday and Sunday, available for everyone to read."
   }
 ];

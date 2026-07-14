@@ -143,11 +143,11 @@ export default function NewsletterReaderPage() {
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
           {/* Back button */}
           <Link
-            to="/newsletter"
+            to="/free-stories"
             className="group mb-8 inline-flex items-center gap-2 text-sm font-medium text-white/55 hover:text-cyan-400 transition-colors"
           >
             <ArrowLeft size={16} className="transition-transform duration-250 group-hover:-translate-x-1" />
-            Back to Newsletter
+            Back to Free Stories
           </Link>
 
           {/* Loader */}
@@ -164,7 +164,7 @@ export default function NewsletterReaderPage() {
               <h2 className="text-xl font-bold text-red-400 mb-2">Error</h2>
               <p className="text-white/60 mb-6">{error}</p>
               <Link
-                to="/newsletter"
+                to="/free-stories"
                 className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 font-semibold text-black hover:scale-105 transition"
               >
                 Return to Listing

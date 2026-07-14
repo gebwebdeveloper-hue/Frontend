@@ -69,7 +69,7 @@ export default function NewsletterListingPage() {
               className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300 sm:text-sm"
             >
               <BookOpen size={14} className="animate-pulse" />
-              Weekly Newsletter
+              Free Stories
             </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 10 }}
@@ -149,7 +149,7 @@ export default function NewsletterListingPage() {
 
                       {/* Title & Snippet */}
                       <h2 className="mb-3 text-xl font-bold tracking-tight text-white group-hover:text-cyan-300 transition-colors duration-300 line-clamp-2">
-                        <Link to={`/newsletter/${story.slug}`}>{story.title}</Link>
+                        <Link to={`/free-stories/${story.slug}`}>{story.title}</Link>
                       </h2>
                       <p className="mb-6 text-sm leading-relaxed text-white/60 line-clamp-3">
                         {story.description}
@@ -158,7 +158,7 @@ export default function NewsletterListingPage() {
                       {/* Read More button */}
                       <div className="mt-auto pt-4 border-t border-white/5">
                         <Link
-                          to={`/newsletter/${story.slug}`}
+                          to={`/free-stories/${story.slug}`}
                           className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 transition-colors duration-250 group-hover:text-cyan-300"
                         >
                           Read Full Story

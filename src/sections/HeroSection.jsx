@@ -12,7 +12,7 @@ const words = [
 
 const stats = [
   {
-    number: "200+",
+    number: "5",
     label: "Premium Books",
   },
   {

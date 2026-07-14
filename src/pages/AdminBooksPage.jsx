@@ -854,7 +854,7 @@ export default function AdminBooksPage() {
                         activeTab === "newsletter" ? "bg-white text-black" : "text-white/60 hover:text-white"
                       }`}
                     >
-                      Newsletter
+                      Free Stories
                     </button>
 
                   </div>
@@ -1914,7 +1914,7 @@ export default function AdminBooksPage() {
               {/* RIGHT: Newsletters List */}
               <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
                 <div className="border-b border-white/10 pb-6 mb-6">
-                  <h2 className="text-xl font-bold text-white">All Newsletter Stories</h2>
+                  <h2 className="text-xl font-bold text-white">All Free Stories</h2>
                   <p className="mt-1 text-sm text-white/55">{newsletterList.length} stor{newsletterList.length !== 1 ? "ies" : "y"} written.</p>
                 </div>
 

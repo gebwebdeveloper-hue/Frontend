@@ -66,7 +66,7 @@ const stats = [
     label: "Readers",
   },
   {
-    value: "250+",
+    value: "5",
     label: "Books",
   },
   {
