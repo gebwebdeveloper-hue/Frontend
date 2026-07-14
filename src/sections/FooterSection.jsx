@@ -5,9 +5,12 @@ import {
   Send,
   ArrowUpRight,
   BookOpen,
+  Loader2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { API_BASE } from "../config.js";
 
 const social = [
   {
@@ -25,6 +28,37 @@ const social = [
 ];
 
 export default function FooterSection() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState({ type: "", text: "" });
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setLoading(true);
+    setStatus({ type: "", text: "" });
+
+    try {
+      const res = await fetch(`${API_BASE}/newsletter/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setEmail("");
+        setStatus({ type: "success", text: "Successfully subscribed!" });
+      } else {
+        setStatus({ type: "error", text: data.message || "Failed to subscribe." });
+      }
+    } catch {
+      setStatus({ type: "error", text: "Something went wrong. Please try again." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <footer className="relative overflow-hidden border-t border-white/10">
 
@@ -42,7 +76,7 @@ export default function FooterSection() {
 
       <div className="section-shell relative">
 
-        <div className="grid gap-16 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:gap-16">
 
           {/* Brand */}
 
@@ -58,7 +92,7 @@ export default function FooterSection() {
 
               <div>
 
-                <h2 className="text-2xl font-bold tracking-[0.3em] text-white">
+                <h2 className="text-xl font-bold tracking-[0.2em] text-white sm:text-2xl sm:tracking-[0.3em]">
                   LEKHOK TRIPURA
                 </h2>
 
@@ -77,24 +111,39 @@ export default function FooterSection() {
             </p>
 
             {/* Newsletter */}
-
-            <div className="mt-10 flex overflow-hidden rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-xl">
-
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 bg-transparent px-6 text-white outline-none placeholder:text-white/40"
-              />
-
-              <button className="m-2 flex items-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-black transition hover:scale-105">
-
-                Subscribe
-
-                <Send size={16} />
-
-              </button>
-
-            </div>
+            <form onSubmit={handleSubscribe} className="mt-10 max-w-md">
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-0 sm:overflow-hidden sm:rounded-full sm:border sm:border-white/10 sm:bg-white/[0.04] sm:backdrop-blur-xl">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-4 text-white outline-none placeholder:text-white/40 focus:border-cyan-400/40 sm:flex-1 sm:rounded-none sm:border-none sm:bg-transparent sm:py-3"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-4 font-semibold text-black transition hover:scale-[1.02] disabled:opacity-60 sm:m-2 sm:rounded-full sm:py-3 shrink-0"
+                >
+                  {loading ? (
+                    <Loader2 size={16} className="animate-spin text-black" />
+                  ) : (
+                    <>
+                      Subscribe
+                      <Send size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
+              {status.text && (
+                <p className={`mt-3 text-xs pl-4 font-semibold ${
+                  status.type === "success" ? "text-emerald-400" : "text-red-400"
+                }`}>
+                  {status.text}
+                </p>
+              )}
+            </form>
 
           </div>
 
@@ -110,8 +159,7 @@ export default function FooterSection() {
 
               {[
                 { name: "Library", to: "/library" },
-                { name: "Publish with Us", to: "/reader" },
-                { name: "Admin Dashboard", to: "/admin" }
+                { name: "Publish with Us", to: "/reader" }
               ].map((item) => (
 
                 <Link
