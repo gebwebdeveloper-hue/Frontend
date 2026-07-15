@@ -97,6 +97,15 @@ export default function AdminBooksPage() {
   const [submittingNewsletter, setSubmittingNewsletter] = useState(false);
   const quillRef = useRef(null);
 
+  // Newsletter categories state
+  const [categoriesList, setCategoriesList] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [submittingCategory, setSubmittingCategory] = useState(false);
+  const [selectedStoryCategories, setSelectedStoryCategories] = useState([]);
+  const [categoryError, setCategoryError] = useState("");
+  const [categorySuccess, setCategorySuccess] = useState("");
+
 
 
 
@@ -128,6 +137,7 @@ export default function AdminBooksPage() {
             fetchAuthors();
             fetchPaymentConfig();
             fetchNewsletters();
+            fetchCategories();
           } else {
             setAuthError("Access denied. Admin permissions required.");
             setStep("login-email");
@@ -335,6 +345,7 @@ export default function AdminBooksPage() {
     setEditingNewsletter(null);
     setNewsletterFormError("");
     setNewsletterFormSuccess("");
+    setSelectedStoryCategories([]);
   };
 
   const handleNewsletterSubmit = (e) => {
@@ -349,6 +360,7 @@ export default function AdminBooksPage() {
     const fd = new FormData();
     Object.entries(newsletterForm).forEach(([k, v]) => fd.append(k, v));
     if (newsletterCover) fd.append("cover", newsletterCover);
+    fd.append("categories", selectedStoryCategories.join(","));
 
     const url = editingNewsletter ? `${API_BASE}/newsletter/${editingNewsletter._id}` : `${API_BASE}/newsletter`;
     const method = editingNewsletter ? "PUT" : "POST";
@@ -382,10 +394,70 @@ export default function AdminBooksPage() {
     setNewsletterCover(null);
     setNewsletterFormError("");
     setNewsletterFormSuccess("");
+    setSelectedStoryCategories(n.categories ? n.categories.map((c) => typeof c === "string" ? c : c._id) : []);
   };
 
 
 
+
+  const fetchCategories = () => {
+    setLoadingCategories(true);
+    fetch(`${API_BASE}/categories`, { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setCategoriesList(data.categories || []);
+      })
+      .catch((err) => console.error("Error fetching categories:", err))
+      .finally(() => setLoadingCategories(false));
+  };
+
+  const handleCategoryCreate = (e) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    setSubmittingCategory(true);
+    setCategoryError("");
+    setCategorySuccess("");
+
+    fetch(`${API_BASE}/categories`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newCategoryName }),
+      credentials: "include"
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setCategorySuccess("Category created successfully!");
+          setNewCategoryName("");
+          fetchCategories();
+        } else {
+          setCategoryError(data.message || "Failed to create category.");
+        }
+      })
+      .catch(() => setCategoryError("Server error. Please try again."))
+      .finally(() => setSubmittingCategory(false));
+  };
+
+  const handleCategoryDelete = (id) => {
+    if (!confirm("Delete this category? Stories marked with this category will no longer be classified under it.")) return;
+    setCategoryError("");
+    setCategorySuccess("");
+
+    fetch(`${API_BASE}/categories/${id}`, {
+      method: "DELETE",
+      credentials: "include"
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setCategorySuccess("Category deleted.");
+          fetchCategories();
+        } else {
+          setCategoryError(data.message || "Failed to delete category.");
+        }
+      })
+      .catch(() => setCategoryError("Server error."));
+  };
 
   const handleDeleteNewsletter = (id) => {
     if (!confirm("Delete this story?")) return;
@@ -1884,6 +1956,48 @@ export default function AdminBooksPage() {
                     </p>
                   </div>
 
+                  {/* Category Selection */}
+                  <div className="border-t border-white/5 pt-4">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-3">
+                      Story Categories
+                    </label>
+                    {categoriesList.length === 0 ? (
+                      <p className="text-xs text-white/40 italic">No categories available. Please add some on the right panel first.</p>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2 rounded-2xl border border-white/10 bg-zinc-950 p-4">
+                        {categoriesList.map((cat) => {
+                          const isChecked = selectedStoryCategories.includes(cat._id);
+                          return (
+                            <label
+                              key={cat._id}
+                              className={`flex items-center gap-2.5 cursor-pointer rounded-xl px-3 py-2 border transition ${
+                                isChecked
+                                  ? "border-cyan-400/30 bg-cyan-400/5 text-cyan-300"
+                                  : "border-white/5 hover:border-white/15 bg-white/[0.02]"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedStoryCategories((prev) => [...prev, cat._id]);
+                                  } else {
+                                    setSelectedStoryCategories((prev) =>
+                                      prev.filter((id) => id !== cat._id)
+                                    );
+                                  }
+                                }}
+                                className="h-4 w-4 rounded border-white/10 bg-white/5 text-cyan-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
+                              />
+                              <span className="text-xs font-medium truncate select-none">{cat.name}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
                   {/* Jodit Editor */}
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Content (Jodit Rich Text Experience) *</label>
@@ -1911,80 +2025,156 @@ export default function AdminBooksPage() {
                 </form>
               </div>
 
-              {/* RIGHT: Newsletters List */}
-              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
-                <div className="border-b border-white/10 pb-6 mb-6">
-                  <h2 className="text-xl font-bold text-white">All Free Stories</h2>
-                  <p className="mt-1 text-sm text-white/55">{newsletterList.length} stor{newsletterList.length !== 1 ? "ies" : "y"} written.</p>
+              {/* RIGHT: Categories & Newsletters List */}
+              <div className="space-y-8">
+                {/* CATEGORY MANAGER */}
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+                  <div className="border-b border-white/10 pb-6 mb-6">
+                    <h2 className="text-xl font-bold text-white">Manage Categories</h2>
+                    <p className="mt-1 text-sm text-white/55">Create and delete story classification categories.</p>
+                  </div>
+                  
+                  {categoryError && (
+                    <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-xs text-red-300">
+                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                      <span>{categoryError}</span>
+                    </div>
+                  )}
+                  {categorySuccess && (
+                    <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-xs text-emerald-300">
+                      <span>{categorySuccess}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleCategoryCreate} className="flex gap-2 mb-6">
+                    <input
+                      type="text"
+                      placeholder="Category name (e.g. Ray Special)"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder-white/30 focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      disabled={submittingCategory || !newCategoryName.trim()}
+                      className="flex items-center gap-1.5 rounded-xl bg-white px-4 py-2.5 text-xs font-semibold text-black hover:scale-[1.02] transition disabled:opacity-50 shrink-0"
+                    >
+                      {submittingCategory ? <Loader2 size={13} className="animate-spin" /> : <PlusCircle size={13} />}
+                      Add
+                    </button>
+                  </form>
+
+                  {loadingCategories ? (
+                    <div className="flex justify-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-cyan-300" />
+                    </div>
+                  ) : categoriesList.length === 0 ? (
+                    <p className="text-xs text-white/40 text-center py-2">No categories created yet.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
+                      {categoriesList.map((cat) => (
+                        <div
+                          key={cat._id}
+                          className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 pl-3 pr-1 py-1 text-xs text-white"
+                        >
+                          <span>{cat.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCategoryDelete(cat._id)}
+                            className="rounded-full p-1 text-white/40 hover:text-red-400 hover:bg-white/5 transition"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {loadingNewsletters ? (
-                  <div className="flex justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
+                {/* Newsletters List */}
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+                  <div className="border-b border-white/10 pb-6 mb-6">
+                    <h2 className="text-xl font-bold text-white">All Free Stories</h2>
+                    <p className="mt-1 text-sm text-white/55">{newsletterList.length} stor{newsletterList.length !== 1 ? "ies" : "y"} written.</p>
                   </div>
-                ) : newsletterList.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <BookOpen size={36} className="mb-3 text-white/20" />
-                    <p className="text-sm text-white/40">No stories posted yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
-                    {newsletterList.map((story) => {
-                      const coverUrl = story.cover?.url
-                        ? story.cover.url.startsWith("http")
-                          ? story.cover.url
-                          : `${SERVER_URL}${story.cover.url}`
-                        : null;
-                      return (
-                        <div
-                          key={story._id}
-                          className="flex items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 hover:border-cyan-500/20 transition-all"
-                        >
-                          {/* Cover preview */}
-                          <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5">
-                            {coverUrl ? (
-                              <img src={coverUrl} alt={story.title} className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center">
-                                <BookOpen size={16} className="text-white/20" />
-                              </div>
-                            )}
+
+                  {loadingNewsletters ? (
+                    <div className="flex justify-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
+                    </div>
+                  ) : newsletterList.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <BookOpen size={36} className="mb-3 text-white/20" />
+                      <p className="text-sm text-white/40">No stories posted yet.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
+                      {newsletterList.map((story) => {
+                        const coverUrl = story.cover?.url
+                          ? story.cover.url.startsWith("http")
+                            ? story.cover.url
+                            : `${SERVER_URL}${story.cover.url}`
+                          : null;
+                        return (
+                          <div
+                            key={story._id}
+                            className="flex items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 hover:border-cyan-500/20 transition-all"
+                          >
+                            {/* Cover preview */}
+                            <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                              {coverUrl ? (
+                                <img src={coverUrl} alt={story.title} className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center">
+                                  <BookOpen size={16} className="text-white/20" />
+                                </div>
+                              )}
+                            </div>
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="truncate text-sm font-semibold text-white">{story.title}</p>
+                              <p className="text-[10px] text-white/45 flex items-center gap-1.5 flex-wrap">
+                                <span>{story.author}</span>
+                                <span>&bull;</span>
+                                <span className={`font-semibold uppercase ${story.status === "published" ? "text-emerald-400" : "text-yellow-400"}`}>
+                                  {story.status}
+                                </span>
+                                <span>&bull;</span>
+                                <span>{new Date(story.publishedAt).toLocaleDateString()}</span>
+                              </p>
+                              {story.categories && story.categories.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {story.categories.map((c) => (
+                                    <span key={c._id} className="text-[8px] bg-cyan-500/10 text-cyan-300 px-1.5 py-0.5 rounded">
+                                      {c.name}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            {/* Actions */}
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleEditNewsletter(story)}
+                                className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:border-cyan-400/30 hover:bg-cyan-400/10 hover:text-cyan-300"
+                              >
+                                <Pencil size={13} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteNewsletter(story._id)}
+                                className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
                           </div>
-                          {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <p className="truncate text-sm font-semibold text-white">{story.title}</p>
-                            <p className="text-[10px] text-white/45 flex items-center gap-1.5">
-                              <span>{story.author}</span>
-                              <span>&bull;</span>
-                              <span className={`font-semibold uppercase ${story.status === "published" ? "text-emerald-400" : "text-yellow-400"}`}>
-                                {story.status}
-                              </span>
-                              <span>&bull;</span>
-                              <span>{new Date(story.publishedAt).toLocaleDateString()}</span>
-                            </p>
-                          </div>
-                          {/* Actions */}
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleEditNewsletter(story)}
-                              className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:border-cyan-400/30 hover:bg-cyan-400/10 hover:text-cyan-300"
-                            >
-                              <Pencil size={13} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteNewsletter(story._id)}
-                              className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
