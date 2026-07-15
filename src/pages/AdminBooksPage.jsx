@@ -161,6 +161,16 @@ export default function AdminBooksPage() {
     }
   }, [location.state?.editBookId, booksList]);
 
+  useEffect(() => {
+    if (location.state?.editNewsletterId && newsletterList.length > 0) {
+      const newsletterToEdit = newsletterList.find((n) => n._id === location.state.editNewsletterId);
+      if (newsletterToEdit) {
+        setActiveTab("newsletter");
+        handleEditNewsletter(newsletterToEdit);
+      }
+    }
+  }, [location.state?.editNewsletterId, newsletterList]);
+
   const fetchBooks = () => {
     setLoadingBooks(true);
     fetch(`${API_BASE}/books?limit=2000`, { credentials: "include" })
@@ -2093,9 +2103,17 @@ export default function AdminBooksPage() {
 
                 {/* Newsletters List */}
                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
-                  <div className="border-b border-white/10 pb-6 mb-6">
-                    <h2 className="text-xl font-bold text-white">All Free Stories</h2>
-                    <p className="mt-1 text-sm text-white/55">{newsletterList.length} stor{newsletterList.length !== 1 ? "ies" : "y"} written.</p>
+                  <div className="border-b border-white/10 pb-6 mb-6 flex items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-white">All Free Stories</h2>
+                      <p className="mt-1 text-sm text-white/55">{newsletterList.length} stor{newsletterList.length !== 1 ? "ies" : "y"} written.</p>
+                    </div>
+                    <Link
+                      to="/admin/stories"
+                      className="rounded-xl border border-cyan-400/20 bg-cyan-400/5 px-4 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-400 hover:text-black transition shrink-0"
+                    >
+                      Open Stories Database
+                    </Link>
                   </div>
 
                   {loadingNewsletters ? (
