@@ -731,6 +731,7 @@ export default function AdminBooksPage() {
     placeholder: "Write your masterpiece story here...",
     height: 400,
     theme: "dark",
+    toolbarAdaptive: true,
     uploader: {
       insertImageAsBase64URI: false,
       withCredentials: true,
@@ -1808,8 +1809,15 @@ export default function AdminBooksPage() {
             <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
               {/* Dark styles to adapt Jodit for Dark Theme */}
               <style>{`
+                .jodit-editor-container {
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  overflow: hidden !important;
+                }
                 .jodit-editor-container .jodit-container {
                   border: none !important;
+                  width: 100% !important;
+                  max-width: 100% !important;
                 }
                 .jodit-editor-container .jodit-wysiwyg {
                   background-color: #09090b !important;
@@ -1817,6 +1825,12 @@ export default function AdminBooksPage() {
                 }
                 .jodit-editor-container .jodit-workplace {
                   background-color: #09090b !important;
+                }
+                .jodit-editor-container .jodit-toolbar__box {
+                  max-width: 100% !important;
+                }
+                .jodit-editor-container .jodit-toolbar-list {
+                  flex-wrap: wrap !important;
                 }
               `}</style>
 
@@ -2086,7 +2100,7 @@ export default function AdminBooksPage() {
                           key={cat._id}
                           className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 pl-3 pr-1 py-1 text-xs text-white"
                         >
-                          <span>{cat.name}</span>
+                          <span className="truncate max-w-[120px]" title={cat.name}>{cat.name}</span>
                           <button
                             type="button"
                             onClick={() => handleCategoryDelete(cat._id)}

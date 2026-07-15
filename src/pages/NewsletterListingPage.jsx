@@ -115,7 +115,7 @@ export default function NewsletterListingPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="mt-6 text-4xl font-extrabold tracking-tight sm:text-6xl"
+              className="mt-6 text-4xl font-black tracking-tight sm:text-6xl bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-500 bg-clip-text text-transparent animate-text-gradient"
             >
               Stories & Updates
             </motion.h1>
