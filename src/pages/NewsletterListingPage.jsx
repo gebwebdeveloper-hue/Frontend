@@ -6,6 +6,102 @@ import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
 
+function StoryCard({ story, index, getCoverUrl, formatDate }) {
+  const [showAllTags, setShowAllTags] = useState(false);
+
+  const categories = story.categories || [];
+  const firstCategory = categories[0];
+  const remainingCount = categories.length - 1;
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.05 }}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-white/[0.02] backdrop-blur-md transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-cyan-500/5"
+    >
+      {/* Cover Image Container */}
+      <div className="aspect-[16/9] w-full overflow-hidden bg-white/5 relative">
+        <img
+          src={getCoverUrl(story.cover)}
+          alt={story.title}
+          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        
+        {/* Categories badge Overlay */}
+        {categories.length > 0 && (
+          <div 
+            className="absolute left-4 top-4 flex flex-wrap gap-1.5 max-w-[85%] z-20 cursor-pointer"
+            onMouseEnter={() => setShowAllTags(true)}
+            onMouseLeave={() => setShowAllTags(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowAllTags(!showAllTags);
+            }}
+          >
+            {showAllTags ? (
+              categories.map((cat) => (
+                <span
+                  key={cat._id}
+                  className="rounded-full bg-cyan-500 text-black border border-cyan-400 px-2.5 py-0.5 text-[10px] font-bold backdrop-blur-sm shadow-glow shadow-cyan-500/20 transition-all duration-200"
+                >
+                  {cat.name}
+                </span>
+              ))
+            ) : (
+              <>
+                <span className="rounded-full bg-black/75 border border-white/15 px-2.5 py-0.5 text-[10px] font-medium text-cyan-300 backdrop-blur-sm truncate max-w-full">
+                  {firstCategory.name}
+                </span>
+                {remainingCount > 0 && (
+                  <span className="rounded-full bg-cyan-400 border border-cyan-300 px-2 py-0.5 text-[10px] font-extrabold text-black backdrop-blur-sm cursor-pointer select-none">
+                    +{remainingCount}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Card Content */}
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        {/* Meta information */}
+        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-white/45">
+          <div className="flex items-center gap-1">
+            <Calendar size={12} />
+            <span>{formatDate(story.publishedAt)}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Clock size={12} />
+            <span>{story.readingTime} min read</span>
+          </div>
+        </div>
+
+        {/* Title & Snippet */}
+        <h2 className="mb-2 text-lg font-bold tracking-tight text-white group-hover:text-cyan-300 transition-colors duration-300 line-clamp-2">
+          <Link to={`/free-stories/${story.slug}`}>{story.title}</Link>
+        </h2>
+        <p className="mb-4 text-xs leading-relaxed text-white/60 line-clamp-3">
+          {story.description}
+        </p>
+
+        {/* Read More button */}
+        <div className="mt-auto pt-4 border-t border-white/5">
+          <Link
+            to={`/free-stories/${story.slug}`}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 transition-colors duration-250 group-hover:text-cyan-300"
+          >
+            Read Full Story
+            <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+          </Link>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
 export default function NewsletterListingPage() {
   const [newsletters, setNewsletters] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -213,71 +309,13 @@ export default function NewsletterListingPage() {
                 <>
                   <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                     {newsletters.map((story, index) => (
-                      <motion.article
+                      <StoryCard
                         key={story._id}
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: index * 0.05 }}
-                        className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-white/[0.02] backdrop-blur-md transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-cyan-500/5"
-                      >
-                        {/* Cover Image Container */}
-                        <div className="aspect-[16/9] w-full overflow-hidden bg-white/5 relative">
-                          <img
-                            src={getCoverUrl(story.cover)}
-                            alt={story.title}
-                            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                          
-                          {/* Categories badge Overlay */}
-                          {story.categories && story.categories.length > 0 && (
-                            <div className="absolute left-4 top-4 flex flex-wrap gap-1.5 max-w-[80%]">
-                              {story.categories.map((cat) => (
-                                <span
-                                  key={cat._id}
-                                  className="rounded-full bg-black/75 border border-white/15 px-2.5 py-0.5 text-[10px] font-medium text-cyan-300 backdrop-blur-sm truncate max-w-full"
-                                >
-                                  {cat.name}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Card Content */}
-                        <div className="flex flex-1 flex-col p-5 sm:p-6">
-                          {/* Meta information */}
-                          <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-white/45">
-                            <div className="flex items-center gap-1">
-                              <Calendar size={12} />
-                              <span>{formatDate(story.publishedAt)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock size={12} />
-                              <span>{story.readingTime} min read</span>
-                            </div>
-                          </div>
-
-                          {/* Title & Snippet */}
-                          <h2 className="mb-2 text-lg font-bold tracking-tight text-white group-hover:text-cyan-300 transition-colors duration-300 line-clamp-2">
-                            <Link to={`/free-stories/${story.slug}`}>{story.title}</Link>
-                          </h2>
-                          <p className="mb-4 text-xs leading-relaxed text-white/60 line-clamp-3">
-                            {story.description}
-                          </p>
-
-                          {/* Read More button */}
-                          <div className="mt-auto pt-4 border-t border-white/5">
-                            <Link
-                              to={`/free-stories/${story.slug}`}
-                              className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 transition-colors duration-250 group-hover:text-cyan-300"
-                            >
-                              Read Full Story
-                              <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
-                            </Link>
-                          </div>
-                        </div>
-                      </motion.article>
+                        story={story}
+                        index={index}
+                        getCoverUrl={getCoverUrl}
+                        formatDate={formatDate}
+                      />
                     ))}
                   </div>
 
