@@ -64,6 +64,8 @@ export default function AdminBooksPage() {
   const [trending, setTrending] = useState(false);
   const [ourPublication, setOurPublication] = useState(false);
   const [comingSoon, setComingSoon] = useState(false);
+  const [listenInYoutube, setListenInYoutube] = useState(false);
+  const [youtubeLink, setYoutubeLink] = useState("");
   const [editingBook, setEditingBook] = useState(null);
 
   // File states
@@ -623,6 +625,8 @@ export default function AdminBooksPage() {
     setTrending(false);
     setOurPublication(false);
     setComingSoon(false);
+    setListenInYoutube(false);
+    setYoutubeLink("");
     setCoverFile(null);
     setPdfFile(null);
     setPreviewPdfFile(null);
@@ -647,6 +651,8 @@ export default function AdminBooksPage() {
     setTrending(book.trending || false);
     setOurPublication(book.ourPublication || false);
     setComingSoon(book.comingSoon || false);
+    setListenInYoutube(book.listenInYoutube || false);
+    setYoutubeLink(book.youtubeLink || "");
 
     setCoverFile(null);
     setPdfFile(null);
@@ -687,6 +693,8 @@ export default function AdminBooksPage() {
     formData.append("trending", String(trending));
     formData.append("ourPublication", String(ourPublication));
     formData.append("comingSoon", String(comingSoon));
+    formData.append("listenInYoutube", String(listenInYoutube));
+    formData.append("youtubeLink", listenInYoutube ? youtubeLink : "");
 
     if (coverFile) {
       formData.append("cover", coverFile);
@@ -1174,6 +1182,33 @@ export default function AdminBooksPage() {
                             Coming Soon
                           </label>
                         </div>
+                      </div>
+
+                      <div className="grid gap-6 md:grid-cols-2 border-t border-white/10 pt-6">
+                        <div className="flex items-center">
+                          <label className="flex items-center gap-3 cursor-pointer text-sm text-white/80">
+                            <input
+                              type="checkbox"
+                              checked={listenInYoutube}
+                              onChange={(e) => setListenInYoutube(e.target.checked)}
+                              className="h-5 w-5 rounded border-white/10 bg-white/5 text-cyan-400 focus:ring-0 focus:ring-offset-0 focus:outline-none"
+                            />
+                            Listen in YouTube
+                          </label>
+                        </div>
+                        {listenInYoutube && (
+                          <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">YouTube Link</label>
+                            <input
+                              type="url"
+                              required={listenInYoutube}
+                              value={youtubeLink}
+                              onChange={(e) => setYoutubeLink(e.target.value)}
+                              placeholder="https://www.youtube.com/watch?v=..."
+                              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                            />
+                          </div>
+                        )}
                       </div>
 
                       {/* File Upload Fields */}

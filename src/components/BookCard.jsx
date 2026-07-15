@@ -619,14 +619,25 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                           </button>
 
                           {/* Listen in YouTube */}
-                          <button
-                            type="button"
-                            disabled
-                            className="book-format-button flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/40 cursor-not-allowed"
-                            title="YouTube listening option is not available yet"
-                          >
-                            Listen in YouTube
-                          </button>
+                          {book.listenInYoutube ? (
+                            <a
+                              href={book.youtubeLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="book-format-button book-format-button-active flex items-center justify-center rounded-xl border border-white/10 bg-white/5 py-3 text-xs font-bold uppercase tracking-[0.04em] text-white/80 transition hover:bg-white/10 hover:text-white"
+                            >
+                              Listen in YouTube
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              className="book-format-button flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/40 cursor-not-allowed"
+                              title="YouTube listening option is not available yet"
+                            >
+                              Listen in YouTube
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
