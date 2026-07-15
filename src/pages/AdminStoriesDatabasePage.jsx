@@ -122,20 +122,38 @@ export default function AdminStoriesDatabasePage() {
       <div className="min-h-screen bg-zinc-950 text-white pt-20 md:pt-28">
         {/* Header */}
         <div className="sticky top-[76px] md:top-[92px] z-30 border-b border-white/8 bg-zinc-950/90 backdrop-blur-xl">
-          <div className="mx-auto max-w-7xl px-6 py-4 flex items-center gap-4">
-            <Link
-              to="/admin"
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white transition"
-            >
-              <ArrowLeft size={15} /> Back to Admin
-            </Link>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto">
+              <Link
+                to="/admin"
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white transition shrink-0"
+              >
+                <ArrowLeft size={15} /> Back to Admin
+              </Link>
+              
+              <button
+                onClick={() => setShowFilters((v) => !v)}
+                className={`sm:hidden flex items-center gap-2 rounded-xl border px-4 py-2 text-sm transition shrink-0 ${
+                  showFilters
+                    ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-300"
+                    : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                }`}
+              >
+                <Filter size={14} /> Filters
+                {(categoryFilter !== "All" || statusFilter !== "All") && (
+                  <span className="ml-1 h-2 w-2 rounded-full bg-cyan-400 inline-block" />
+                )}
+              </button>
+            </div>
+
             <div className="flex-1">
               <h1 className="text-xl font-bold text-white">Stories Database</h1>
               <p className="text-xs text-white/40">{filtered.length} of {stories.length} stories</p>
             </div>
+
             <button
               onClick={() => setShowFilters((v) => !v)}
-              className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm transition ${
+              className={`hidden sm:flex items-center gap-2 rounded-xl border px-4 py-2 text-sm transition ${
                 showFilters
                   ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-300"
                   : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"

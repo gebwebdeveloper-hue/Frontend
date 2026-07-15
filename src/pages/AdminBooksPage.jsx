@@ -771,7 +771,7 @@ export default function AdminBooksPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen px-6 py-28 relative overflow-hidden">
+      <div className="min-h-screen px-4 sm:px-6 py-20 sm:py-28 relative overflow-hidden">
         {/* Background glow */}
         <div className="absolute inset-0 animated-gradient opacity-80" />
         <div className="noise" />
@@ -897,18 +897,18 @@ export default function AdminBooksPage() {
           {step === "dashboard" && (
             <div>
               {/* Header section with title and logout */}
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-white/10 pb-6 mb-8 gap-4">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between border-b border-white/10 pb-6 mb-8 gap-6">
                 <div>
                   <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
                   <p className="mt-1 text-sm text-white/55">Manage your digital assets and review readers access requests.</p>
                 </div>
                 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                   {/* Tabs */}
-                  <div className="flex rounded-full bg-white/5 p-1 border border-white/10">
+                  <div className="flex rounded-full bg-white/5 p-1 border border-white/10 overflow-x-auto max-w-full whitespace-nowrap scrollbar-none">
                     <button
                       onClick={() => setActiveTab("books")}
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 ${
                         activeTab === "books" ? "bg-white text-black" : "text-white/60 hover:text-white"
                       }`}
                     >
@@ -916,7 +916,7 @@ export default function AdminBooksPage() {
                     </button>
                     <button
                       onClick={() => setActiveTab("purchases")}
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 ${
                         activeTab === "purchases" ? "bg-white text-black" : "text-white/60 hover:text-white"
                       }`}
                     >
@@ -924,7 +924,7 @@ export default function AdminBooksPage() {
                     </button>
                     <button
                       onClick={() => setActiveTab("authors")}
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 ${
                         activeTab === "authors" ? "bg-white text-black" : "text-white/60 hover:text-white"
                       }`}
                     >
@@ -932,18 +932,17 @@ export default function AdminBooksPage() {
                     </button>
                     <button
                       onClick={() => setActiveTab("newsletter")}
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 ${
                         activeTab === "newsletter" ? "bg-white text-black" : "text-white/60 hover:text-white"
                       }`}
                     >
                       Free Stories
                     </button>
-
                   </div>
                   
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500/20 hover:border-red-500/30 transition"
+                    className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500/20 hover:border-red-500/30 transition shrink-0 w-full sm:w-auto"
                   >
                     <LogOut size={14} /> Log Out
                   </button>
@@ -954,7 +953,7 @@ export default function AdminBooksPage() {
               {activeTab === "books" && (
                 <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
                   {/* LEFT: BOOK UPLOADER */}
-                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
                     <div className="border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
                       <div>
                         <h2 className="text-2xl font-bold text-white">
@@ -1315,7 +1314,7 @@ export default function AdminBooksPage() {
                   </div>
 
                   {/* RIGHT: QUICK LINK TO DATABASE */}
-                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl flex flex-col gap-6">
+                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl flex flex-col gap-6">
                     <div>
                       <h2 className="text-2xl font-bold text-white mb-2">Database Ebooks</h2>
                       <p className="text-sm text-white/45 leading-relaxed">
@@ -1351,7 +1350,7 @@ export default function AdminBooksPage() {
               {activeTab === "purchases" && (
                 <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
                   {/* LEFT: Access Requests */}
-                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
                     <div className="border-b border-white/10 pb-6 mb-8">
                       <h2 className="text-2xl font-bold text-white">Access Requests</h2>
                       <p className="mt-1 text-sm text-white/55">Verify transaction numbers and approve ebook access for readers.</p>
@@ -1510,7 +1509,7 @@ export default function AdminBooksPage() {
                 </div>
 
                 {/* RIGHT: Payment Config Settings */}
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl h-fit">
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl h-fit">
                   <div className="border-b border-white/10 pb-6 mb-6">
                     <h2 className="text-2xl font-bold text-white">Payment Configuration</h2>
                     <p className="mt-1 text-sm text-white/55">Configure the active UPI ID and scanner QR code image.</p>
@@ -1595,7 +1594,7 @@ export default function AdminBooksPage() {
           {activeTab === "authors" && (
             <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
               {/* LEFT: Author Form */}
-              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
                 <div className="border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-bold text-white">
@@ -1733,7 +1732,7 @@ export default function AdminBooksPage() {
               </div>
 
               {/* RIGHT: Authors List */}
-              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
                 <div className="border-b border-white/10 pb-6 mb-6">
                   <h2 className="text-xl font-bold text-white">All Authors</h2>
                   <p className="mt-1 text-sm text-white/55">{authorsList.length} author{authorsList.length !== 1 ? "s" : ""} on the platform.</p>
@@ -1822,7 +1821,7 @@ export default function AdminBooksPage() {
               `}</style>
 
               {/* LEFT: Newsletter Editor Form */}
-              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
                 <div className="border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-bold text-white">
@@ -2038,7 +2037,7 @@ export default function AdminBooksPage() {
               {/* RIGHT: Categories & Newsletters List */}
               <div className="space-y-8">
                 {/* CATEGORY MANAGER */}
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
                   <div className="border-b border-white/10 pb-6 mb-6">
                     <h2 className="text-xl font-bold text-white">Manage Categories</h2>
                     <p className="mt-1 text-sm text-white/55">Create and delete story classification categories.</p>
@@ -2102,7 +2101,7 @@ export default function AdminBooksPage() {
                 </div>
 
                 {/* Newsletters List */}
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
                   <div className="border-b border-white/10 pb-6 mb-6 flex items-center justify-between gap-4">
                     <div>
                       <h2 className="text-xl font-bold text-white">All Free Stories</h2>
