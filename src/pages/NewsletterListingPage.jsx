@@ -145,6 +145,7 @@ export default function NewsletterListingPage() {
         if (data.success) {
           setNewsletters(data.newsletters || []);
           setPagination(data.pagination || { page: 1, limit: 12, total: 0, pages: 1 });
+          window.scrollTo(0, 0);
         } else {
           setError(data.message || "Something went wrong.");
         }
