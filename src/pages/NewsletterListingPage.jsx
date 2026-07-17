@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Calendar, Clock, ArrowRight, BookOpen, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Calendar, Clock, ArrowRight, BookOpen, Loader2, ChevronDown } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
@@ -113,6 +113,7 @@ export default function NewsletterListingPage() {
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     setLoadingCategories(true);
@@ -231,48 +232,77 @@ export default function NewsletterListingPage() {
           </div>
 
           {/* Category Selector for Mobile / Tablet (hidden on desktop) */}
-          <div className="mb-10 lg:hidden overflow-hidden">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/45">
-              Filter by Category
-            </h3>
-            {loadingCategories ? (
-              <div className="flex gap-2 animate-pulse">
-                <div className="h-8 w-20 rounded-full bg-white/5" />
-                <div className="h-8 w-24 rounded-full bg-white/5" />
-                <div className="h-8 w-16 rounded-full bg-white/5" />
-              </div>
-            ) : categories.length === 0 ? (
-              <p className="text-xs text-white/35 italic">No categories available</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={clearCategories}
-                  className={`rounded-full px-4 py-1.5 text-xs font-semibold border transition ${
-                    selectedCategories.length === 0
-                      ? "bg-cyan-500 border-cyan-500 text-black shadow-glow shadow-cyan-500/20"
-                      : "bg-white/5 border-white/10 text-white/70 hover:border-white/20"
-                  }`}
+          <div className="mb-10 lg:hidden rounded-2xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur-md">
+            <button
+              onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+              className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-white/80"
+            >
+              <span className="flex items-center gap-2">
+                <BookOpen size={14} className="text-cyan-300" />
+                Filter by Category
+                {selectedCategories.length > 0 && (
+                  <span className="rounded-full bg-cyan-400 px-2 py-0.5 text-[10px] font-extrabold text-black uppercase tracking-normal">
+                    {selectedCategories.length}
+                  </span>
+                )}
+              </span>
+              <motion.span
+                animate={{ rotate: mobileFiltersOpen ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronDown size={16} className="text-white/60" />
+              </motion.span>
+            </button>
+
+            <AnimatePresence>
+              {mobileFiltersOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                  animate={{ height: "auto", opacity: 1, marginTop: 16 }}
+                  exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                  className="overflow-hidden"
                 >
-                  All Stories
-                </button>
-                {categories.map((cat) => {
-                  const isSelected = selectedCategories.includes(cat._id);
-                  return (
-                    <button
-                      key={cat._id}
-                      onClick={() => toggleCategory(cat._id)}
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold border transition ${
-                        isSelected
-                          ? "bg-cyan-500 border-cyan-500 text-black shadow-glow shadow-cyan-500/20"
-                          : "bg-white/5 border-white/10 text-white/70 hover:border-white/20"
-                      }`}
-                    >
-                      {cat.name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                  {loadingCategories ? (
+                    <div className="flex flex-wrap gap-2 animate-pulse">
+                      <div className="h-8 w-20 rounded-full bg-white/5" />
+                      <div className="h-8 w-24 rounded-full bg-white/5" />
+                      <div className="h-8 w-16 rounded-full bg-white/5" />
+                    </div>
+                  ) : categories.length === 0 ? (
+                    <p className="text-xs text-white/35 italic py-2">No categories available</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <button
+                        onClick={clearCategories}
+                        className={`rounded-full px-4 py-1.5 text-xs font-semibold border transition ${
+                          selectedCategories.length === 0
+                            ? "bg-cyan-500 border-cyan-500 text-black shadow-glow shadow-cyan-500/20"
+                            : "bg-white/5 border-white/10 text-white/70 hover:border-white/20"
+                        }`}
+                      >
+                        All Stories
+                      </button>
+                      {categories.map((cat) => {
+                        const isSelected = selectedCategories.includes(cat._id);
+                        return (
+                          <button
+                            key={cat._id}
+                            onClick={() => toggleCategory(cat._id)}
+                            className={`rounded-full px-4 py-1.5 text-xs font-semibold border transition ${
+                              isSelected
+                                ? "bg-cyan-500 border-cyan-500 text-black shadow-glow shadow-cyan-500/20"
+                                : "bg-white/5 border-white/10 text-white/70 hover:border-white/20"
+                            }`}
+                          >
+                            {cat.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="grid gap-10 lg:grid-cols-[1fr_280px]">
