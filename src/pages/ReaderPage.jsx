@@ -10,77 +10,18 @@ import { useGsapReveal } from "../hooks/useGsapReveal.js";
 
 const plans = [
   {
-    name: "Basic",
-    price: "₹4,999",
-    tag: "E-Book + Paperback Launch",
+    name: "Publication Cost",
+    price: "₹999",
+    tag: "The Basic Publishing Suite",
+    description: "Perfect for authors looking to get their manuscript professionally formatted and distributed across major digital platforms.",
     features: [
-      "Publish your book as E-BOOK",
-      "Publish your book as paperback",
-      "Sell your book all over India",
-      "ISBN registration",
-      "Simple COVER design",
-      "Basic interior formatting",
-      "2 Promotional Posters",
-      "2 Mockups",
-      "5 free author copies",
-      "Available on Amazon & Flipkart",
-      "Available on Meesho, Playbook & Kindle",
+      "Professional Interior Formatting: Standard layout styling for both print-ready PDF and reflowable ePub/Mobi formats.",
+      "Global E-Book Publishing: Distribution setup on major platforms (like Amazon Kindle, Kobo, and Google Books).",
+      "Official ISBN Assignment: Provision of a unique International Standard Book Number (ISBN) for legal identification and tracking.",
+      "Basic Cover Design: A clean, template-based digital cover design utilizing high-quality stock imagery and standard typography.",
+      "Official Website Listing: A dedicated author/book feature page on our publishing house website to drive traffic and credibility."
     ],
-  },
-  {
-    name: "Essential",
-    price: "₹14,999",
-    tag: "eBook + Paperback with artist design",
-    featured: true,
-    features: [
-      "Publish your book as E-BOOK & paperback",
-      "Sell your book all over India",
-      "ISBN registration",
-      "Cover design with artist",
-      "Basic interior formatting",
-      "5 Promotional Posters",
-      "3 Mockups",
-      "20 free author copies",
-      "Available on Amazon & Flipkart",
-      "Available on Meesho, Playbook & Kindle",
-    ],
-  },
-  {
-    name: "Popular",
-    price: "₹49,999",
-    tag: "Global Print & digital package",
-    features: [
-      "Publish your book as E-BOOK & paperback",
-      "Sell your book all over the World",
-      "ISBN registration",
-      "Premium Cover design with artist",
-      "Premium interior formatting",
-      "20 Promotional Posters + 1 week social media marketing",
-      "5 Mockups",
-      "100 free author copies",
-      "Available on Amazon & Flipkart",
-      "Available on Meesho, Playbook & Kindle",
-    ],
-  },
-  {
-    name: "Premium",
-    price: "₹99,999",
-    tag: "Complete publishing & branding",
-    features: [
-      "Publish your book as E-BOOK & Hardcover",
-      "Sell your book all over the World",
-      "ISBN registration",
-      "Premium Cover design with artist",
-      "Premium interior formatting",
-      "20 Promotional Posters + 1 month social media marketing",
-      "5 Mockups",
-      "200 free author copies",
-      "Media & podcast invitation",
-      "Worldwide distribution",
-      "Available on Amazon & Flipkart",
-      "Available on Meesho, Playbook & Kindle",
-    ],
-  },
+  }
 ];
 
 const services = [
@@ -327,26 +268,95 @@ export default function ReaderPage() {
         </section>
 
         <section id="self-publishing" className="section-shell relative z-10 py-16">
-          <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Self Publishing Plans</h2>
-          <p data-reveal className="mx-auto mt-4 max-w-2xl text-center text-white/55">Pick the level of support you need. Final scope can be confirmed after manuscript discussion.</p>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+          <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Self Publishing</h2>
+          <p data-reveal className="mx-auto mt-4 max-w-2xl text-center text-white/55">Simple, transparent, and direct publishing cost with no hidden fees.</p>
+          <div className="mt-10 flex justify-center">
             {plans.map((plan) => (
-              <motion.article key={plan.name} data-reveal whileHover={{ y: -8 }} className={`relative rounded-lg border p-6 shadow-card backdrop-blur-xl ${plan.featured ? "border-cyan-300/35 bg-cyan-300/[0.08]" : "border-white/10 bg-white/[0.055]"}`}>
-                {plan.featured ? <div className="absolute right-5 top-5 rounded-full bg-white px-3 py-1 text-xs font-black text-black">Recommended</div> : null}
-                <p className="text-sm font-bold uppercase tracking-[0.32em] text-cyan-300/80">{plan.tag}</p>
-                <h3 className="mt-5 text-3xl font-black text-white">{plan.name}</h3>
-                <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-5">
-                  <p className="text-3xl font-black text-white">{plan.price}</p>
-                  <p className="mt-1 text-sm text-white/45">+ GST</p>
+              <motion.article 
+                key={plan.name} 
+                data-reveal 
+                whileHover={{ y: -6 }} 
+                className="relative rounded-3xl border border-cyan-300/30 bg-cyan-300/[0.04] p-6 sm:p-8 shadow-card backdrop-blur-xl max-w-xl w-full"
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.32em] text-cyan-300/80">{plan.tag}</p>
+                <h3 className="mt-4 text-3xl font-black text-white">{plan.name}</h3>
+                {plan.description && (
+                  <p className="mt-3 text-sm text-white/55 leading-relaxed">{plan.description}</p>
+                )}
+                
+                <div className="mt-6 rounded-2xl border border-white/8 bg-black/30 p-6 flex items-baseline justify-between">
+                  <div>
+                    <span className="text-4xl font-black text-white">{plan.price}</span>
+                    <span className="ml-2 text-xs font-bold uppercase tracking-wider text-cyan-300/80">Only</span>
+                  </div>
+                  <p className="text-xs text-white/40 font-medium">+ GST</p>
                 </div>
-                <ul className="mt-6 space-y-3 text-sm leading-6 text-white/68">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />{feature}</li>
-                  ))}
+
+                <ul className="mt-8 space-y-4 text-sm leading-relaxed text-white/70 border-t border-white/5 pt-6">
+                  {plan.features.map((feature) => {
+                    const [titlePart, descPart] = feature.split(":");
+                    return (
+                      <li key={feature} className="flex gap-3">
+                        <CheckCircle2 className="mt-0.5 h-4.5 w-4.5 shrink-0 text-cyan-300" />
+                        <div>
+                          <strong className="text-white">{titlePart}</strong>
+                          {descPart && <span className="text-white/50">{descPart}</span>}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
-                <button type="button" onClick={() => openPlanModal(plan.name)} className="mt-7 w-full rounded-full bg-white px-5 py-3 font-bold text-black transition hover:scale-105 hover:bg-cyan-50">Choose Plan</button>
+                
+                <button 
+                  type="button" 
+                  onClick={() => openPlanModal(plan.name)} 
+                  className="mt-8 w-full rounded-xl bg-white px-5 py-4 font-bold text-black transition hover:scale-[1.01] hover:bg-cyan-50"
+                >
+                  Choose Plan
+                </button>
               </motion.article>
             ))}
+          </div>
+        </section>
+
+        <section className="section-shell relative z-10 py-16">
+          <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Add-Ons</h2>
+          <p data-reveal className="mx-auto mt-4 max-w-2xl text-center text-white/55">Customize your publishing journey with specialized features tailored to your manuscript's exact needs.</p>
+          
+          <div data-reveal className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-white/10 bg-white/5 text-xs font-semibold uppercase tracking-wider text-cyan-300/90">
+                    <th className="px-6 py-4">Service</th>
+                    <th className="px-6 py-4">Investment</th>
+                    <th className="px-6 py-4">Important Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 leading-relaxed text-white/70">
+                  <tr className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-6 py-4 font-bold text-white whitespace-nowrap">Manuscript Typing</td>
+                    <td className="px-6 py-4 font-bold text-cyan-300 whitespace-nowrap">₹0.70 / word</td>
+                    <td className="px-6 py-4 text-xs text-white/50">Turn handwritten sheets or scanned PDFs into editable text documents.</td>
+                  </tr>
+                  <tr className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-6 py-4 font-bold text-white whitespace-nowrap">Premium Cover Design</td>
+                    <td className="px-6 py-4 font-bold text-cyan-300 whitespace-nowrap">₹1,500 – ₹3,000</td>
+                    <td className="px-6 py-4 text-xs text-white/50">Custom illustration or advanced photo manipulation with premium typography for print (Wrap) + digital.</td>
+                  </tr>
+                  <tr className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-6 py-4 font-bold text-white whitespace-nowrap">Author Website</td>
+                    <td className="px-6 py-4 font-bold text-cyan-300 whitespace-nowrap">₹5,000</td>
+                    <td className="px-6 py-4 text-xs text-white/50">A fully responsive personal brand website. <span className="italic text-white/30">(Note: Domain name registration fees are extra).</span></td>
+                  </tr>
+                  <tr className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-6 py-4 font-bold text-white whitespace-nowrap">Social Media Posters</td>
+                    <td className="px-6 py-4 font-bold text-cyan-300 whitespace-nowrap">₹50 / poster</td>
+                    <td className="px-6 py-4 text-xs text-white/50">Custom graphics designed to pitch your book on Instagram, Facebook, and LinkedIn.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
