@@ -130,6 +130,11 @@ export default function NewsletterListingPage() {
       .finally(() => setLoadingCategories(false));
   }, []);
 
+  // Scroll to top instantly when page or filters change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage, selectedCategories]);
+
   useEffect(() => {
     setLoading(true);
     let url = `${API_BASE}/newsletter?page=${currentPage}&limit=12`;
@@ -145,7 +150,6 @@ export default function NewsletterListingPage() {
         if (data.success) {
           setNewsletters(data.newsletters || []);
           setPagination(data.pagination || { page: 1, limit: 12, total: 0, pages: 1 });
-          window.scrollTo(0, 0);
         } else {
           setError(data.message || "Something went wrong.");
         }
@@ -273,7 +277,7 @@ export default function NewsletterListingPage() {
 
           <div className="grid gap-10 lg:grid-cols-[1fr_280px]">
             {/* LEFT COLUMN: LISTING */}
-            <div className="space-y-12">
+            <div className="space-y-12 min-h-[600px]">
               {/* Loader */}
               {loading && (
                 <div className="flex h-64 flex-col items-center justify-center gap-4 text-cyan-400">
