@@ -24,6 +24,13 @@ const plans = [
   }
 ];
 
+const addonsList = [
+  { id: "typing", name: "Manuscript Typing", price: "₹0.70 / word", desc: "Turn handwritten sheets or scanned PDFs into editable text documents." },
+  { id: "cover", name: "Premium Cover Design", price: "₹1,500 – ₹3,000", desc: "Custom illustration or advanced photo manipulation with premium typography for print (Wrap) + digital." },
+  { id: "website", name: "Author Website", price: "₹5,000", desc: "A fully responsive personal brand website (domain name registration fees are extra)." },
+  { id: "posters", name: "Social Media Posters", price: "₹50 / poster", desc: "Custom graphics designed to pitch your book on Instagram, Facebook, and LinkedIn." }
+];
+
 const services = [
   { icon: PencilLine, title: "Editorial Services", copy: "Manuscript review, clarity checks, proofreading, copy editing, and language polish." },
   { icon: Paintbrush, title: "Designing Services", copy: "Cover design, page layout, typography, book posters, and launch-ready creatives." },
@@ -74,6 +81,7 @@ export default function ReaderPage() {
   const scope = useGsapReveal({ stagger: 0.06, y: 24 });
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("");
+  const [selectedAddons, setSelectedAddons] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [manuscript, setManuscript] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -122,6 +130,7 @@ export default function ReaderPage() {
   const openPlanModal = (planName) => {
     setSelectedPlan(planName);
     setManuscript(null);
+    setSelectedAddons([]);
     setMessage({ type: "", text: "" });
     setForm((current) => ({ ...current, note: `I am interested in the ${planName} self-publishing plan. Please call me back with more details.` }));
     setModalOpen(true);
@@ -209,6 +218,7 @@ export default function ReaderPage() {
           email: form.email,
           bookAbout: form.bookAbout,
           note: form.note,
+          addons: selectedAddons,
         }),
       });
       const data = await res.json();
@@ -320,47 +330,6 @@ export default function ReaderPage() {
         </section>
 
         <section className="section-shell relative z-10 py-16">
-          <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Add-Ons</h2>
-          <p data-reveal className="mx-auto mt-4 max-w-2xl text-center text-white/55">Customize your publishing journey with specialized features tailored to your manuscript's exact needs.</p>
-          
-          <div data-reveal className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-white/10 bg-white/5 text-xs font-semibold uppercase tracking-wider text-cyan-300/90">
-                    <th className="px-6 py-4">Service</th>
-                    <th className="px-6 py-4">Investment</th>
-                    <th className="px-6 py-4">Important Details</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 leading-relaxed text-white/70">
-                  <tr className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4 font-bold text-white whitespace-nowrap">Manuscript Typing</td>
-                    <td className="px-6 py-4 font-bold text-cyan-300 whitespace-nowrap">₹0.70 / word</td>
-                    <td className="px-6 py-4 text-xs text-white/50">Turn handwritten sheets or scanned PDFs into editable text documents.</td>
-                  </tr>
-                  <tr className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4 font-bold text-white whitespace-nowrap">Premium Cover Design</td>
-                    <td className="px-6 py-4 font-bold text-cyan-300 whitespace-nowrap">₹1,500 – ₹3,000</td>
-                    <td className="px-6 py-4 text-xs text-white/50">Custom illustration or advanced photo manipulation with premium typography for print (Wrap) + digital.</td>
-                  </tr>
-                  <tr className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4 font-bold text-white whitespace-nowrap">Author Website</td>
-                    <td className="px-6 py-4 font-bold text-cyan-300 whitespace-nowrap">₹5,000</td>
-                    <td className="px-6 py-4 text-xs text-white/50">A fully responsive personal brand website. <span className="italic text-white/30">(Note: Domain name registration fees are extra).</span></td>
-                  </tr>
-                  <tr className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4 font-bold text-white whitespace-nowrap">Social Media Posters</td>
-                    <td className="px-6 py-4 font-bold text-cyan-300 whitespace-nowrap">₹50 / poster</td>
-                    <td className="px-6 py-4 text-xs text-white/50">Custom graphics designed to pitch your book on Instagram, Facebook, and LinkedIn.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <section className="section-shell relative z-10 py-16">
           <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Our Publishing Process</h2>
           <p data-reveal className="mx-auto mt-4 max-w-2xl text-center text-white/55">A simple, transparent path from manuscript to publication.</p>
           <div className="relative mx-auto mt-14 max-w-4xl">
@@ -465,6 +434,44 @@ export default function ReaderPage() {
                         <Input label="Email" required type="email" value={form.email} onChange={setField("email")} placeholder="you@example.com" className="md:col-span-2" />
                         <Textarea label="Your Book is about?" rows={4} value={form.bookAbout} onChange={setField("bookAbout")} placeholder="Tell us about your book or manuscript" className="md:col-span-2" />
                         <Textarea label="Notes" rows={3} value={form.note} onChange={setField("note")} placeholder="Any preferred time to call or requirements?" className="md:col-span-2" />
+                        
+                        {/* Add-Ons Selection */}
+                        <div className="md:col-span-2 mt-4">
+                          <h4 className="text-sm font-bold text-white/75 mb-3 flex items-center gap-2">
+                            <Sparkles size={16} className="text-cyan-300" />
+                            Select Add-Ons (Optional)
+                          </h4>
+                          <p className="text-xs text-white/45 mb-4">Select any additional features you would like to include in your publishing journey.</p>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {addonsList.map((addon) => {
+                              const isSelected = selectedAddons.includes(addon.name);
+                              return (
+                                <button
+                                  type="button"
+                                  key={addon.id}
+                                  onClick={() => {
+                                    setSelectedAddons((prev) =>
+                                      prev.includes(addon.name)
+                                        ? prev.filter((name) => name !== addon.name)
+                                        : [...prev, addon.name]
+                                    );
+                                  }}
+                                  className={`text-left p-4 rounded-xl border transition-all duration-200 select-none ${
+                                    isSelected
+                                      ? "border-cyan-300 bg-cyan-300/[0.08] shadow-glow shadow-cyan-300/5"
+                                      : "border-white/10 bg-white/5 hover:border-white/20"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-bold text-sm text-white">{addon.name}</span>
+                                    <span className="text-xs font-black text-cyan-300 shrink-0">{addon.price}</span>
+                                  </div>
+                                  <p className="mt-1.5 text-xs text-white/50 leading-relaxed">{addon.desc}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="grid gap-4 md:grid-cols-2">
