@@ -42,7 +42,7 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.05 }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-white/[0.02] backdrop-blur-md transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-cyan-500/5 cursor-pointer"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-white/[0.02] backdrop-blur-md transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-cyan-500/5 cursor-pointer w-full max-w-full"
       onClick={handleCardClick}
     >
       {/* Cover Image Container */}
@@ -91,21 +91,21 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
       </div>
 
       {/* Card Content */}
-      <div className="flex flex-1 flex-col p-5 sm:p-6">
+      <div className="flex flex-1 flex-col p-4 sm:p-6">
         {/* Meta information */}
-        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-white/45">
+        <div className="mb-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[11px] sm:text-xs text-white/50">
           {story.author && (
-            <div className="flex items-center gap-1 font-semibold text-cyan-300">
-              <User size={12} />
-              <span>{story.author}</span>
+            <div className="flex items-center gap-1 font-semibold text-cyan-300 truncate max-w-full">
+              <User size={12} className="shrink-0" />
+              <span className="truncate">{story.author}</span>
             </div>
           )}
-          <div className="flex items-center gap-1">
-            <Calendar size={12} />
+          <div className="flex items-center gap-1 shrink-0">
+            <Calendar size={12} className="shrink-0" />
             <span>{formatDate(story.publishedAt)}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Clock size={12} />
+          <div className="flex items-center gap-1 shrink-0">
+            <Clock size={12} className="shrink-0" />
             <span>{story.readingTime} min read</span>
           </div>
         </div>
@@ -234,11 +234,11 @@ export default function NewsletterListingPage() {
     return `${SERVER_URL}${cover.url}`;
   };
 
-  // Format date to show Day, Month Date, Year (e.g. "Sunday, June 14, 2026")
+  // Format date to show Month Date, Year (e.g. "Jun 14, 2026")
   const formatDate = (dateString) => {
+    if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
-      weekday: "long",
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -247,7 +247,7 @@ export default function NewsletterListingPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-black pt-32 pb-20 text-white">
+      <div className="min-h-screen bg-black pt-32 pb-20 text-white overflow-x-hidden w-full">
         {/* Decorative background glows */}
         <div className="pointer-events-none absolute left-1/4 top-1/4 -z-10 h-96 w-96 -translate-x-1/2 rounded-full bg-cyan-500/10 blur-[120px]" />
         <div className="pointer-events-none absolute right-1/4 bottom-1/4 -z-10 h-96 w-96 translate-x-1/2 rounded-full bg-indigo-500/10 blur-[120px]" />
