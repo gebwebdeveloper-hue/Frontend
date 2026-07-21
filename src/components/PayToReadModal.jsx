@@ -26,7 +26,8 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = "hidden";
+      // Do NOT set body overflow:hidden — it prevents scroll inside fixed overlays on Android Chrome
+      // Just stop Lenis smooth scroll so it doesn't interfere
       if (window.lenis) window.lenis.stop();
 
       // Fetch UPI details (same as Library payment config)
@@ -57,12 +58,10 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
         checkExistingStatus(story._id, savedUser.email, savedUser.transactionId);
       }
     } else {
-      document.body.style.overflow = "";
       if (window.lenis) window.lenis.start();
     }
 
     return () => {
-      document.body.style.overflow = "";
       if (window.lenis) window.lenis.start();
     };
   }, [isOpen, story]);
