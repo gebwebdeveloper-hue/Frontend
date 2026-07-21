@@ -25,10 +25,12 @@ const plans = [
 ];
 
 const addonsList = [
-  { id: "typing", name: "Manuscript Typing", price: "₹0.70 / word", desc: "Turn handwritten sheets or scanned PDFs into editable text documents." },
-  { id: "cover", name: "Premium Cover Design", price: "₹1,500 – ₹3,000", desc: "Custom illustration or advanced photo manipulation with premium typography for print (Wrap) + digital." },
-  { id: "website", name: "Author Website", price: "₹5,000", desc: "A fully responsive personal brand website (domain name registration fees are extra)." },
-  { id: "posters", name: "Social Media Posters", price: "₹50 / poster", desc: "Custom graphics designed to pitch your book on Instagram, Facebook, and LinkedIn." }
+  { id: "cover", name: "Premium Cover Design", price: "₹1,500 – ₹4,000", desc: "Custom artist-designed cover with detailed illustrations and specialized typography." },
+  { id: "proofreading", name: "Proofreading & Editing", price: "₹0.50 / word", desc: "Thorough spell check, grammar correction, line edits, and consistency verification." },
+  { id: "typing", name: "Manuscript Digitization", price: "₹0.80 / word", desc: "Word-by-word typing into editable digital formats for handwritten manuscripts or diaries." },
+  { id: "website", name: "Author Portfolio Website", price: "₹5,000 – ₹7,000", desc: "Custom personal brand website to display author biography, portfolio, and direct buy links (domain extra)." },
+  { id: "posters", name: "Book Mockups & Posters", price: "₹50 – ₹100 / poster", desc: "High-resolution 3D book mockups and customized social media promotional graphics." },
+  { id: "marketing", name: "Social Media Marketing", price: "Custom / As per budget", desc: "Targeted ad setups and promotional campaigns across major social media channels." }
 ];
 
 const services = [
