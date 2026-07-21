@@ -38,6 +38,33 @@ export default function NewsletterReaderPage() {
       .finally(() => setLoading(false));
   }, [slug]);
 
+  useEffect(() => {
+    const clearSelection = () => {
+      if (window.getSelection) {
+        const selection = window.getSelection();
+        if (selection && selection.toString().length > 0) {
+          selection.removeAllRanges();
+        }
+      }
+    };
+
+    const handleCopy = (e) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener("selectionchange", clearSelection);
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("cut", handleCopy);
+    document.addEventListener("contextmenu", handleCopy);
+
+    return () => {
+      document.removeEventListener("selectionchange", clearSelection);
+      document.removeEventListener("copy", handleCopy);
+      document.removeEventListener("cut", handleCopy);
+      document.removeEventListener("contextmenu", handleCopy);
+    };
+  }, []);
+
   const getCoverUrl = (cover) => {
     if (!cover || !cover.url) return "";
     if (cover.url.startsWith("http")) return cover.url;
@@ -60,17 +87,21 @@ export default function NewsletterReaderPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
 
-        .newsletter-content {
+        .newsletter-content,
+        .newsletter-content * {
           font-family: '${story?.fontFamily || "Outfit"}', 'Outfit', 'Inter', serif, sans-serif;
           color: ${isLightMode ? "#1e293b" : "rgba(255, 255, 255, 0.85)"};
+          transition: color 0.3s ease;
+          -webkit-touch-callout: none !important;
+          -webkit-user-select: none !important;
+          -khtml-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+          user-select: none !important;
+        }
+        .newsletter-content {
           font-size: 1.125rem;
           line-height: 1.85;
-          transition: color 0.3s ease;
-          -webkit-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
-          user-select: none;
-          -webkit-touch-callout: none;
         }
         .newsletter-content p {
           margin-bottom: 1.75rem;
