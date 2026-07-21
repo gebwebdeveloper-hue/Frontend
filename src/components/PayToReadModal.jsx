@@ -143,37 +143,56 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
   return createPortal(
     <AnimatePresence>
       {isOpen && story && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center sm:p-4 bg-black/85 backdrop-blur-md"
-          style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
-        >
-          {/* Click backdrop to close */}
-          <div className="fixed inset-0" onClick={onClose} />
+        <>
+          {/* Backdrop — fixed, non-scrollable, close on tap */}
+          <div
+            className="fixed inset-0 z-[9998] bg-black/80 backdrop-blur-sm"
+            onClick={onClose}
+          />
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 40 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 40 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-cyan-500/40 bg-zinc-950 p-5 sm:p-8 shadow-2xl text-white overflow-y-auto"
-            style={{ maxHeight: '90dvh', WebkitOverflowScrolling: 'touch' }}
+          {/* Modal sheet — sits above backdrop, scrolls independently */}
+          <div
+            className="fixed inset-x-0 bottom-0 sm:inset-0 z-[9999] sm:flex sm:items-center sm:justify-center sm:p-4"
+            style={{ pointerEvents: 'none' }}
           >
+            <motion.div
+              initial={{ opacity: 0, y: 60 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 60 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-cyan-500/40 bg-zinc-950 shadow-2xl text-white"
+              style={{
+                pointerEvents: 'auto',
+                maxHeight: '92dvh',
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+                overscrollBehavior: 'contain',
+              }}
+            >
+            {/* Drag handle (mobile visual cue) */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="h-1 w-10 rounded-full bg-white/20" />
+            </div>
+
+          {/* Padded inner content */}
+          <div className="px-5 sm:px-8 pb-2">
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-full bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition"
+            className="absolute right-4 top-4 sm:right-5 sm:top-5 grid h-9 w-9 place-items-center rounded-full bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition"
           >
             <X size={18} />
           </button>
 
           {/* Header */}
-          <div className="flex items-center gap-3 border-b border-white/10 pb-5">
+          <div className="flex items-center gap-3 border-b border-white/10 pb-4 pt-2 sm:pt-0">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
               <Lock size={22} />
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-cyan-300">Paid Story Access</span>
-              <h2 className="text-xl font-black text-white">{story.title}</h2>
+              <h2 className="text-lg font-black text-white truncate">{story.title}</h2>
             </div>
           </div>
 
@@ -370,7 +389,7 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
                   </div>
                 </div>
 
-                <div className="pt-3 flex gap-3">
+                <div className="pt-3 pb-2 flex gap-3">
                   <button
                     type="button"
                     onClick={onClose}
@@ -390,8 +409,12 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
               </form>
             </>
           )}
+          {/* Bottom safe-area padding for mobile home bar */}
+          <div className="h-5 sm:h-0" />
+          </div>{/* end padded inner content */}
         </motion.div>
       </div>
+        </>
       )}
     </AnimatePresence>,
     document.body
