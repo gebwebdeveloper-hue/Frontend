@@ -46,13 +46,13 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
       onClick={handleCardClick}
     >
       {/* Cover Image Container */}
-      <div className="aspect-[16/9] w-full overflow-hidden bg-white/5 relative">
+      <div className="aspect-[16/9] w-full overflow-hidden bg-[#0a0a0a] relative rounded-t-2xl border-b border-white/5">
         <img
           src={getCoverUrl(story.cover)}
           alt={story.title}
-          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-102"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#030303]/60 via-transparent to-transparent pointer-events-none" />
         
         {/* Categories badge Overlay */}
         {categories.length > 0 && (
@@ -356,9 +356,9 @@ export default function NewsletterListingPage() {
             </AnimatePresence>
           </div>
 
-          <div className="grid gap-10 lg:grid-cols-[1fr_280px]">
+          <div className="grid gap-10 lg:grid-cols-[1fr_280px] w-full min-w-0 max-w-full">
             {/* LEFT COLUMN: LISTING */}
-            <div className="space-y-6 min-h-[600px]">
+            <div className="space-y-6 min-h-[600px] w-full min-w-0 max-w-full">
               {/* Search Bar */}
               <div className="relative max-w-sm w-full">
                 <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
@@ -382,18 +382,18 @@ export default function NewsletterListingPage() {
 
               {/* Author Filter Bar */}
               {authorsList.length > 0 && (
-                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur-md">
-                  <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none">
-                    <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white/50 shrink-0 pr-3 border-r border-white/10">
-                      <User size={14} className="text-cyan-400" />
-                      Filter Author:
+                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-3 sm:p-4 backdrop-blur-md w-full min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar scrollbar-none select-none max-w-full">
+                    <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white/50 shrink-0 pr-2.5 border-r border-white/10">
+                      <User size={13} className="text-cyan-400" />
+                      Author:
                     </span>
                     <button
                       onClick={() => {
                         setCurrentPage(1);
                         setSelectedAuthor("");
                       }}
-                      className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold border transition-all duration-200 ${
+                      className={`shrink-0 rounded-full px-3.5 py-1 text-xs font-bold border transition-all duration-200 ${
                         !selectedAuthor
                           ? "bg-cyan-500 border-cyan-500 text-black shadow-glow shadow-cyan-500/20"
                           : "bg-white/5 border-white/10 text-white/70 hover:border-white/20 hover:text-white"
@@ -410,7 +410,7 @@ export default function NewsletterListingPage() {
                             setCurrentPage(1);
                             setSelectedAuthor(isSelected ? "" : authorName);
                           }}
-                          className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold border transition-all duration-200 ${
+                          className={`shrink-0 rounded-full px-3.5 py-1 text-xs font-bold border transition-all duration-200 ${
                             isSelected
                               ? "bg-cyan-500 border-cyan-500 text-black shadow-glow shadow-cyan-500/20"
                               : "bg-white/5 border-white/10 text-white/70 hover:border-white/20 hover:text-white"
@@ -486,7 +486,7 @@ export default function NewsletterListingPage() {
                   return matchesSearch && matchesAuthor;
                 }).length > 0 && (
                   <>
-                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 w-full min-w-0 max-w-full">
                       {newsletters
                         .filter((story) => {
                           const q = searchQuery.toLowerCase().trim();

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Lock, CheckCircle2, AlertCircle, Loader2, Copy, Check, QrCode } from "lucide-react";
+import { X, Lock, CheckCircle2, AlertCircle, Loader2, Copy, Check, QrCode, Smartphone } from "lucide-react";
 import { API_BASE, SERVER_URL } from "../config.js";
 
 export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
@@ -10,8 +10,6 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [transactionId, setTransactionId] = useState("");
-
   const [paymentConfig, setPaymentConfig] = useState({ upiId: "pritamchakrabrty@slc", upiQrUrl: "" });
   const [copiedUpi, setCopiedUpi] = useState(false);
 
@@ -257,19 +255,29 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
             /* FORM & UPI DETAILS VIEW BEFORE SUBMISSION */
             <>
               {/* Price Banner */}
-              <div className="my-5 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/50 to-indigo-950/40 p-5 flex items-center justify-between">
+              <div className="my-5 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/50 to-indigo-950/40 p-5 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs text-white/60">Story Reading Fee</p>
                   <p className="text-3xl font-black text-white mt-0.5">₹{story.price}</p>
                 </div>
-                <span className="rounded-full bg-cyan-400 px-4 py-1.5 text-xs font-black text-black uppercase tracking-wider">
-                  Pay via UPI
-                </span>
+                <a
+                  href={upiUrl}
+                  className="rounded-full bg-cyan-400 px-4 py-2 text-xs font-black text-black uppercase tracking-wider hover:bg-cyan-300 transition flex items-center gap-1.5 shadow-glow shadow-cyan-400/20 shrink-0"
+                >
+                  <Smartphone size={14} /> Open UPI App
+                </a>
               </div>
 
               {/* UPI ID & Payment Box */}
               <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
                 <p className="text-xs font-bold uppercase tracking-wider text-white/50">1. Pay to Owner UPI ID</p>
+
+                <a
+                  href={upiUrl}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-400 px-4 py-3 text-xs font-black text-black hover:opacity-90 transition shadow-glow shadow-cyan-400/20 uppercase tracking-wider"
+                >
+                  <Smartphone size={16} /> Open UPI App (Pay ₹{story.price})
+                </a>
                 
                 {paymentConfig.upiId ? (
                   <div className="flex items-center justify-between rounded-xl border border-cyan-400/20 bg-cyan-950/30 px-4 py-3">
