@@ -36,9 +36,7 @@ export default function NewsletterReaderPage() {
       .then((data) => {
         if (data.success) {
           setStory(data.newsletter);
-          if (data.newsletter?.isLocked) {
-            setIsPayModalOpen(true);
-          }
+          // Don't auto-open modal — show the lock screen so user can tap button to pay
         } else {
           setError(data.message || "Failed to load the story.");
         }
@@ -190,7 +188,7 @@ export default function NewsletterReaderPage() {
         .newsletter-content .ql-align-left { text-align: left; }
       `}</style>
 
-      <div className={`min-h-screen pt-32 pb-24 relative overflow-hidden transition-colors duration-350 ${isLightMode ? "bg-gradient-to-br from-zinc-50 via-slate-50 to-zinc-100 text-slate-900" : "bg-black text-white"}`}>
+      <div className={`min-h-screen pt-28 pb-24 relative overflow-hidden transition-colors duration-350 ${isLightMode ? "bg-gradient-to-br from-zinc-50 via-slate-50 to-zinc-100 text-slate-900" : "bg-[#030303] text-white"}`}>
         {/* Glow Effects */}
         <div className={`pointer-events-none absolute left-[-250px] top-[10%] -z-10 h-[600px] w-[600px] rounded-full blur-[180px] opacity-70 transition-all duration-350 ${isLightMode ? "bg-cyan-200/20" : "bg-cyan-500/10"}`} />
         <div className={`pointer-events-none absolute right-[-250px] top-[35%] -z-10 h-[600px] w-[600px] rounded-full blur-[180px] opacity-70 transition-all duration-350 ${isLightMode ? "bg-fuchsia-200/15" : "bg-fuchsia-500/8"}`} />

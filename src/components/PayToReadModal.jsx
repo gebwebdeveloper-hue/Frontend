@@ -138,22 +138,19 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
     <AnimatePresence>
       {isOpen && story && (
         <div
-          data-lenis-prevent
-          onWheel={(e) => e.stopPropagation()}
-          onTouchMove={(e) => e.stopPropagation()}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto"
+          className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center sm:p-4 bg-black/85 backdrop-blur-md"
+          style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
         >
           {/* Click backdrop to close */}
           <div className="fixed inset-0" onClick={onClose} />
 
           <motion.div
-            data-lenis-prevent
-            onWheel={(e) => e.stopPropagation()}
-            onTouchMove={(e) => e.stopPropagation()}
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.96, y: 40 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative z-10 w-full max-w-lg rounded-3xl border border-cyan-500/40 bg-zinc-950 p-6 sm:p-8 shadow-2xl text-white my-auto max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20"
+            exit={{ opacity: 0, scale: 0.96, y: 40 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="relative z-10 w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-cyan-500/40 bg-zinc-950 p-5 sm:p-8 shadow-2xl text-white overflow-y-auto"
+            style={{ maxHeight: '90dvh', WebkitOverflowScrolling: 'touch' }}
           >
           {/* Close button */}
           <button
