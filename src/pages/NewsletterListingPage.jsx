@@ -81,7 +81,7 @@ function StoryCard({ story, index, getCoverUrl, formatDate }) {
 
         {/* Title & Snippet */}
         <h2 className="mb-2 text-lg font-bold tracking-tight text-white group-hover:text-cyan-300 transition-colors duration-300 line-clamp-2">
-          <Link to={`/free-stories/${story.slug}`}>{story.title}</Link>
+          <Link to={`/short-stories/${story.slug}`}>{story.title}</Link>
         </h2>
         <p className="mb-4 text-xs leading-relaxed text-white/60 line-clamp-3">
           {story.description}
@@ -90,7 +90,7 @@ function StoryCard({ story, index, getCoverUrl, formatDate }) {
         {/* Read More button */}
         <div className="mt-auto pt-4 border-t border-white/5">
           <Link
-            to={`/free-stories/${story.slug}`}
+            to={`/short-stories/${story.slug}`}
             className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 transition-colors duration-250 group-hover:text-cyan-300"
           >
             Read Full Story
@@ -211,7 +211,7 @@ export default function NewsletterListingPage() {
               className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300 sm:text-sm"
             >
               <BookOpen size={14} className="animate-pulse" />
-              Free Stories
+              Short Stories
             </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 10 }}

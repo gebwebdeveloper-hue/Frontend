@@ -80,6 +80,7 @@ function Textarea({ label, className = "", ...props }) {
 export default function ReaderPage() {
   const scope = useGsapReveal({ stagger: 0.06, y: 24 });
   const [modalOpen, setModalOpen] = useState(false);
+  const [showPlans, setShowPlans] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("");
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [form, setForm] = useState(initialForm);
@@ -261,73 +262,89 @@ export default function ReaderPage() {
             </p>
           </motion.div>
 
-          <div className="mt-12 grid gap-5 lg:grid-cols-2">
-            <motion.div data-reveal whileHover={{ y: -6 }} className="rounded-lg border border-white/10 bg-white/[0.055] p-7 text-left shadow-card backdrop-blur-xl md:p-8">
+          <div className="mt-12 flex justify-center">
+            <motion.div data-reveal whileHover={{ y: -6 }} className="rounded-3xl border border-white/10 bg-white/[0.055] p-8 text-left shadow-card backdrop-blur-xl md:p-10 max-w-xl w-full">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300"><Sparkles size={24} /></div>
               <h2 className="mt-6 text-3xl font-black text-white">Self Publishing</h2>
               <p className="mt-4 text-white/62">Paid plans for authors who want a structured publishing team, faster production, and clear service packages.</p>
-              <a href="#self-publishing" className="mt-6 inline-flex rounded-full bg-white px-6 py-3 font-bold text-black transition hover:scale-105">View Plans</a>
-            </motion.div>
-            <motion.div data-reveal whileHover={{ y: -6 }} className="rounded-lg border border-cyan-300/20 bg-cyan-300/[0.075] p-7 text-left shadow-card backdrop-blur-xl md:p-8">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-cyan-200"><BookOpen size={24} /></div>
-              <h2 className="mt-6 text-3xl font-black text-white">Free Sponsored Publishing</h2>
-              <p className="mt-4 text-white/62">For financially challenged writers. Because talent should never be limited by financial constraints.</p>
-              <button onClick={openFreeModal} className="mt-6 inline-flex rounded-full border border-cyan-300/30 bg-cyan-300/10 px-6 py-3 font-bold text-cyan-100 transition hover:bg-cyan-300/15">Apply for Sponsorship</button>
-            </motion.div>
-          </div>
-        </section>
-
-        <section id="self-publishing" className="section-shell relative z-10 py-16">
-          <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Self Publishing</h2>
-          <p data-reveal className="mx-auto mt-4 max-w-2xl text-center text-white/55">Simple, transparent, and direct publishing cost with no hidden fees.</p>
-          <div className="mt-10 flex justify-center">
-            {plans.map((plan) => (
-              <motion.article 
-                key={plan.name} 
-                data-reveal 
-                whileHover={{ y: -6 }} 
-                className="relative rounded-3xl border border-cyan-300/30 bg-cyan-300/[0.04] p-6 sm:p-8 shadow-card backdrop-blur-xl max-w-xl w-full"
+              <button
+                onClick={() => {
+                  setShowPlans(true);
+                  setTimeout(() => {
+                    const el = document.getElementById("self-publishing");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }, 100);
+                }}
+                className="mt-6 inline-flex rounded-full bg-white px-8 py-3.5 font-bold text-black transition hover:scale-105 hover:bg-cyan-50"
               >
-                <p className="text-xs font-bold uppercase tracking-[0.32em] text-cyan-300/80">{plan.tag}</p>
-                <h3 className="mt-4 text-3xl font-black text-white">{plan.name}</h3>
-                {plan.description && (
-                  <p className="mt-3 text-sm text-white/55 leading-relaxed">{plan.description}</p>
-                )}
-                
-                <div className="mt-6 rounded-2xl border border-white/8 bg-black/30 p-6 flex items-baseline justify-between">
-                  <div>
-                    <span className="text-4xl font-black text-white">{plan.price}</span>
-                    <span className="ml-2 text-xs font-bold uppercase tracking-wider text-cyan-300/80">Only</span>
-                  </div>
-                  <p className="text-xs text-white/40 font-medium">+ GST</p>
-                </div>
-
-                <ul className="mt-8 space-y-4 text-sm leading-relaxed text-white/70 border-t border-white/5 pt-6">
-                  {plan.features.map((feature) => {
-                    const [titlePart, descPart] = feature.split(":");
-                    return (
-                      <li key={feature} className="flex gap-3">
-                        <CheckCircle2 className="mt-0.5 h-4.5 w-4.5 shrink-0 text-cyan-300" />
-                        <div>
-                          <strong className="text-white">{titlePart}</strong>
-                          {descPart && <span className="text-white/50">{descPart}</span>}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-                
-                <button 
-                  type="button" 
-                  onClick={() => openPlanModal(plan.name)} 
-                  className="mt-8 w-full rounded-xl bg-white px-5 py-4 font-bold text-black transition hover:scale-[1.01] hover:bg-cyan-50"
-                >
-                  Choose Plan
-                </button>
-              </motion.article>
-            ))}
+                View Plans
+              </button>
+            </motion.div>
           </div>
         </section>
+
+        <AnimatePresence>
+          {showPlans && (
+            <motion.section
+              id="self-publishing"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.5 }}
+              className="section-shell relative z-10 py-16 overflow-hidden"
+            >
+              <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Self Publishing</h2>
+              <p data-reveal className="mx-auto mt-4 max-w-2xl text-center text-white/55">Simple, transparent, and direct publishing cost with no hidden fees.</p>
+              <div className="mt-10 flex justify-center">
+                {plans.map((plan) => (
+                  <motion.article 
+                    key={plan.name} 
+                    data-reveal 
+                    whileHover={{ y: -6 }} 
+                    className="relative rounded-3xl border border-cyan-300/30 bg-cyan-300/[0.04] p-6 sm:p-8 shadow-card backdrop-blur-xl max-w-xl w-full"
+                  >
+                    <p className="text-xs font-bold uppercase tracking-[0.32em] text-cyan-300/80">{plan.tag}</p>
+                    <h3 className="mt-4 text-3xl font-black text-white">{plan.name}</h3>
+                    {plan.description && (
+                      <p className="mt-3 text-sm text-white/55 leading-relaxed">{plan.description}</p>
+                    )}
+                    
+                    <div className="mt-6 rounded-2xl border border-white/8 bg-black/30 p-6 flex items-baseline justify-between">
+                      <div>
+                        <span className="text-4xl font-black text-white">{plan.price}</span>
+                        <span className="ml-2 text-xs font-bold uppercase tracking-wider text-cyan-300/80">Only</span>
+                      </div>
+                      <p className="text-xs text-white/40 font-medium">+ GST</p>
+                    </div>
+
+                    <ul className="mt-8 space-y-4 text-sm leading-relaxed text-white/70 border-t border-white/5 pt-6">
+                      {plan.features.map((feature) => {
+                        const [titlePart, descPart] = feature.split(":");
+                        return (
+                          <li key={feature} className="flex gap-3">
+                            <CheckCircle2 className="mt-0.5 h-4.5 w-4.5 shrink-0 text-cyan-300" />
+                            <div>
+                              <strong className="text-white">{titlePart}</strong>
+                              {descPart && <span className="text-white/50">{descPart}</span>}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    
+                    <button 
+                      type="button" 
+                      onClick={() => openPlanModal(plan.name)} 
+                      className="mt-8 w-full rounded-xl bg-white px-5 py-4 font-bold text-black transition hover:scale-[1.01] hover:bg-cyan-50"
+                    >
+                      Choose Plan
+                    </button>
+                  </motion.article>
+                ))}
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
 
         <section className="section-shell relative z-10 py-16">
           <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Our Publishing Process</h2>
@@ -346,6 +363,32 @@ export default function ReaderPage() {
                   </motion.div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+
+        {/* Free Sponsored Publishing Section */}
+        <section className="section-shell relative z-10 py-16">
+          <div data-reveal className="rounded-3xl border border-cyan-300/20 bg-gradient-to-r from-cyan-950/40 via-cyan-900/20 to-zinc-950 p-8 sm:p-12 text-center md:text-left shadow-card backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="max-w-2xl">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-200 mx-auto md:mx-0">
+                <BookOpen size={24} />
+              </div>
+              <h2 className="mt-6 text-3xl sm:text-4xl font-black text-white">Free Sponsored Publishing</h2>
+              <p className="mt-4 text-lg text-white/70 leading-relaxed">
+                For financially challenged writers. Because talent should never be limited by financial constraints.
+              </p>
+              <p className="mt-2 text-sm text-white/50">
+                যেসব মেধাবী লেখক শুধুমাত্র আর্থিক অসুবিধার কারণে তাঁদের বই প্রকাশ করতে পারছেন না, তাঁদের জন্য আমাদের এই বিশেষ উদ্যোগ।
+              </p>
+            </div>
+            <div className="shrink-0">
+              <button 
+                onClick={openFreeModal} 
+                className="inline-flex rounded-full border border-cyan-300/40 bg-cyan-300/15 px-8 py-4 font-bold text-cyan-100 shadow-glow shadow-cyan-300/10 transition hover:scale-105 hover:bg-cyan-300/25 hover:border-cyan-300/60"
+              >
+                Apply for Sponsorship
+              </button>
             </div>
           </div>
         </section>

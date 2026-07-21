@@ -1,4 +1,4 @@
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import HomePage from "./pages/HomePage.jsx";
 import ReaderPage from "./pages/ReaderPage.jsx";
@@ -36,10 +36,10 @@ export default function App() {
           <Route path="/admin/database" element={<AdminDatabasePage />} />
           <Route path="/admin/stories" element={<AdminStoriesDatabasePage />} />
           <Route path="/club" element={<ClubPage />} />
-          <Route path="/free-stories" element={<NewsletterListingPage />} />
-          <Route path="/free-stories/:slug" element={<NewsletterReaderPage />} />
+          <Route path="/short-stories" element={<NewsletterListingPage />} />
+          <Route path="/short-stories/:slug" element={<NewsletterReaderPage />} />
+          <Route path="/free-stories" element={<Navigate to="/short-stories" replace />} />
         </Routes>
-
       </AnimatePresence>
       <BackToTop />
     </>
