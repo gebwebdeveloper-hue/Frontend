@@ -17,21 +17,27 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
 
   const handleCardClick = () => {
     if (story.isPaid && story.price > 0) {
+      // Immediately open modal (synchronous) so mobile browsers don't block it.
+      // Then check if user already has access and auto-navigate if approved.
       const savedUser = JSON.parse(localStorage.getItem("story_reader_info") || "{}");
-      let url = `${API_BASE}/newsletter/access-status?newsletterId=${story._id}`;
-      if (savedUser.email) url += `&userEmail=${encodeURIComponent(savedUser.email)}`;
-      if (savedUser.transactionId) url += `&transactionId=${encodeURIComponent(savedUser.transactionId)}`;
-
-      fetch(url)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && data.approved) {
-            navigate(`/short-stories/${story.slug}`);
-          } else {
-            onOpenPayModal(story);
-          }
-        })
-        .catch(() => onOpenPayModal(story));
+      if (savedUser.email || savedUser.transactionId) {
+        let url = `${API_BASE}/newsletter/access-status?newsletterId=${story._id}`;
+        if (savedUser.email) url += `&userEmail=${encodeURIComponent(savedUser.email)}`;
+        if (savedUser.transactionId) url += `&transactionId=${encodeURIComponent(savedUser.transactionId)}`;
+        fetch(url)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.approved) {
+              navigate(`/short-stories/${story.slug}`);
+            } else {
+              onOpenPayModal(story);
+            }
+          })
+          .catch(() => onOpenPayModal(story));
+      } else {
+        // No saved user info — open modal immediately (synchronous, mobile-safe)
+        onOpenPayModal(story);
+      }
     } else {
       navigate(`/short-stories/${story.slug}`);
     }
@@ -120,12 +126,17 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
 
         {/* Read More button */}
         <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
-          <span
-            className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 transition-colors duration-250 group-hover:text-cyan-300"
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCardClick();
+            }}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 transition-colors duration-250 hover:text-cyan-300 active:opacity-70"
           >
             Read Full Story
             <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
-          </span>
+          </button>
         </div>
       </div>
     </motion.article>
