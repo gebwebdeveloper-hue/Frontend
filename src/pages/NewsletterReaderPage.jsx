@@ -66,6 +66,11 @@ export default function NewsletterReaderPage() {
           font-size: 1.125rem;
           line-height: 1.85;
           transition: color 0.3s ease;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+          -webkit-touch-callout: none;
         }
         .newsletter-content p {
           margin-bottom: 1.75rem;
@@ -204,7 +209,13 @@ export default function NewsletterReaderPage() {
 
           {/* Story Content */}
           {!loading && !error && story && (
-            <article>
+            <article
+              onCopy={(e) => e.preventDefault()}
+              onCut={(e) => e.preventDefault()}
+              onContextMenu={(e) => e.preventDefault()}
+              onSelectStart={(e) => e.preventDefault()}
+              className="select-none"
+            >
               {/* Header */}
               <header className="mb-10">
                 <div className={`mb-4 flex flex-wrap items-center gap-4 text-sm transition-colors ${isLightMode ? "text-slate-500" : "text-white/45"}`}>
