@@ -17,7 +17,21 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
 
   const handleCardClick = () => {
     if (story.isPaid && story.price > 0) {
-      onOpenPayModal(story);
+      const savedUser = JSON.parse(localStorage.getItem("story_reader_info") || "{}");
+      let url = `${API_BASE}/newsletter/access-status?newsletterId=${story._id}`;
+      if (savedUser.email) url += `&userEmail=${encodeURIComponent(savedUser.email)}`;
+      if (savedUser.transactionId) url += `&transactionId=${encodeURIComponent(savedUser.transactionId)}`;
+
+      fetch(url)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.approved) {
+            navigate(`/short-stories/${story.slug}`);
+          } else {
+            onOpenPayModal(story);
+          }
+        })
+        .catch(() => onOpenPayModal(story));
     } else {
       navigate(`/short-stories/${story.slug}`);
     }
@@ -40,21 +54,10 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         
-        {/* Price Badge Overlay */}
-        {story.isPaid && story.price > 0 ? (
-          <span className="absolute right-4 top-4 rounded-full bg-cyan-400 border border-cyan-300 px-3 py-1 text-[11px] font-black text-black shadow-glow shadow-cyan-400/20 z-20">
-            ₹{story.price} Paid
-          </span>
-        ) : (
-          <span className="absolute right-4 top-4 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3 py-1 text-[11px] font-bold text-emerald-300 backdrop-blur-sm z-20">
-            Free
-          </span>
-        )}
-
         {/* Categories badge Overlay */}
         {categories.length > 0 && (
           <div 
-            className="absolute left-4 top-4 flex flex-wrap gap-1.5 max-w-[70%] z-20 cursor-pointer"
+            className="absolute left-4 top-4 flex flex-wrap gap-1.5 max-w-[85%] z-20 cursor-pointer"
             onMouseEnter={() => setShowAllTags(true)}
             onMouseLeave={() => setShowAllTags(false)}
             onClick={(e) => {
@@ -117,27 +120,12 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
 
         {/* Read More button */}
         <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
-          {story.isPaid && story.price > 0 ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCardClick();
-              }}
-              className="inline-flex items-center gap-2 text-sm font-bold text-cyan-300 hover:text-cyan-200 transition"
-            >
-              <Lock size={14} className="text-cyan-400" />
-              Pay ₹{story.price} to Read
-              <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
-            </button>
-          ) : (
-            <span
-              className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 transition-colors duration-250 group-hover:text-cyan-300"
-            >
-              Read Full Story
-              <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
-            </span>
-          )}
+          <span
+            className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 transition-colors duration-250 group-hover:text-cyan-300"
+          >
+            Read Full Story
+            <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+          </span>
         </div>
       </div>
     </motion.article>
@@ -621,6 +609,12 @@ export default function NewsletterListingPage() {
         story={payModalStory}
         isOpen={!!payModalStory}
         onClose={() => setPayModalStory(null)}
+        onSuccess={() => {
+          if (payModalStory?.slug) {
+            navigate(`/short-stories/${payModalStory.slug}`);
+          }
+          setPayModalStory(null);
+        }}
       />
       <FooterSection />
     </PageTransition>

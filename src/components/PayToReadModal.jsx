@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Lock, CheckCircle2, AlertCircle, Loader2, Copy, Check, QrCode } from "lucide-react";
 import { API_BASE, SERVER_URL } from "../config.js";
 
 export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -242,6 +244,9 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
                 onClick={() => {
                   onClose();
                   if (onSuccess) onSuccess();
+                  if (story?.slug) {
+                    navigate(`/short-stories/${story.slug}`);
+                  }
                 }}
                 className="w-full rounded-2xl bg-emerald-400 px-6 py-3.5 text-xs font-black text-black hover:bg-emerald-300 transition shadow-glow shadow-emerald-400/20 uppercase tracking-wider"
               >
