@@ -1,24 +1,35 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Clock, ArrowRight, BookOpen, Loader2, ChevronDown } from "lucide-react";
+import { Calendar, Clock, ArrowRight, BookOpen, Loader2, ChevronDown, User, Search, X, Lock } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
+import PayToReadModal from "../components/PayToReadModal.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
 
-function StoryCard({ story, index, getCoverUrl, formatDate }) {
+function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
   const [showAllTags, setShowAllTags] = useState(false);
+  const navigate = useNavigate();
 
   const categories = story.categories || [];
   const firstCategory = categories[0];
   const remainingCount = categories.length - 1;
+
+  const handleCardClick = () => {
+    if (story.isPaid && story.price > 0) {
+      onOpenPayModal(story);
+    } else {
+      navigate(`/short-stories/${story.slug}`);
+    }
+  };
 
   return (
     <motion.article
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.05 }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-white/[0.02] backdrop-blur-md transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-cyan-500/5"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-white/[0.02] backdrop-blur-md transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.04] hover:shadow-2xl hover:shadow-cyan-500/5 cursor-pointer"
+      onClick={handleCardClick}
     >
       {/* Cover Image Container */}
       <div className="aspect-[16/9] w-full overflow-hidden bg-white/5 relative">
@@ -29,10 +40,21 @@ function StoryCard({ story, index, getCoverUrl, formatDate }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         
+        {/* Price Badge Overlay */}
+        {story.isPaid && story.price > 0 ? (
+          <span className="absolute right-4 top-4 rounded-full bg-cyan-400 border border-cyan-300 px-3 py-1 text-[11px] font-black text-black shadow-glow shadow-cyan-400/20 z-20">
+            ₹{story.price} Paid
+          </span>
+        ) : (
+          <span className="absolute right-4 top-4 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3 py-1 text-[11px] font-bold text-emerald-300 backdrop-blur-sm z-20">
+            Free
+          </span>
+        )}
+
         {/* Categories badge Overlay */}
         {categories.length > 0 && (
           <div 
-            className="absolute left-4 top-4 flex flex-wrap gap-1.5 max-w-[85%] z-20 cursor-pointer"
+            className="absolute left-4 top-4 flex flex-wrap gap-1.5 max-w-[70%] z-20 cursor-pointer"
             onMouseEnter={() => setShowAllTags(true)}
             onMouseLeave={() => setShowAllTags(false)}
             onClick={(e) => {
@@ -69,6 +91,12 @@ function StoryCard({ story, index, getCoverUrl, formatDate }) {
       <div className="flex flex-1 flex-col p-5 sm:p-6">
         {/* Meta information */}
         <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-white/45">
+          {story.author && (
+            <div className="flex items-center gap-1 font-semibold text-cyan-300">
+              <User size={12} />
+              <span>{story.author}</span>
+            </div>
+          )}
           <div className="flex items-center gap-1">
             <Calendar size={12} />
             <span>{formatDate(story.publishedAt)}</span>
@@ -81,21 +109,35 @@ function StoryCard({ story, index, getCoverUrl, formatDate }) {
 
         {/* Title & Snippet */}
         <h2 className="mb-2 text-lg font-bold tracking-tight text-white group-hover:text-cyan-300 transition-colors duration-300 line-clamp-2">
-          <Link to={`/short-stories/${story.slug}`}>{story.title}</Link>
+          {story.title}
         </h2>
         <p className="mb-4 text-xs leading-relaxed text-white/60 line-clamp-3">
           {story.description}
         </p>
 
         {/* Read More button */}
-        <div className="mt-auto pt-4 border-t border-white/5">
-          <Link
-            to={`/short-stories/${story.slug}`}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 transition-colors duration-250 group-hover:text-cyan-300"
-          >
-            Read Full Story
-            <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
-          </Link>
+        <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
+          {story.isPaid && story.price > 0 ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCardClick();
+              }}
+              className="inline-flex items-center gap-2 text-sm font-bold text-cyan-300 hover:text-cyan-200 transition"
+            >
+              <Lock size={14} className="text-cyan-400" />
+              Pay ₹{story.price} to Read
+              <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+            </button>
+          ) : (
+            <span
+              className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 transition-colors duration-250 group-hover:text-cyan-300"
+            >
+              Read Full Story
+              <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+            </span>
+          )}
         </div>
       </div>
     </motion.article>
@@ -109,11 +151,32 @@ export default function NewsletterListingPage() {
   const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0, pages: 1 });
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Search & Filter & Pay Modal states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [authorsList, setAuthorsList] = useState([]);
+  const [selectedAuthor, setSelectedAuthor] = useState("");
+  const [payModalStory, setPayModalStory] = useState(null);
+
   // Category filter state
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Fetch unique authors across all published stories automatically
+  useEffect(() => {
+    fetch(`${API_BASE}/newsletter?limit=1000`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.success && data.newsletters) {
+          const names = Array.from(
+            new Set(data.newsletters.map((s) => s.author?.trim()).filter(Boolean))
+          );
+          setAuthorsList(names);
+        }
+      })
+      .catch((err) => console.error("Error fetching author filters:", err));
+  }, []);
 
   useEffect(() => {
     setLoadingCategories(true);
@@ -307,7 +370,72 @@ export default function NewsletterListingPage() {
 
           <div className="grid gap-10 lg:grid-cols-[1fr_280px]">
             {/* LEFT COLUMN: LISTING */}
-            <div className="space-y-12 min-h-[600px]">
+            <div className="space-y-6 min-h-[600px]">
+              {/* Search Bar */}
+              <div className="relative max-w-sm w-full">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search stories by title, author, etc..."
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pl-10 pr-9 text-xs sm:text-sm text-white placeholder-white/35 backdrop-blur-md outline-none transition-all duration-200 focus:border-cyan-400/50 focus:bg-white/[0.06] focus:ring-1 focus:ring-cyan-400/50"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/40 hover:bg-white/10 hover:text-white transition"
+                    aria-label="Clear search"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              {/* Author Filter Bar */}
+              {authorsList.length > 0 && (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur-md">
+                  <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none">
+                    <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white/50 shrink-0 pr-3 border-r border-white/10">
+                      <User size={14} className="text-cyan-400" />
+                      Filter Author:
+                    </span>
+                    <button
+                      onClick={() => {
+                        setCurrentPage(1);
+                        setSelectedAuthor("");
+                      }}
+                      className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold border transition-all duration-200 ${
+                        !selectedAuthor
+                          ? "bg-cyan-500 border-cyan-500 text-black shadow-glow shadow-cyan-500/20"
+                          : "bg-white/5 border-white/10 text-white/70 hover:border-white/20 hover:text-white"
+                      }`}
+                    >
+                      All Authors
+                    </button>
+                    {authorsList.map((authorName) => {
+                      const isSelected = selectedAuthor === authorName;
+                      return (
+                        <button
+                          key={authorName}
+                          onClick={() => {
+                            setCurrentPage(1);
+                            setSelectedAuthor(isSelected ? "" : authorName);
+                          }}
+                          className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold border transition-all duration-200 ${
+                            isSelected
+                              ? "bg-cyan-500 border-cyan-500 text-black shadow-glow shadow-cyan-500/20"
+                              : "bg-white/5 border-white/10 text-white/70 hover:border-white/20 hover:text-white"
+                          }`}
+                        >
+                          {authorName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Loader */}
               {loading && (
                 <div className="flex h-64 flex-col items-center justify-center gap-4 text-cyan-400">
@@ -324,35 +452,76 @@ export default function NewsletterListingPage() {
               )}
 
               {/* Empty state */}
-              {!loading && !error && newsletters.length === 0 && (
-                <div className="text-center py-20 bg-white/[0.01] border border-white/5 rounded-3xl">
-                  <BookOpen className="mx-auto mb-4 h-12 w-12 text-white/25" />
-                  <p className="text-white/45 text-lg">No stories found under the selected filters.</p>
-                  {selectedCategories.length > 0 && (
-                    <button
-                      onClick={clearCategories}
-                      className="mt-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 px-4 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500 hover:text-black transition"
-                    >
-                      Clear Filters
-                    </button>
-                  )}
-                </div>
-              )}
+              {!loading &&
+                !error &&
+                newsletters.filter((story) => {
+                  const q = searchQuery.toLowerCase().trim();
+                  const matchesSearch =
+                    !q ||
+                    story.title?.toLowerCase().includes(q) ||
+                    story.author?.toLowerCase().includes(q) ||
+                    story.description?.toLowerCase().includes(q);
+                  const matchesAuthor =
+                    !selectedAuthor || story.author?.trim() === selectedAuthor;
+                  return matchesSearch && matchesAuthor;
+                }).length === 0 && (
+                  <div className="text-center py-20 bg-white/[0.01] border border-white/5 rounded-3xl">
+                    <BookOpen className="mx-auto mb-4 h-12 w-12 text-white/25" />
+                    <p className="text-white/45 text-lg">No stories found matching your search or filters.</p>
+                    {(selectedCategories.length > 0 || selectedAuthor || searchQuery) && (
+                      <button
+                        onClick={() => {
+                          clearCategories();
+                          setSelectedAuthor("");
+                          setSearchQuery("");
+                        }}
+                        className="mt-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 px-4 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500 hover:text-black transition"
+                      >
+                        Clear Search & Filters
+                      </button>
+                    )}
+                  </div>
+                )}
 
               {/* Grid List */}
-              {!loading && !error && newsletters.length > 0 && (
-                <>
-                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                    {newsletters.map((story, index) => (
-                      <StoryCard
-                        key={story._id}
-                        story={story}
-                        index={index}
-                        getCoverUrl={getCoverUrl}
-                        formatDate={formatDate}
-                      />
-                    ))}
-                  </div>
+              {!loading &&
+                !error &&
+                newsletters.filter((story) => {
+                  const q = searchQuery.toLowerCase().trim();
+                  const matchesSearch =
+                    !q ||
+                    story.title?.toLowerCase().includes(q) ||
+                    story.author?.toLowerCase().includes(q) ||
+                    story.description?.toLowerCase().includes(q);
+                  const matchesAuthor =
+                    !selectedAuthor || story.author?.trim() === selectedAuthor;
+                  return matchesSearch && matchesAuthor;
+                }).length > 0 && (
+                  <>
+                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                      {newsletters
+                        .filter((story) => {
+                          const q = searchQuery.toLowerCase().trim();
+                          const matchesSearch =
+                            !q ||
+                            story.title?.toLowerCase().includes(q) ||
+                            story.author?.toLowerCase().includes(q) ||
+                            story.description?.toLowerCase().includes(q);
+                          const matchesAuthor =
+                            !selectedAuthor || story.author?.trim() === selectedAuthor;
+                          return matchesSearch && matchesAuthor;
+                        })
+                        .map((story, index) => (
+                          <StoryCard
+                            key={story._id}
+                            story={story}
+                            index={index}
+                            getCoverUrl={getCoverUrl}
+                            formatDate={formatDate}
+                            onOpenPayModal={(st) => setPayModalStory(st)}
+                          />
+                        ))}
+                    </div>
 
                   {/* Pagination */}
                   {pagination.pages > 1 && (
@@ -448,6 +617,11 @@ export default function NewsletterListingPage() {
           </div>
         </div>
       </div>
+      <PayToReadModal
+        story={payModalStory}
+        isOpen={!!payModalStory}
+        onClose={() => setPayModalStory(null)}
+      />
       <FooterSection />
     </PageTransition>
   );

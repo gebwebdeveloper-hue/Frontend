@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube } from "lucide-react";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube, ShieldCheck } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import AuthModal from "./AuthModal.jsx";
 import { API_BASE } from "../config.js";
@@ -19,6 +19,7 @@ export default function Navbar() {
   const [authModalTab, setAuthModalTab] = useState("login");
   const profileRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const checkSession = () => {
     fetch(`${API_BASE}/auth/me`, { credentials: "include" })
@@ -34,22 +35,28 @@ export default function Navbar() {
   };
 
   useEffect(() => {
+    checkSession();
+  }, [location.pathname]);
+
+  useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener("scroll", onScroll, { passive: true });
     checkSession();
 
-    // Re-check session when the window regains focus (e.g. after OTP in another tab)
+    // Re-check session when the window regains focus
     const onFocus = () => checkSession();
     window.addEventListener("focus", onFocus);
 
-    // Also listen for custom "user-logged-in" event dispatched by BookCard after OTP
+    // Listen for custom login/logout events
     const onLogin = () => checkSession();
     window.addEventListener("lekhak:login", onLogin);
+    window.addEventListener("lekhak:logout", onLogin);
 
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("lekhak:login", onLogin);
+      window.removeEventListener("lekhak:logout", onLogin);
     };
   }, []);
 
@@ -251,9 +258,28 @@ export default function Navbar() {
                         className="absolute right-0 top-14 w-56 rounded-2xl border border-white/10 bg-black/90 backdrop-blur-xl p-3 shadow-2xl"
                       >
                         <div className="mb-3 border-b border-white/10 pb-3">
-                          <p className="text-xs font-semibold text-white truncate">{authUser.name || "Reader"}</p>
-                          <p className="text-[10px] text-white/45 truncate">{authUser.email}</p>
+                          <div className="flex items-center justify-between gap-1">
+                            <p className="text-xs font-semibold text-white truncate">{authUser.name || "Reader"}</p>
+                            {authUser.role === "admin" && (
+                              <span className="rounded bg-cyan-400/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-cyan-300 border border-cyan-400/30 shrink-0">
+                                Admin
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-white/45 truncate mt-0.5">{authUser.email}</p>
                         </div>
+
+                        {authUser.role === "admin" && (
+                          <Link
+                            to="/admin"
+                            onClick={() => setProfileOpen(false)}
+                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/10 transition mb-1"
+                          >
+                            <ShieldCheck size={14} />
+                            Admin Dashboard
+                          </Link>
+                        )}
+
                         <button
                           onClick={handleLogout}
                           className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition"
@@ -350,6 +376,15 @@ export default function Navbar() {
                     {userInitial}
                   </div>
                   <p className="text-white/60 text-sm">{authUser.name || authUser.email}</p>
+                  {authUser.role === "admin" && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-6 py-2.5 text-xs font-extrabold text-cyan-300 transition"
+                    >
+                      <ShieldCheck size={15} /> Admin Dashboard
+                    </Link>
+                  )}
                   <button
                     onClick={() => { handleLogout(); setOpen(false); }}
                     className="flex items-center gap-2 rounded-full border border-red-500/30 px-6 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 transition"

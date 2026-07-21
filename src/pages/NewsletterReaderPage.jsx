@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, Clock, ArrowLeft, Loader2, Sparkles, User, Sun, Moon } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, Loader2, Sparkles, User, Sun, Moon, Lock } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
+import PayToReadModal from "../components/PayToReadModal.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
 
 export default function NewsletterReaderPage() {
@@ -11,10 +12,18 @@ export default function NewsletterReaderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isLightMode, setIsLightMode] = useState(false);
+  const [isPayModalOpen, setIsPayModalOpen] = useState(false);
 
-  useEffect(() => {
+  const fetchStory = () => {
     setLoading(true);
-    fetch(`${API_BASE}/newsletter/${slug}`, { credentials: "include" })
+    const savedUser = JSON.parse(localStorage.getItem("story_reader_info") || "{}");
+    let url = `${API_BASE}/newsletter/${slug}`;
+    const params = [];
+    if (savedUser.email) params.push(`email=${encodeURIComponent(savedUser.email)}`);
+    if (savedUser.transactionId) params.push(`transactionId=${encodeURIComponent(savedUser.transactionId)}`);
+    if (params.length > 0) url += `?${params.join("&")}`;
+
+    fetch(url, { credentials: "include" })
       .then((res) => {
         if (!res.ok) {
           if (res.status === 403) {
@@ -27,6 +36,9 @@ export default function NewsletterReaderPage() {
       .then((data) => {
         if (data.success) {
           setStory(data.newsletter);
+          if (data.newsletter?.isLocked) {
+            setIsPayModalOpen(true);
+          }
         } else {
           setError(data.message || "Failed to load the story.");
         }
@@ -36,6 +48,10 @@ export default function NewsletterReaderPage() {
         setError(err.message || "Something went wrong while fetching the story.");
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchStory();
   }, [slug]);
 
   useEffect(() => {
@@ -302,10 +318,34 @@ export default function NewsletterReaderPage() {
               )}
 
               {/* Story body */}
-              <div
-                className="newsletter-content"
-                dangerouslySetInnerHTML={{ __html: story.content }}
-              />
+              {story.isLocked ? (
+                <div className={`rounded-3xl border p-8 text-center backdrop-blur-xl my-12 space-y-6 ${
+                  isLightMode ? "border-cyan-500/30 bg-cyan-50/50" : "border-cyan-400/30 bg-cyan-950/20"
+                }`}>
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-300 border border-cyan-400/20">
+                    <Lock size={32} />
+                  </div>
+                  <div>
+                    <h2 className={`text-2xl font-black ${isLightMode ? "text-slate-900" : "text-white"}`}>
+                      Paid Story Access Required
+                    </h2>
+                    <p className={`mt-2 text-sm max-w-md mx-auto ${isLightMode ? "text-slate-600" : "text-white/60"}`}>
+                      This story requires a reading fee of <strong className="text-cyan-400">₹{story.price}</strong>. Submit your UPI transaction ID for verification to unlock full reading access.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsPayModalOpen(true)}
+                    className="rounded-full bg-cyan-400 px-8 py-3.5 text-sm font-black text-black hover:bg-cyan-300 transition shadow-glow shadow-cyan-400/20"
+                  >
+                    Pay ₹{story.price} via UPI / Submit Transaction ID
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className="newsletter-content"
+                  dangerouslySetInnerHTML={{ __html: story.content }}
+                />
+              )}
 
               {/* Newsletter footer CTA */}
               <div className={`mt-16 rounded-3xl border p-8 text-center sm:p-12 transition-all duration-300 ${
@@ -333,6 +373,13 @@ export default function NewsletterReaderPage() {
           )}
         </div>
       </div>
+
+      <PayToReadModal
+        story={story}
+        isOpen={isPayModalOpen}
+        onClose={() => setIsPayModalOpen(false)}
+        onSuccess={() => fetchStory()}
+      />
     </PageTransition>
   );
 }

@@ -83,6 +83,10 @@ export default function AdminBooksPage() {
   // Newsletter management state
   const [newsletterList, setNewsletterList] = useState([]);
   const [loadingNewsletters, setLoadingNewsletters] = useState(false);
+  const [newsletterAccessRequests, setNewsletterAccessRequests] = useState([]);
+  const [loadingAccessRequests, setLoadingAccessRequests] = useState(false);
+  const [storySubTab, setStorySubTab] = useState("editor"); // 'editor' | 'verifications'
+
   const [newsletterForm, setNewsletterForm] = useState({
     title: "",
     description: "",
@@ -90,7 +94,8 @@ export default function AdminBooksPage() {
     author: "Lekhok Tripura",
     status: "draft",
     publishedAt: new Date().toISOString().split("T")[0],
-    fontFamily: "Outfit"
+    fontFamily: "Outfit",
+    price: "0"
   });
   const [newsletterCover, setNewsletterCover] = useState(null);
   const [editingNewsletter, setEditingNewsletter] = useState(null);
@@ -108,8 +113,36 @@ export default function AdminBooksPage() {
   const [categoryError, setCategoryError] = useState("");
   const [categorySuccess, setCategorySuccess] = useState("");
 
+  const fetchNewsletterAccessRequests = () => {
+    setLoadingAccessRequests(true);
+    fetch(`${API_BASE}/newsletter/admin/access-requests`, { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setNewsletterAccessRequests(data.requests || []);
+        }
+      })
+      .catch((err) => console.error("Error fetching access requests:", err))
+      .finally(() => setLoadingAccessRequests(false));
+  };
 
-
+  const handleUpdateAccessStatus = (requestId, newStatus) => {
+    fetch(`${API_BASE}/newsletter/admin/access-requests/${requestId}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ status: newStatus })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          fetchNewsletterAccessRequests();
+        } else {
+          alert(data.message || "Failed to update request.");
+        }
+      })
+      .catch(() => alert("Error updating request."));
+  };
 
   const checkFileSize = (file, key) => {
     if (!file) return true;
@@ -134,12 +167,14 @@ export default function AdminBooksPage() {
           if (data.user.role === "admin") {
             setUser(data.user);
             setStep("dashboard");
+            window.dispatchEvent(new Event("lekhak:login"));
             fetchBooks();
             fetchPurchases();
             fetchAuthors();
             fetchPaymentConfig();
             fetchNewsletters();
             fetchCategories();
+            fetchNewsletterAccessRequests();
           } else {
             setAuthError("Access denied. Admin permissions required.");
             setStep("login-email");
@@ -352,7 +387,7 @@ export default function AdminBooksPage() {
   };
 
   const resetNewsletterForm = () => {
-    setNewsletterForm({ title: "", description: "", content: "", author: "Lekhok Tripura", status: "draft", publishedAt: new Date().toISOString().split("T")[0], fontFamily: "Outfit" });
+    setNewsletterForm({ title: "", description: "", content: "", author: "Lekhok Tripura", status: "draft", publishedAt: new Date().toISOString().split("T")[0], fontFamily: "Outfit", price: "0" });
     setNewsletterCover(null);
     setEditingNewsletter(null);
     setNewsletterFormError("");
@@ -370,7 +405,13 @@ export default function AdminBooksPage() {
     }
     setSubmittingNewsletter(true);
     const fd = new FormData();
-    Object.entries(newsletterForm).forEach(([k, v]) => fd.append(k, v));
+    Object.entries(newsletterForm).forEach(([k, v]) => {
+      if (k === "price") {
+        fd.append("price", v === "" || v === null || v === undefined ? "0" : v);
+      } else {
+        fd.append(k, v);
+      }
+    });
     if (newsletterCover) fd.append("cover", newsletterCover);
     fd.append("categories", selectedStoryCategories.join(","));
 
@@ -401,7 +442,8 @@ export default function AdminBooksPage() {
       author: n.author || "Lekhok Tripura",
       status: n.status || "draft",
       publishedAt: n.publishedAt ? n.publishedAt.split("T")[0] : new Date().toISOString().split("T")[0],
-      fontFamily: n.fontFamily || "Outfit"
+      fontFamily: n.fontFamily || "Outfit",
+      price: n.price ? String(n.price) : "0"
     });
     setNewsletterCover(null);
     setNewsletterFormError("");
@@ -565,6 +607,7 @@ export default function AdminBooksPage() {
           if (data.user.role === "admin") {
             setUser(data.user);
             setStep("dashboard");
+            window.dispatchEvent(new Event("lekhak:login"));
             fetchBooks();
             fetchPurchases();
             fetchAuthors();
@@ -587,10 +630,12 @@ export default function AdminBooksPage() {
         setStep("login-email");
         setBooksList([]);
         setAuthorsList([]);
+        window.dispatchEvent(new Event("lekhak:logout"));
       })
       .catch(() => {
         setUser(null);
         setStep("login-email");
+        window.dispatchEvent(new Event("lekhak:logout"));
       });
   };
 
@@ -1841,145 +1886,289 @@ export default function AdminBooksPage() {
 
           {/* TAB 4: NEWSLETTERS */}
           {activeTab === "newsletter" && (
-            <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-              {/* Dark styles to adapt Jodit for Dark Theme */}
-              <style>{`
-                .jodit-editor-container {
-                  width: 100% !important;
-                  max-width: 100% !important;
-                  overflow: hidden !important;
-                }
-                .jodit-editor-container .jodit-container {
-                  border: none !important;
-                  width: 100% !important;
-                  max-width: 100% !important;
-                }
-                .jodit-editor-container .jodit-wysiwyg {
-                  background-color: #09090b !important;
-                  color: #ffffff !important;
-                }
-                .jodit-editor-container .jodit-workplace {
-                  background-color: #09090b !important;
-                }
-                .jodit-editor-container .jodit-toolbar__box {
-                  max-width: 100% !important;
-                }
-                .jodit-editor-container .jodit-toolbar-list {
-                  flex-wrap: wrap !important;
-                }
-              `}</style>
+            <div className="space-y-6">
+              {/* Sub-tabs: Write/Manage Stories vs Payment Verifications */}
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setStorySubTab("editor")}
+                    className={`rounded-full px-5 py-2 text-xs font-bold transition ${
+                      storySubTab === "editor"
+                        ? "bg-cyan-400 text-black shadow-glow"
+                        : "bg-white/5 border border-white/10 text-white/70 hover:text-white"
+                    }`}
+                  >
+                    Write & Manage Stories
+                  </button>
+                  <button
+                    onClick={() => {
+                      setStorySubTab("verifications");
+                      fetchNewsletterAccessRequests();
+                    }}
+                    className={`relative rounded-full px-5 py-2 text-xs font-bold transition ${
+                      storySubTab === "verifications"
+                        ? "bg-cyan-400 text-black shadow-glow"
+                        : "bg-white/5 border border-white/10 text-white/70 hover:text-white"
+                    }`}
+                  >
+                    Story Payment Verifications
+                    {newsletterAccessRequests.filter((r) => r.status === "pending").length > 0 && (
+                      <span className="ml-2 rounded-full bg-amber-400 text-black px-2 py-0.5 text-[10px] font-black">
+                        {newsletterAccessRequests.filter((r) => r.status === "pending").length}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
 
-              {/* LEFT: Newsletter Editor Form */}
-              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
-                <div className="border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">
-                      {editingNewsletter ? "Edit Story" : "Write Story"}
-                    </h2>
-                    <p className="mt-1 text-sm text-white/55">
-                      {editingNewsletter ? `Editing: ${editingNewsletter.title}` : "Write a weekly article or story to post on Friday/Sunday."}
-                    </p>
-                  </div>
-                  {editingNewsletter && (
+              {storySubTab === "verifications" ? (
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl space-y-6">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                    <div>
+                      <h2 className="text-xl font-bold text-white">Story Payment Access Requests</h2>
+                      <p className="text-xs text-white/55 mt-1">Review transaction IDs submitted by readers to approve story reading access.</p>
+                    </div>
                     <button
-                      type="button"
-                      onClick={resetNewsletterForm}
-                      className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/60 hover:text-white transition"
+                      onClick={fetchNewsletterAccessRequests}
+                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 hover:text-white transition"
                     >
-                      <X size={13} /> Cancel Edit
+                      Refresh List
                     </button>
+                  </div>
+
+                  {loadingAccessRequests ? (
+                    <div className="flex h-32 items-center justify-center text-cyan-400">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    </div>
+                  ) : newsletterAccessRequests.length === 0 ? (
+                    <p className="text-center py-12 text-xs text-white/40 italic">No payment requests submitted yet.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {newsletterAccessRequests.map((req) => (
+                        <div
+                          key={req._id}
+                          className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-4 transition hover:border-white/20"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-3">
+                            <div>
+                              <span className="text-xs font-semibold text-cyan-300">
+                                Story: {req.newsletterId?.title || "Story"}
+                              </span>
+                              <span className="ml-2 rounded-lg bg-cyan-400/10 px-2 py-0.5 text-[10px] font-bold text-cyan-300 border border-cyan-400/20">
+                                ₹{req.amount}
+                              </span>
+                            </div>
+                            <span
+                              className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider ${
+                                req.status === "approved"
+                                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                                  : req.status === "rejected"
+                                  ? "bg-red-500/20 text-red-300 border border-red-500/30"
+                                  : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                              }`}
+                            >
+                              {req.status}
+                            </span>
+                          </div>
+
+                          <div className="grid gap-4 sm:grid-cols-3 text-xs text-white/70">
+                            <div>
+                              <p className="text-[10px] uppercase font-bold text-white/40">Reader Details</p>
+                              <p className="font-semibold text-white mt-1">{req.userName}</p>
+                              <p className="text-white/60">{req.userEmail}</p>
+                              <p className="text-white/60">{req.userPhone}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] uppercase font-bold text-white/40">Payment Details</p>
+                              <p className="mt-1">
+                                <span className="text-white/40">UPI UTR / Ref:</span>{" "}
+                                <span className="font-mono text-cyan-300 font-bold bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-800/30 select-all">
+                                  {req.transactionId}
+                                </span>
+                              </p>
+                              <p className="text-[10px] text-white/40 mt-1">
+                                Submitted: {new Date(req.createdAt).toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-end gap-2">
+                              {req.status === "pending" ? (
+                                <>
+                                  <button
+                                    onClick={() => handleUpdateAccessStatus(req._id, "rejected")}
+                                    className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-500 hover:text-white transition"
+                                  >
+                                    Reject
+                                  </button>
+                                  <button
+                                    onClick={() => handleUpdateAccessStatus(req._id, "approved")}
+                                    className="rounded-xl bg-cyan-400 px-4 py-2 text-xs font-bold text-black hover:bg-cyan-300 transition shadow-glow"
+                                  >
+                                    Approve Access
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="text-[11px] text-white/40">
+                                  Processed on {new Date(req.approvedAt || req.rejectedAt || req.updatedAt).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
+              ) : (
+                <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+                  {/* Dark styles to adapt Jodit for Dark Theme */}
+                  <style>{`
+                    .jodit-editor-container {
+                      width: 100% !important;
+                      max-width: 100% !important;
+                      overflow: hidden !important;
+                    }
+                    .jodit-editor-container .jodit-container {
+                      border: none !important;
+                      width: 100% !important;
+                      max-width: 100% !important;
+                    }
+                    .jodit-editor-container .jodit-wysiwyg {
+                      background-color: #09090b !important;
+                      color: #ffffff !important;
+                    }
+                    .jodit-editor-container .jodit-workplace {
+                      background-color: #09090b !important;
+                    }
+                    .jodit-editor-container .jodit-toolbar__box {
+                      max-width: 100% !important;
+                    }
+                    .jodit-editor-container .jodit-toolbar-list {
+                      flex-wrap: wrap !important;
+                    }
+                  `}</style>
 
-                {newsletterFormError && (
-                  <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
-                    <AlertCircle className="h-5 w-5 shrink-0" />
-                    <span>{newsletterFormError}</span>
-                  </div>
-                )}
-                {newsletterFormSuccess && (
-                  <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-300">
-                    {newsletterFormSuccess}
-                  </div>
-                )}
+                  {/* LEFT: Newsletter Editor Form */}
+                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
+                    <div className="border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-bold text-white">
+                          {editingNewsletter ? "Edit Story" : "Write Story"}
+                        </h2>
+                        <p className="mt-1 text-sm text-white/55">
+                          {editingNewsletter ? `Editing: ${editingNewsletter.title}` : "Write a weekly article or story to post on Friday/Sunday."}
+                        </p>
+                      </div>
+                      {editingNewsletter && (
+                        <button
+                          type="button"
+                          onClick={resetNewsletterForm}
+                          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/60 hover:text-white transition"
+                        >
+                          <X size={13} /> Cancel Edit
+                        </button>
+                      )}
+                    </div>
 
-                <form onSubmit={handleNewsletterSubmit} className="space-y-5">
-                  <div className="grid gap-5 md:grid-cols-2">
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Story Title *</label>
-                      <input
-                        type="text"
-                        required
-                        value={newsletterForm.title}
-                        onChange={(e) => handleNewsletterFormChange("title", e.target.value)}
-                        placeholder="e.g. The Call of the Hills"
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Author *</label>
-                      <input
-                        type="text"
-                        required
-                        value={newsletterForm.author}
-                        onChange={(e) => handleNewsletterFormChange("author", e.target.value)}
-                        placeholder="e.g. Lekhok Tripura"
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
-                      />
-                    </div>
-                  </div>
+                    {newsletterFormError && (
+                      <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
+                        <AlertCircle className="h-5 w-5 shrink-0" />
+                        <span>{newsletterFormError}</span>
+                      </div>
+                    )}
+                    {newsletterFormSuccess && (
+                      <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-300">
+                        {newsletterFormSuccess}
+                      </div>
+                    )}
 
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Short Description (Snippet) *</label>
-                    <textarea
-                      rows="2"
-                      required
-                      value={newsletterForm.description}
-                      onChange={(e) => handleNewsletterFormChange("description", e.target.value)}
-                      placeholder="A brief summary for the cards on the list page..."
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none resize-none"
-                    />
-                  </div>
+                    <form onSubmit={handleNewsletterSubmit} className="space-y-5">
+                      <div className="grid gap-5 md:grid-cols-2">
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Story Title *</label>
+                          <input
+                            type="text"
+                            required
+                            value={newsletterForm.title}
+                            onChange={(e) => handleNewsletterFormChange("title", e.target.value)}
+                            placeholder="e.g. The Call of the Hills"
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Author *</label>
+                          <input
+                            type="text"
+                            required
+                            value={newsletterForm.author}
+                            onChange={(e) => handleNewsletterFormChange("author", e.target.value)}
+                            placeholder="e.g. Lekhok Tripura"
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                          />
+                        </div>
+                      </div>
 
-                  <div className="grid gap-5 md:grid-cols-3">
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Publish Date *</label>
-                      <input
-                        type="date"
-                        required
-                        value={newsletterForm.publishedAt}
-                        onChange={(e) => handleNewsletterFormChange("publishedAt", e.target.value)}
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Status *</label>
-                      <select
-                        value={newsletterForm.status}
-                        onChange={(e) => handleNewsletterFormChange("status", e.target.value)}
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
-                        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
-                      >
-                        <option value="draft" style={{ background: "#0a0a0a" }}>Draft</option>
-                        <option value="published" style={{ background: "#0a0a0a" }}>Published</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Story Font Style *</label>
-                      <select
-                        value={newsletterForm.fontFamily}
-                        onChange={(e) => handleNewsletterFormChange("fontFamily", e.target.value)}
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
-                        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
-                      >
-                        <option value="Outfit" style={{ background: "#0a0a0a" }}>Outfit (Sans-Serif)</option>
-                        <option value="Lora" style={{ background: "#0a0a0a" }}>Lora (Elegant Serif)</option>
-                        <option value="Merriweather" style={{ background: "#0a0a0a" }}>Merriweather (Classic Serif)</option>
-                        <option value="Playfair Display" style={{ background: "#0a0a0a" }}>Playfair Display (Dramatic Serif)</option>
-                        <option value="Inter" style={{ background: "#0a0a0a" }}>Inter (Neutral Sans-Serif)</option>
-                      </select>
-                    </div>
-                  </div>
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Short Description (Snippet) *</label>
+                        <textarea
+                          rows="2"
+                          required
+                          value={newsletterForm.description}
+                          onChange={(e) => handleNewsletterFormChange("description", e.target.value)}
+                          placeholder="A brief summary for the cards on the list page..."
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none resize-none"
+                        />
+                      </div>
+
+                      <div className="grid gap-5 md:grid-cols-4">
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Publish Date *</label>
+                          <input
+                            type="date"
+                            required
+                            value={newsletterForm.publishedAt}
+                            onChange={(e) => handleNewsletterFormChange("publishedAt", e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Price (₹) *</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={newsletterForm.price ?? ""}
+                            onChange={(e) => handleNewsletterFormChange("price", e.target.value)}
+                            placeholder="0 (Free)"
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none font-bold text-cyan-300"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Status *</label>
+                          <select
+                            value={newsletterForm.status}
+                            onChange={(e) => handleNewsletterFormChange("status", e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
+                            style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
+                          >
+                            <option value="draft" style={{ background: "#0a0a0a" }}>Draft</option>
+                            <option value="published" style={{ background: "#0a0a0a" }}>Published</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Font Style *</label>
+                          <select
+                            value={newsletterForm.fontFamily}
+                            onChange={(e) => handleNewsletterFormChange("fontFamily", e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
+                            style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
+                          >
+                            <option value="Outfit" style={{ background: "#0a0a0a" }}>Outfit</option>
+                            <option value="Lora" style={{ background: "#0a0a0a" }}>Lora</option>
+                            <option value="Merriweather" style={{ background: "#0a0a0a" }}>Merriweather</option>
+                            <option value="Playfair Display" style={{ background: "#0a0a0a" }}>Playfair Display</option>
+                            <option value="Inter" style={{ background: "#0a0a0a" }}>Inter</option>
+                          </select>
+                        </div>
+                      </div>
 
                   {/* Cover image upload */}
                   <div>
@@ -2255,7 +2444,9 @@ export default function AdminBooksPage() {
             </div>
           )}
         </div>
-      </div>
-    </PageTransition>
-  );
+      )}
+    </div>
+  </div>
+</PageTransition>
+);
 }
