@@ -54,6 +54,12 @@ const initialForm = {
   name: "",
   phone: "",
   email: "",
+  address: "",
+  bookTitle: "",
+  genre: "রহস্য",
+  pageCount: "20-50",
+  publishingType: "বই ছাপাতে (Paperback/Hardcover)",
+  nominee: "",
   bookAbout: "",
   manuscriptReady: "Yes",
   note: "",
@@ -143,14 +149,16 @@ export default function ReaderPage() {
       setManuscript(null);
       return;
     }
-    if (file.type !== "application/pdf" || !file.name.toLowerCase().endsWith(".pdf")) {
-      setMessage({ type: "error", text: "Please upload manuscript as PDF only." });
+    const filename = file.name.toLowerCase();
+    const isAllowed = filename.endsWith(".pdf") || filename.endsWith(".doc") || filename.endsWith(".docx");
+    if (!isAllowed) {
+      setMessage({ type: "error", text: "Please upload manuscript as PDF or Word document (.doc, .docx)." });
       event.target.value = "";
       setManuscript(null);
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setMessage({ type: "error", text: "Manuscript PDF must be below 5MB." });
+    if (file.size > 10 * 1024 * 1024) {
+      setMessage({ type: "error", text: "Manuscript file must be under 10MB." });
       event.target.value = "";
       setManuscript(null);
       return;
@@ -166,7 +174,7 @@ export default function ReaderPage() {
 
     try {
       if (!manuscript) {
-        setMessage({ type: "error", text: "Please upload your manuscript PDF below 5MB." });
+        setMessage({ type: "error", text: "Please upload your manuscript (PDF/DOCX) under 10MB." });
         setLoading(false);
         return;
       }
@@ -209,18 +217,29 @@ export default function ReaderPage() {
     setMessage({ type: "", text: "" });
 
     try {
+      const payload = new FormData();
+      payload.append("planName", selectedPlan);
+      payload.append("name", form.name);
+      payload.append("phone", form.phone);
+      payload.append("email", form.email);
+      payload.append("address", form.address);
+      payload.append("bookTitle", form.bookTitle);
+      payload.append("genre", form.genre);
+      payload.append("pageCount", form.pageCount);
+      payload.append("publishingType", form.publishingType);
+      payload.append("nominee", form.nominee);
+      payload.append("bookAbout", form.bookAbout);
+      payload.append("note", form.note);
+      if (selectedAddons?.length) {
+        selectedAddons.forEach((addon) => payload.append("addons", addon));
+      }
+      if (manuscript) {
+        payload.append("manuscript", manuscript);
+      }
+
       const res = await fetch(`${API_BASE}/publishing/plan`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          planName: selectedPlan,
-          name: form.name,
-          phone: form.phone,
-          email: form.email,
-          bookAbout: form.bookAbout,
-          note: form.note,
-          addons: selectedAddons,
-        }),
+        body: payload,
       });
       const data = await res.json();
 
@@ -231,6 +250,7 @@ export default function ReaderPage() {
             ? `${selectedPlan} plan request submitted and mailed to admin.`
             : "Plan request submitted. Admin email could not be confirmed.",
         });
+        setManuscript(null);
         setForm((current) => ({ ...initialForm, name: current.name, phone: current.phone, email: current.email }));
       } else {
         const errorText = data.errors?.length
@@ -468,23 +488,119 @@ export default function ReaderPage() {
 
                     {selectedPlan ? (
                       <div className="grid gap-4 md:grid-cols-2">
-                        <div className="md:col-span-2 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] p-4 text-sm leading-7 text-white/72">
-                          <h4 className="text-lg font-black text-white">{selectedPlan} Self Publishing Plan</h4>
-                          <p className="mt-2 text-white/65">Submit your contact details and our team will call you back about this paid publishing package.</p>
+                        <div className="md:col-span-2 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] p-5 text-sm leading-7 text-white/80">
+                          <h4 className="text-xl font-black text-white">{selectedPlan} Self Publishing Plan</h4>
+                          <p className="mt-1 text-cyan-300 font-bold">গল্প জমা ফর্ম (Manuscript / Story Submission)</p>
+                          <p className="mt-2 text-white/70">
+                            আপনি কি আপনার নিজের লেখা গল্প, কবিতা বা কোনো সাহিত্যকর্ম আমাদের পেজ/ ওয়েবসাইটে প্রকাশ করতে চান? তাহলে নিচের তথ্যগুলি সঠিকভাবে পূরণ করুন। আমরা আপনার লেখা যাচাইয়ের পর আপনাকে প্রকাশ করার বিষয়ে জানাব।
+                          </p>
                         </div>
-                        <Input label="Name" required value={form.name} onChange={setField("name")} placeholder="Author name" />
-                        <Input label="Phone Number" required value={form.phone} onChange={setField("phone")} placeholder="10-digit phone number" inputMode="numeric" />
-                        <Input label="Email" required type="email" value={form.email} onChange={setField("email")} placeholder="you@example.com" className="md:col-span-2" />
-                        <Textarea label="Your Book is about?" rows={4} value={form.bookAbout} onChange={setField("bookAbout")} placeholder="Tell us about your book or manuscript" className="md:col-span-2" />
-                        <Textarea label="Notes" rows={3} value={form.note} onChange={setField("note")} placeholder="Any preferred time to call or requirements?" className="md:col-span-2" />
+
+                        <Input label="আপনার পূর্ণ নাম (Your Full Name) *" required value={form.name} onChange={setField("name")} placeholder="Author full name" />
+                        <Input label="Mobile No *" required value={form.phone} onChange={setField("phone")} placeholder="10-digit mobile number" inputMode="numeric" />
+                        <Input label="Mail ID *" required type="email" value={form.email} onChange={setField("email")} placeholder="you@example.com" className="md:col-span-2" />
+                        
+                        <Input label="বই শিরোনাম (Book Name) *" required value={form.bookTitle} onChange={setField("bookTitle")} placeholder="e.g. আপনার বইয়ের নাম" className="md:col-span-2" />
+
+                        {/* Genre & Page Count */}
+                        <div className="md:col-span-1">
+                          <label className="block text-sm font-bold text-white/70 mb-2">
+                            আপনার কবিতা / গল্পের ধরন কি (Genre) *
+                          </label>
+                          <select
+                            required
+                            value={form.genre}
+                            onChange={setField("genre")}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
+                            style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
+                          >
+                            <option value="রহস্য" style={{ background: "#0a0a0a" }}>রহস্য (Mystery)</option>
+                            <option value="প্রেম" style={{ background: "#0a0a0a" }}>প্রেম (Romance)</option>
+                            <option value="বিরহ" style={{ background: "#0a0a0a" }}>বিরহ (Heartbreak)</option>
+                            <option value="গোয়েন্দা" style={{ background: "#0a0a0a" }}>গোয়েন্দা (Detective)</option>
+                            <option value="ভৌতিক" style={{ background: "#0a0a0a" }}>ভৌতিক (Horror)</option>
+                            <option value="অলৌকিক" style={{ background: "#0a0a0a" }}>অলৌকিক (Supernatural)</option>
+                            <option value="ঐতিহাসিক" style={{ background: "#0a0a0a" }}>ঐতিহাসিক (Historical)</option>
+                            <option value="এডভেঞ্চার" style={{ background: "#0a0a0a" }}>এডভেঞ্চার (Adventure)</option>
+                            <option value="ট্র্যাজেডি" style={{ background: "#0a0a0a" }}>ট্র্যাজেডি (Tragedy)</option>
+                            <option value="Other" style={{ background: "#0a0a0a" }}>Other</option>
+                          </select>
+                        </div>
+
+                        <div className="md:col-span-1">
+                          <label className="block text-sm font-bold text-white/70 mb-2">
+                            Book Page Count A5 *
+                          </label>
+                          <select
+                            required
+                            value={form.pageCount}
+                            onChange={setField("pageCount")}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
+                            style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
+                          >
+                            <option value="20-50" style={{ background: "#0a0a0a" }}>20–50</option>
+                            <option value="50-100" style={{ background: "#0a0a0a" }}>50–100</option>
+                            <option value="100-200" style={{ background: "#0a0a0a" }}>100–200</option>
+                            <option value="200-300" style={{ background: "#0a0a0a" }}>200–300</option>
+                            <option value="300-400" style={{ background: "#0a0a0a" }}>300–400</option>
+                            <option value="400-500" style={{ background: "#0a0a0a" }}>400–500</option>
+                          </select>
+                        </div>
+
+                        {/* Publishing Format Preference */}
+                        <fieldset className="md:col-span-2 rounded-xl border border-white/10 bg-white/5 p-4">
+                          <legend className="px-2 text-sm font-bold text-white/70">আপনি কি চাইছেন? (Format Preference) *</legend>
+                          <div className="mt-3 flex flex-wrap gap-4">
+                            {[
+                              { id: "paperback", label: "বই ছাপাতে (Paperback/Hardcover)", val: "বই ছাপাতে (Paperback/Hardcover)" },
+                              { id: "ebook", label: "Publish E-Book", val: "Publish E-Book" }
+                            ].map((opt) => (
+                              <label key={opt.id} className={`flex cursor-pointer items-center gap-2 rounded-xl border px-5 py-3 text-sm font-bold transition ${form.publishingType === opt.val ? "border-cyan-300/45 bg-cyan-300/15 text-cyan-100" : "border-white/10 bg-black/20 text-white/55 hover:text-white"}`}>
+                                <input type="radio" name="publishingType" value={opt.val} checked={form.publishingType === opt.val} onChange={setField("publishingType")} className="sr-only" />
+                                {opt.label}
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
+
+                        {/* Nominee Name & Relationship */}
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-bold text-white/70">
+                            আপনার পর আপনার বইএর লভ্যাংশ কাকে দিতে চান ? *
+                          </label>
+                          <span className="block text-xs text-white/45 italic mb-2">
+                            Nominee Name , Relationship with author & contact details
+                          </span>
+                          <input
+                            required
+                            type="text"
+                            value={form.nominee}
+                            onChange={setField("nominee")}
+                            placeholder="Nominee Name, Relationship & Contact Details"
+                            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10"
+                          />
+                        </div>
+
+                        <Textarea label="আপনার ঠিকানা সম্পূর্ণ ভাবে ( যাতে আমরা বই পাঠাতে কোনও সমস্যা না হয় ) *" required rows={3} value={form.address} onChange={setField("address")} placeholder="Village/City, Post Office, District, State, PIN Code" className="md:col-span-2" />
+
+                        {/* Manuscript File Upload */}
+                        <label className="md:col-span-2 block rounded-xl border border-dashed border-white/15 bg-white/5 p-5 text-sm font-bold text-white/70 transition hover:border-cyan-300/35 hover:bg-cyan-300/10">
+                          <span className="flex items-center gap-3"><UploadCloud className="h-5 w-5 text-cyan-300" /> আপনার সম্পূর্ণ গল্প/লেখা এখানে পেস্ট / আপলোড করুন</span>
+                          <span className="mt-2 block text-xs font-medium text-white/45">Upload 1 supported file: PDF or Word document (.pdf, .doc, .docx). Max 10MB.</span>
+                          <input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} className="mt-4 block w-full text-sm text-white/60 file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-bold file:text-black" />
+                          {manuscript ? <span className="mt-3 block text-xs text-cyan-200">Selected File: {manuscript.name}</span> : null}
+                        </label>
+
+                        <Textarea label="আপনি কি নিজের লেখা সম্পর্কে সংক্ষিপ্ত বর্ণনা দিতে চান? (ঐচ্ছিক)" rows={3} value={form.bookAbout} onChange={setField("bookAbout")} placeholder="Brief description of your writing" className="md:col-span-2" />
+                        <Textarea label="Notes / Special Instructions" rows={2} value={form.note} onChange={setField("note")} placeholder="Any preferred time to call or additional requirements?" className="md:col-span-2" />
                         
                         {/* Add-Ons Selection */}
                         <div className="md:col-span-2 mt-4">
-                          <h4 className="text-sm font-bold text-white/75 mb-3 flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-white/75 mb-1 flex items-center gap-2">
                             <Sparkles size={16} className="text-cyan-300" />
-                            Select Add-Ons (Optional)
+                            Choose add on with your basic publication plan (999/-) *
                           </h4>
-                          <p className="text-xs text-white/45 mb-4">Select any additional features you would like to include in your publishing journey.</p>
+                          <p className="text-xs text-white/45 mb-4">Select any additional features you would like to include in your publishing package.</p>
                           <div className="grid gap-3 sm:grid-cols-2">
                             {addonsList.map((addon) => {
                               const isSelected = selectedAddons.includes(addon.name);
@@ -543,8 +659,8 @@ export default function ReaderPage() {
                         </fieldset>
                         <label className="md:col-span-2 block rounded-xl border border-dashed border-white/15 bg-white/5 p-5 text-sm font-bold text-white/70 transition hover:border-cyan-300/35 hover:bg-cyan-300/10">
                           <span className="flex items-center gap-3"><UploadCloud className="h-5 w-5 text-cyan-300" /> Submit your manuscript</span>
-                          <span className="mt-2 block text-xs font-medium text-white/45">PDF only, below 5MB.</span>
-                          <input required type="file" accept="application/pdf,.pdf" onChange={handleFileChange} className="mt-4 block w-full text-sm text-white/60 file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-bold file:text-black" />
+                          <span className="mt-2 block text-xs font-medium text-white/45">PDF or Word document (.pdf, .doc, .docx). Max 10MB.</span>
+                          <input required type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} className="mt-4 block w-full text-sm text-white/60 file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-bold file:text-black" />
                           {manuscript ? <span className="mt-3 block text-xs text-cyan-200">Selected: {manuscript.name}</span> : null}
                         </label>
                       </div>

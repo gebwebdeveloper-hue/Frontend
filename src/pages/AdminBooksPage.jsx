@@ -2129,7 +2129,12 @@ export default function AdminBooksPage() {
                   ) : categoriesList.length === 0 ? (
                     <p className="text-xs text-white/40 text-center py-2">No categories created yet.</p>
                   ) : (
-                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
+                    <div
+                      data-lenis-prevent
+                      onWheel={(e) => e.stopPropagation()}
+                      onTouchMove={(e) => e.stopPropagation()}
+                      className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1"
+                    >
                       {categoriesList.map((cat) => (
                         <div
                           key={cat._id}
@@ -2153,7 +2158,7 @@ export default function AdminBooksPage() {
                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
                   <div className="border-b border-white/10 pb-6 mb-6 flex items-center justify-between gap-4">
                     <div>
-                      <h2 className="text-xl font-bold text-white">All Free Stories</h2>
+                      <h2 className="text-xl font-bold text-white">All Short Stories</h2>
                       <p className="mt-1 text-sm text-white/55">{newsletterList.length} stor{newsletterList.length !== 1 ? "ies" : "y"} written.</p>
                     </div>
                     <Link
@@ -2174,7 +2179,12 @@ export default function AdminBooksPage() {
                       <p className="text-sm text-white/40">No stories posted yet.</p>
                     </div>
                   ) : (
-                    <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
+                    <div
+                      data-lenis-prevent
+                      onWheel={(e) => e.stopPropagation()}
+                      onTouchMove={(e) => e.stopPropagation()}
+                      className="space-y-3 max-h-[650px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/20 hover:scrollbar-thumb-cyan-400/50"
+                    >
                       {newsletterList.map((story) => {
                         const coverUrl = story.cover?.url
                           ? story.cover.url.startsWith("http")
