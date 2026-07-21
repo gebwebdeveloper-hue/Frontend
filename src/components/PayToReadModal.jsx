@@ -10,6 +10,7 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [transactionId, setTransactionId] = useState("");
   const [paymentConfig, setPaymentConfig] = useState({ upiId: "pritamchakrabrty@slc", upiQrUrl: "" });
   const [copiedUpi, setCopiedUpi] = useState(false);
 
@@ -17,6 +18,11 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
   const [error, setError] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [submittedStatus, setSubmittedStatus] = useState(null); // 'pending' | 'approved' | 'rejected'
+
+  // Build UPI deep link URL for opening payment apps directly
+  const upiUrl = paymentConfig.upiId && story?.price
+    ? `upi://pay?pa=${encodeURIComponent(paymentConfig.upiId)}&pn=${encodeURIComponent("Lekhok Tripura")}&am=${story.price}&cu=INR&tn=${encodeURIComponent("Story: " + (story?.title || ""))}`
+    : "#";
 
   useEffect(() => {
     if (isOpen) {
