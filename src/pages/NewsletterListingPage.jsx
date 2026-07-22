@@ -60,10 +60,23 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#030303]/60 via-transparent to-transparent pointer-events-none" />
         
-        {/* Categories badge Overlay */}
+        {/* Price Badge Overlay - Top Right */}
+        <div className="absolute right-3.5 top-3.5 z-20">
+          {story.isPaid && story.price > 0 ? (
+            <span className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 px-3 py-1 text-xs font-black text-slate-950 shadow-lg shadow-cyan-500/30 border border-cyan-200">
+              ₹{story.price}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider backdrop-blur-md">
+              FREE
+            </span>
+          )}
+        </div>
+
+        {/* Categories badge Overlay - Top Left */}
         {categories.length > 0 && (
           <div 
-            className="absolute left-4 top-4 flex flex-wrap gap-1.5 max-w-[85%] z-20 cursor-pointer"
+            className="absolute left-3.5 top-3.5 flex flex-wrap gap-1.5 max-w-[65%] z-20 cursor-pointer"
             onMouseEnter={() => setShowAllTags(true)}
             onMouseLeave={() => setShowAllTags(false)}
             onClick={(e) => {
@@ -124,7 +137,7 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
           {story.description}
         </p>
 
-        {/* Read More button */}
+        {/* Read More button & Price Tag */}
         <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
           <button
             type="button"
@@ -137,6 +150,16 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
             Read Full Story
             <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
           </button>
+
+          {story.isPaid && story.price > 0 ? (
+            <span className="text-xs font-black text-cyan-300 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/20 font-mono">
+              ₹{story.price}
+            </span>
+          ) : (
+            <span className="text-[10px] font-extrabold text-emerald-400 bg-emerald-400/10 px-2.5 py-1 rounded-lg border border-emerald-400/20 uppercase tracking-wider">
+              FREE
+            </span>
+          )}
         </div>
       </div>
     </motion.article>
