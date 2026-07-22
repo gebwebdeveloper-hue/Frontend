@@ -2,14 +2,6 @@ import { ArrowRight, Play, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
-const words = [
-  "Learn.",
-  "Master.",
-  "Discover.",
-  "Grow.",
-  "Repeat."
-];
-
 const stats = [
   {
     number: "5",
@@ -95,37 +87,36 @@ export default function HeroSection() {
 
         </div>
 
-        {/* Rotating Words */}
-
-        <div className="mt-8 h-12 overflow-hidden flex justify-center w-full">
-
-          <motion.div
-            animate={{
-              y: [
-                "0%",
-                "-20%",
-                "-40%",
-                "-60%",
-                "-80%",
-              ],
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            {words.map((word) => (
-              <div
-                key={word}
-                className="h-12 text-4xl font-semibold bg-gradient-to-r from-cyan-300 via-white to-fuchsia-400 bg-clip-text text-transparent animate-text-gradient text-center"
+        {/* Circular Masked Logo Video Emblem (Below LIMITS) */}
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
+          className="relative mt-8 group flex justify-center"
+        >
+          {/* Ambient Outer Glow */}
+          <div className="absolute -inset-3 rounded-full bg-gradient-to-r from-cyan-500 via-fuchsia-500 to-indigo-500 opacity-50 blur-xl group-hover:opacity-90 transition duration-700 animate-pulse" />
+          
+          {/* Outer Glass Ring Frame */}
+          <div className="relative flex items-center justify-center p-[3px] rounded-full bg-gradient-to-tr from-cyan-400/80 via-white/40 to-fuchsia-500/80 shadow-[0_0_50px_rgba(34,211,238,0.25)]">
+            {/* Mask Container */}
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-black/90 shadow-inner">
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover scale-105 group-hover:scale-115 transition-transform duration-700"
               >
-                {word}
-              </div>
-            ))}
-          </motion.div>
-
-        </div>
+                <source src="/ETA_AMR_LOGO_EI_LOGO_TAR_ANIMA (1).mp4" type="video/mp4" />
+              </video>
+              
+              {/* Glossy Overlay Highlight */}
+              <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-black/40 pointer-events-none rounded-full" />
+              <div className="absolute inset-0 ring-1 ring-white/20 rounded-full pointer-events-none" />
+            </div>
+          </div>
+        </motion.div>
 
         {/* Description */}
 
