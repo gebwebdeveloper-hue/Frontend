@@ -46,7 +46,7 @@ export default function AdminStoriesDatabasePage() {
     setLoading(true);
     try {
       const [storiesRes, catsRes] = await Promise.all([
-        fetch(`${API_BASE}/newsletter?all=true`, { credentials: "include" }).then((r) => r.json()),
+        fetch(`${API_BASE}/newsletter?all=true&limit=1000`, { credentials: "include" }).then((r) => r.json()),
         fetch(`${API_BASE}/categories`, { credentials: "include" }).then((r) => r.json())
       ]);
 
