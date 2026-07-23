@@ -711,14 +711,6 @@ export default function ReaderPage() {
 
                         <Textarea label="আপনার ঠিকানা সম্পূর্ণ ভাবে ( যাতে আমরা বই পাঠাতে কোনও সমস্যা না হয় ) *" required rows={3} value={form.address} onChange={setField("address")} placeholder="Village/City, Post Office, District, State, PIN Code" className="md:col-span-2" />
 
-                        {/* Manuscript File Upload */}
-                        <label className="md:col-span-2 block rounded-xl border border-dashed border-white/15 bg-white/5 p-5 text-sm font-bold text-white/70 transition hover:border-cyan-300/35 hover:bg-cyan-300/10">
-                          <span className="flex items-center gap-3"><UploadCloud className="h-5 w-5 text-cyan-300" /> আপনার সম্পূর্ণ গল্প/লেখা এখানে পেস্ট / আপলোড করুন</span>
-                          <span className="mt-2 block text-xs font-medium text-white/45">Upload 1 supported file: PDF or Word document (.pdf, .doc, .docx). Max 10MB.</span>
-                          <input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} className="mt-4 block w-full text-sm text-white/60 file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-bold file:text-black" />
-                          {manuscript ? <span className="mt-3 block text-xs text-cyan-200">Selected File: {manuscript.name}</span> : null}
-                        </label>
-
                         <Textarea label="আপনি কি নিজের লেখা সম্পর্কে সংক্ষিপ্ত বর্ণনা দিতে চান? (ঐচ্ছিক)" rows={3} value={form.bookAbout} onChange={setField("bookAbout")} placeholder="Brief description of your writing" className="md:col-span-2" />
                         <Textarea label="Notes / Special Instructions" rows={2} value={form.note} onChange={setField("note")} placeholder="Any preferred time to call or additional requirements?" className="md:col-span-2" />
                         
