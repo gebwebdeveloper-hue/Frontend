@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, CheckCircle2, XCircle, AlertCircle, X, Loader2, BookOpen, ChevronRight, PackageCheck, ShoppingBag, Truck, MapPin, Package, Box, Copy, ExternalLink, Calendar, ChevronDown, ChevronUp, Navigation } from "lucide-react";
+import { Clock, CheckCircle2, XCircle, AlertCircle, X, Loader2, BookOpen, ChevronRight, PackageCheck, ShoppingBag, Truck, MapPin, Package, Box, Copy, ExternalLink, Calendar, ChevronDown, ChevronUp, Navigation, FileText } from "lucide-react";
 import { API_BASE, SERVER_URL } from "../config.js";
 
 function ShipmentTracker({ purchase }) {
@@ -366,9 +366,20 @@ export default function MyOrdersModal({ isOpen, onClose, onReadBook }) {
                           )}
 
                           {isApproved && (
-                            <div className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-extrabold text-emerald-300">
-                              <CheckCircle2 size={14} />
-                              <span>{isPhysical ? "ORDER CONFIRMED" : "APPROVED"}</span>
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-extrabold text-emerald-300">
+                                <CheckCircle2 size={14} />
+                                <span>{isPhysical ? "ORDER CONFIRMED" : "APPROVED"}</span>
+                              </div>
+
+                              <a
+                                href={`${API_BASE}/purchase/${purchase._id}/invoice`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-1.5 rounded-xl bg-cyan-400 px-3 py-1.5 text-xs font-black text-black hover:bg-cyan-300 transition shadow-md shadow-cyan-400/20"
+                              >
+                                <FileText size={13} /> Invoice (PDF)
+                              </a>
                             </div>
                           )}
 
@@ -391,18 +402,31 @@ export default function MyOrdersModal({ isOpen, onClose, onReadBook }) {
                           Txn ID: <strong className="text-white/70">{purchase.transactionNumber || "N/A"}</strong>
                         </span>
 
-                        {isApproved && purchase.format === "ebook" && onReadBook && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onClose();
-                              onReadBook(book);
-                            }}
-                            className="flex items-center gap-1.5 rounded-xl bg-cyan-400 px-3.5 py-1.5 text-xs font-black uppercase text-black hover:bg-cyan-300 transition"
-                          >
-                            <BookOpen size={13} /> Read E-Book
-                          </button>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {isApproved && (
+                            <a
+                              href={`${API_BASE}/purchase/${purchase._id}/invoice`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20 transition shadow-glow"
+                            >
+                              <FileText size={13} /> Download Invoice
+                            </a>
+                          )}
+
+                          {isApproved && purchase.format === "ebook" && onReadBook && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onClose();
+                                onReadBook(book);
+                              }}
+                              className="flex items-center gap-1.5 rounded-xl bg-cyan-400 px-3.5 py-1.5 text-xs font-black uppercase text-black hover:bg-cyan-300 transition"
+                            >
+                              <BookOpen size={13} /> Read E-Book
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       {isRejected && purchase.adminNote && (
