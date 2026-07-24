@@ -114,9 +114,9 @@ export default function LibraryPage() {
                 Premium Library
               </p>
               <h1 className="text-4xl font-black leading-[1.1] text-white md:text-6xl lg:text-7xl">
-                Welcome to<br />
-                <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-500 bg-clip-text text-transparent animate-text-gradient">
-                  Lekhok Library
+                BUY BOOKS<br />
+                <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-fuchsia-500 bg-clip-text text-transparent animate-text-gradient text-3xl sm:text-5xl md:text-5xl lg:text-6xl">
+                  E-Book - Paperback - Hardcover
                 </span>
               </h1>
               <p className="mt-4 max-w-lg text-sm leading-6 text-white/50">

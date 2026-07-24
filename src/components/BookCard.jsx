@@ -23,6 +23,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
   const [accessCheckLoading, setAccessCheckLoading] = useState(true);
   const [showPhysicalOrder, setShowPhysicalOrder] = useState(false);
   const [physicalFormat, setPhysicalFormat] = useState("paperback");
+  const [selectedFormat, setSelectedFormat] = useState("ebook");
   const [physicalLoading, setPhysicalLoading] = useState(false);
   const [physicalError, setPhysicalError] = useState("");
   const [physicalSuccess, setPhysicalSuccess] = useState("");
@@ -65,6 +66,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
     // Show Details modal immediately!
     setShowReader(true);
     setModalStep("details");
+    setSelectedFormat("ebook");
     setAccessCheckLoading(true);
     setAccessStatus("loading");
     setErrorMsg("");
@@ -549,7 +551,11 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                           <h4 className="text-2xl font-bold text-white leading-tight">{book.title}</h4>
                           <p className="text-sm text-white/50 mt-1">by {book.author}</p>
                           <div className="mt-2 text-2xl font-bold text-cyan-300">
-                            {formatPrice(book.price)}
+                            {selectedFormat === "paperback" && book.paperbackPrice && Number(book.paperbackPrice) > 0
+                              ? formatPrice(book.paperbackPrice)
+                              : selectedFormat === "hardcover" && book.hardcoverPrice && Number(book.hardcoverPrice) > 0
+                              ? formatPrice(book.hardcoverPrice)
+                              : formatPrice(book.price)}
                           </div>
                         </div>
 
@@ -577,46 +583,101 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                           ) : accessStatus === "approved" ? (
                             <button
                               type="button"
-                              onClick={() => setModalStep("pdf")}
-                              className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 py-3 text-xs font-bold text-black hover:scale-[1.01] transition shadow-lg shadow-cyan-500/10"
+                              onClick={() => { setSelectedFormat("ebook"); setModalStep("pdf"); }}
+                              className={`flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold transition shadow-lg ${
+                                selectedFormat === "ebook"
+                                  ? "bg-white text-black"
+                                  : "bg-gradient-to-r from-cyan-400 to-indigo-500 text-black hover:scale-[1.01]"
+                              }`}
                             >
                               Read E-Book
                             </button>
                           ) : accessStatus === "pending" ? (
                             <button
                               type="button"
-                              onClick={() => setModalStep("pending")}
+                              onClick={() => { setSelectedFormat("ebook"); setModalStep("pending"); }}
                               className="flex items-center justify-center gap-2 rounded-xl bg-amber-400/10 border border-amber-400/20 py-3 text-xs font-bold text-amber-300 hover:bg-amber-400/20 transition"
                             >
                               E-Book Pending
                             </button>
+                          ) : !book.price || Number(book.price) <= 0 ? (
+                            <button
+                              type="button"
+                              disabled
+                              className="book-format-button flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/40 cursor-not-allowed"
+                            >
+                              E-Book
+                            </button>
                           ) : (
                             <button
                               type="button"
-                              onClick={handleDetailsPurchaseAction}
-                              className="flex items-center justify-center gap-2 rounded-xl bg-white py-3 text-xs font-bold text-black hover:bg-cyan-50 transition"
+                              onClick={() => {
+                                setSelectedFormat("ebook");
+                                handleDetailsPurchaseAction();
+                              }}
+                              className={`flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold transition ${
+                                selectedFormat === "ebook"
+                                  ? "bg-white text-black"
+                                  : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
+                              }`}
                             >
                               E-Book ({formatPrice(book.price)})
                             </button>
                           )}
 
                           {/* Paperback */}
-                          <button
-                            type="button"
-                            onClick={() => openPhysicalOrder("paperback")}
-                            className="book-format-button book-format-button-active flex items-center justify-center rounded-xl border border-white/10 bg-white/5 py-3 text-xs font-bold uppercase tracking-[0.04em] text-white/80 transition hover:bg-white/10 hover:text-white"
-                          >
-                            Paperback
-                          </button>
+                          {book.paperbackPrice && Number(book.paperbackPrice) > 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedFormat("paperback");
+                                openPhysicalOrder("paperback");
+                              }}
+                              className={`book-format-button book-format-button-active flex items-center justify-center rounded-xl border py-3 text-xs font-bold uppercase tracking-[0.04em] transition ${
+                                selectedFormat === "paperback"
+                                  ? "bg-white text-black border-white"
+                                  : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
+                              }`}
+                            >
+                              Paperback ({formatPrice(book.paperbackPrice)})
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              className="book-format-button flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/40 cursor-not-allowed"
+                              title="Paperback edition is not available for this book"
+                            >
+                              Paperback
+                            </button>
+                          )}
 
                           {/* Hardcover */}
-                          <button
-                            type="button"
-                            onClick={() => openPhysicalOrder("hardcover")}
-                            className="book-format-button book-format-button-active flex items-center justify-center rounded-xl border border-white/10 bg-white/5 py-3 text-xs font-bold uppercase tracking-[0.04em] text-white/80 transition hover:bg-white/10 hover:text-white"
-                          >
-                            Hardcover
-                          </button>
+                          {book.hardcoverPrice && Number(book.hardcoverPrice) > 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedFormat("hardcover");
+                                openPhysicalOrder("hardcover");
+                              }}
+                              className={`book-format-button book-format-button-active flex items-center justify-center rounded-xl border py-3 text-xs font-bold uppercase tracking-[0.04em] transition ${
+                                selectedFormat === "hardcover"
+                                  ? "bg-white text-black border-white"
+                                  : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
+                              }`}
+                            >
+                              Hardcover ({formatPrice(book.hardcoverPrice)})
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              className="book-format-button flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/40 cursor-not-allowed"
+                              title="Hardcover edition is not available for this book"
+                            >
+                              Hardcover
+                            </button>
+                          )}
 
                           {/* Listen in YouTube */}
                           {book.listenInYoutube ? (

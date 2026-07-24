@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Sparkles, BookOpen, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, BookOpen, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X, CheckCircle2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
@@ -56,6 +56,8 @@ export default function AdminBooksPage() {
   const [author, setAuthor] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("10");
+  const [paperbackPrice, setPaperbackPrice] = useState("");
+  const [hardcoverPrice, setHardcoverPrice] = useState("");
   const [category, setCategory] = useState("Story");
   const [pages, setPages] = useState("100");
   const [language, setLanguage] = useState("English");
@@ -75,6 +77,8 @@ export default function AdminBooksPage() {
   const [previewImagesFiles, setPreviewImagesFiles] = useState([]);
   const [formSuccess, setFormSuccess] = useState("");
   const [formError, setFormError] = useState("");
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState({ title: "", description: "" });
 
   const MAX_FILE_MB = 10;
   const MAX_FILE_SIZE = MAX_FILE_MB * 1024 * 1024; // 10 MB in bytes
@@ -662,6 +666,8 @@ export default function AdminBooksPage() {
     setAuthor("");
     setDescription("");
     setPrice("10");
+    setPaperbackPrice("");
+    setHardcoverPrice("");
     setCategory("Story");
     setPages("100");
     setLanguage("English");
@@ -688,6 +694,8 @@ export default function AdminBooksPage() {
     setAuthor(book.author || "");
     setDescription(book.description || "");
     setPrice(String(book.price || "0"));
+    setPaperbackPrice(book.paperbackPrice ? String(book.paperbackPrice) : "");
+    setHardcoverPrice(book.hardcoverPrice ? String(book.hardcoverPrice) : "");
     setCategory(book.category || "AI");
     setPages(String(book.pages || "1"));
     setLanguage(book.language || "English");
@@ -730,6 +738,8 @@ export default function AdminBooksPage() {
     formData.append("author", author);
     formData.append("description", description);
     formData.append("price", comingSoon ? "0" : price);
+    formData.append("paperbackPrice", comingSoon ? "0" : (paperbackPrice || "0"));
+    formData.append("hardcoverPrice", comingSoon ? "0" : (hardcoverPrice || "0"));
     formData.append("category", category);
     formData.append("pages", comingSoon ? "0" : pages);
     formData.append("language", language);
@@ -754,6 +764,8 @@ export default function AdminBooksPage() {
       formData.append("previewImages", file);
     });
 
+    const wasEditing = Boolean(editingBook);
+    const savedBookTitle = title || editingBook?.title || "Book";
     const url = editingBook ? `${API_BASE}/books/${editingBook._id}` : `${API_BASE}/books`;
     const method = editingBook ? "PUT" : "POST";
 
@@ -765,7 +777,15 @@ export default function AdminBooksPage() {
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
-          setFormSuccess(editingBook ? "Book updated successfully!" : "Book uploaded successfully!");
+          const popupTitle = wasEditing ? "Book Updated!" : "Book Uploaded!";
+          const popupDesc = wasEditing
+            ? `Successfully saved all changes for "${savedBookTitle}".`
+            : `"${savedBookTitle}" has been added to the library database.`;
+
+          setFormSuccess(wasEditing ? "Book updated successfully!" : "Book uploaded successfully!");
+          setPopupMessage({ title: popupTitle, description: popupDesc });
+          setShowSuccessPopup(true);
+
           resetBookForm();
           fetchBooks();
         } else {
@@ -1091,9 +1111,10 @@ export default function AdminBooksPage() {
                         />
                       </div>
 
-                      <div className="grid gap-6 md:grid-cols-4">
+                      {/* Format Pricing Fields */}
+                      <div className="grid gap-6 md:grid-cols-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
                         <div>
-                          <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 transition-colors ${comingSoon ? "text-white/20" : "text-white/50"}`}>Price (₹)</label>
+                          <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 transition-colors ${comingSoon ? "text-white/20" : "text-cyan-300"}`}>E-Book Price (₹) *</label>
                           <input
                             type="number"
                             required={!comingSoon}
@@ -1101,6 +1122,7 @@ export default function AdminBooksPage() {
                             value={comingSoon ? "" : price}
                             disabled={comingSoon}
                             onChange={(e) => setPrice(e.target.value)}
+                            placeholder="e.g. 190"
                             className={`w-full rounded-xl border px-4 py-3 text-sm focus:outline-none transition-all ${
                               comingSoon
                                 ? "border-white/5 bg-white/[0.02] text-white/20 cursor-not-allowed"
@@ -1108,6 +1130,41 @@ export default function AdminBooksPage() {
                             }`}
                           />
                         </div>
+                        <div>
+                          <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 transition-colors ${comingSoon ? "text-white/20" : "text-white/70"}`}>Paperback Price (₹)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={comingSoon ? "" : paperbackPrice}
+                            disabled={comingSoon}
+                            onChange={(e) => setPaperbackPrice(e.target.value)}
+                            placeholder="Leave 0 or blank if unavailable"
+                            className={`w-full rounded-xl border px-4 py-3 text-sm focus:outline-none transition-all ${
+                              comingSoon
+                                ? "border-white/5 bg-white/[0.02] text-white/20 cursor-not-allowed"
+                                : "border-white/10 bg-white/5 text-white focus:border-cyan-400/40 focus:bg-white/10"
+                            }`}
+                          />
+                        </div>
+                        <div>
+                          <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 transition-colors ${comingSoon ? "text-white/20" : "text-white/70"}`}>Hardcopy Price (₹)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={comingSoon ? "" : hardcoverPrice}
+                            disabled={comingSoon}
+                            onChange={(e) => setHardcoverPrice(e.target.value)}
+                            placeholder="Leave 0 or blank if unavailable"
+                            className={`w-full rounded-xl border px-4 py-3 text-sm focus:outline-none transition-all ${
+                              comingSoon
+                                ? "border-white/5 bg-white/[0.02] text-white/20 cursor-not-allowed"
+                                : "border-white/10 bg-white/5 text-white focus:border-cyan-400/40 focus:bg-white/10"
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid gap-6 md:grid-cols-3">
                         <div>
                           <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 transition-colors ${comingSoon ? "text-white/20" : "text-white/50"}`}>Pages</label>
                           <input
@@ -2446,6 +2503,55 @@ export default function AdminBooksPage() {
         </div>
       )}
     </div>
+
+    {/* Success Notification Modal Popup */}
+    <AnimatePresence>
+      {showSuccessPopup && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+          onClick={() => setShowSuccessPopup(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.85, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.85, opacity: 0, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="relative w-full max-w-md overflow-hidden rounded-3xl border border-emerald-500/30 bg-zinc-950 p-6 sm:p-8 shadow-[0_0_50px_rgba(16,185,129,0.25)] text-center select-none"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Ambient glow circle */}
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 h-36 w-36 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
+
+            {/* Icon */}
+            <div className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-glow">
+              <CheckCircle2 size={36} className="animate-bounce" />
+            </div>
+
+            {/* Title */}
+            <h3 className="text-2xl font-black text-white tracking-wide">
+              {popupMessage.title || "Book Updated!"}
+            </h3>
+
+            {/* Description */}
+            <p className="mt-3 text-sm text-white/65 leading-relaxed">
+              {popupMessage.description || "The book details have been saved successfully to the database."}
+            </p>
+
+            {/* Action Button */}
+            <button
+              type="button"
+              onClick={() => setShowSuccessPopup(false)}
+              className="mt-6 w-full rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 py-3.5 text-sm font-extrabold uppercase tracking-wider text-black shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02] hover:opacity-95"
+            >
+              OK, Got It
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   </div>
 </PageTransition>
 );
