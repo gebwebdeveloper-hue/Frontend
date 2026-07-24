@@ -63,3 +63,12 @@ export function clearCart() {
   localStorage.removeItem(CART_KEY);
   window.dispatchEvent(new Event("lekhak:cart-updated"));
 }
+
+if (typeof window !== "undefined") {
+  window.addEventListener("lekhak:logout", () => {
+    clearCart();
+  });
+  window.addEventListener("lekhak:login", () => {
+    clearCart();
+  });
+}

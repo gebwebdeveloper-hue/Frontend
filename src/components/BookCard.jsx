@@ -457,9 +457,11 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
               {book.author}
             </button>
           </div>
-          <p className="shrink-0 text-sm font-bold text-cyan-200 drop-shadow-[0_0_14px_rgba(103,232,249,0.45)]">
-            {formatPrice(book.price)}
-          </p>
+          {!book.comingSoon && (
+            <span className="shrink-0 text-xs font-bold text-cyan-200 drop-shadow-[0_0_14px_rgba(103,232,249,0.45)] group-hover:text-cyan-50 transition">
+              Buy now
+            </span>
+          )}
         </div>
         <div className="mt-2 flex items-center justify-between text-xs text-white/[0.58]">
           <span className="book-rating-pill flex items-center gap-1 text-amber-100"><Star size={12} fill="currentColor" /> {book.rating || "4.9"}</span>
@@ -595,7 +597,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                               className={`flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold transition shadow-lg ${
                                 selectedFormat === "ebook"
                                   ? "bg-white text-black"
-                                  : "bg-gradient-to-r from-cyan-400 to-indigo-500 text-black hover:scale-[1.01]"
+                                  : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
                               }`}
                             >
                               Read E-Book
@@ -621,7 +623,6 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                               type="button"
                               onClick={() => {
                                 setSelectedFormat("ebook");
-                                handleDetailsPurchaseAction();
                               }}
                               className={`flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold transition ${
                                 selectedFormat === "ebook"
@@ -639,7 +640,6 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                               type="button"
                               onClick={() => {
                                 setSelectedFormat("paperback");
-                                openPhysicalOrder("paperback");
                               }}
                               className={`book-format-button book-format-button-active flex items-center justify-center rounded-xl border py-3 text-xs font-bold uppercase tracking-[0.04em] transition ${
                                 selectedFormat === "paperback"
@@ -666,7 +666,6 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                               type="button"
                               onClick={() => {
                                 setSelectedFormat("hardcover");
-                                openPhysicalOrder("hardcover");
                               }}
                               className={`book-format-button book-format-button-active flex items-center justify-center rounded-xl border py-3 text-xs font-bold uppercase tracking-[0.04em] transition ${
                                 selectedFormat === "hardcover"
@@ -721,8 +720,8 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                           </div>
                         )}
 
-                        {/* Add to Cart Button */}
-                        <div className="mt-4 pt-3 border-t border-white/5">
+                        {/* Add to Cart & Go to Cart Buttons */}
+                        <div className="mt-4 pt-3 border-t border-white/5 flex flex-col gap-2.5">
                           <button
                             type="button"
                             onClick={handleAddToCartAction}
@@ -730,6 +729,18 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                           >
                             <ShoppingCart size={16} />
                             Add to Cart ({selectedFormat.toUpperCase()})
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowReader(false);
+                              window.dispatchEvent(new Event("lekhak:open-cart"));
+                            }}
+                            className="w-full flex items-center justify-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/10 py-2.5 text-xs font-extrabold uppercase tracking-wider text-cyan-300 hover:bg-cyan-400/20 transition"
+                          >
+                            <ShoppingCart size={15} />
+                            Go to Cart
                           </button>
                         </div>
                       </div>

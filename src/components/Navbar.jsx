@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import AuthModal from "./AuthModal.jsx";
 import CartModal from "./CartModal.jsx";
 import MyOrdersModal from "./MyOrdersModal.jsx";
-import { getCart } from "../utils/cart.js";
+import { getCart, clearCart } from "../utils/cart.js";
 import { API_BASE } from "../config.js";
 
 const baseLinks = [
@@ -33,8 +33,13 @@ export default function Navbar() {
 
   useEffect(() => {
     updateCartCount();
+    const handleOpenCart = () => setCartOpen(true);
     window.addEventListener("lekhak:cart-updated", updateCartCount);
-    return () => window.removeEventListener("lekhak:cart-updated", updateCartCount);
+    window.addEventListener("lekhak:open-cart", handleOpenCart);
+    return () => {
+      window.removeEventListener("lekhak:cart-updated", updateCartCount);
+      window.removeEventListener("lekhak:open-cart", handleOpenCart);
+    };
   }, []);
 
   const checkSession = () => {
@@ -108,6 +113,8 @@ export default function Navbar() {
     await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" }).catch(() => {});
     setAuthUser(false);
     setProfileOpen(false);
+    clearCart();
+    window.dispatchEvent(new Event("lekhak:logout"));
     navigate("/");
   };
 

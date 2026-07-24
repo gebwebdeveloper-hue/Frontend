@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, BookOpen, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X, CheckCircle2 } from "lucide-react";
+import { Sparkles, BookOpen, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X, CheckCircle2, Truck, Box, Package, MapPin } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
@@ -32,6 +33,69 @@ export default function AdminBooksPage() {
   const [loadingPurchases, setLoadingPurchases] = useState(false);
   const [activeTab, setActiveTab] = useState("books"); // 'books', 'purchases', 'authors'
   const [adminNotes, setAdminNotes] = useState({});
+
+  // Shipment tracking state
+  const [shipmentModalOpen, setShipmentModalOpen] = useState(false);
+  const [selectedShipmentPurchase, setSelectedShipmentPurchase] = useState(null);
+  const [shipmentForm, setShipmentForm] = useState({
+    shipmentStatus: "processing",
+    courierService: "",
+    trackingNumber: "",
+    trackingUrl: "",
+    currentLocation: "",
+    estimatedDeliveryDate: "",
+    note: ""
+  });
+  const [updatingShipment, setUpdatingShipment] = useState(false);
+  const [shipmentError, setShipmentError] = useState("");
+  const [shipmentSuccess, setShipmentSuccess] = useState("");
+
+  const openShipmentModal = (purchase) => {
+    setSelectedShipmentPurchase(purchase);
+    setShipmentForm({
+      shipmentStatus: purchase.shipmentStatus || "processing",
+      courierService: purchase.courierService || "",
+      trackingNumber: purchase.trackingNumber || "",
+      trackingUrl: purchase.trackingUrl || "",
+      currentLocation: purchase.currentLocation || "",
+      estimatedDeliveryDate: purchase.estimatedDeliveryDate ? new Date(purchase.estimatedDeliveryDate).toISOString().split("T")[0] : "",
+      note: ""
+    });
+    setShipmentError("");
+    setShipmentSuccess("");
+    setShipmentModalOpen(true);
+  };
+
+  const handleSaveShipmentDetails = async (e) => {
+    e.preventDefault();
+    if (!selectedShipmentPurchase) return;
+    setUpdatingShipment(true);
+    setShipmentError("");
+    setShipmentSuccess("");
+
+    try {
+      const res = await fetch(`${API_BASE}/purchase/${selectedShipmentPurchase._id}/shipment`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(shipmentForm),
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShipmentSuccess("Shipment tracking updated successfully!");
+        fetchPurchases();
+        setTimeout(() => {
+          setShipmentModalOpen(false);
+        }, 1200);
+      } else {
+        setShipmentError(data.message || "Failed to update shipment status.");
+      }
+    } catch (err) {
+      setShipmentError("Network error updating shipment.");
+    } finally {
+      setUpdatingShipment(false);
+    }
+  };
 
   // Payment configuration state
   const [upiIdInput, setUpiIdInput] = useState("");
@@ -1653,6 +1717,45 @@ export default function AdminBooksPage() {
                             </div>
                           )}
 
+                          {/* Physical Order Shipment & Tracking Control */}
+                          {(purchase.format === "paperback" || purchase.format === "hardcover") && (
+                            <div className="border-t border-cyan-500/20 bg-cyan-500/5 p-4 rounded-2xl space-y-3">
+                              <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Paperback Shipment & Tracking</span>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-xs font-black uppercase text-white bg-black/40 px-2.5 py-1 rounded-lg border border-white/10">
+                                      Status: {(purchase.shipmentStatus || "processing").replace(/_/g, " ")}
+                                    </span>
+                                    {purchase.currentLocation && (
+                                      <span className="text-xs font-semibold text-cyan-200">
+                                        📍 {purchase.currentLocation}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => openShipmentModal(purchase)}
+                                  className="flex items-center gap-1.5 rounded-xl bg-cyan-400 px-4 py-2 text-xs font-bold text-black hover:bg-cyan-300 transition shadow-md"
+                                >
+                                  <Truck size={14} /> Update Shipment & Location
+                                </button>
+                              </div>
+
+                              {(purchase.courierService || purchase.trackingNumber) && (
+                                <div className="text-xs text-white/70 flex flex-wrap gap-4 pt-1 border-t border-white/5">
+                                  <span>Courier: <strong className="text-white">{purchase.courierService || "N/A"}</strong></span>
+                                  <span>AWB / Tracking: <strong className="text-cyan-300 font-mono">{purchase.trackingNumber || "N/A"}</strong></span>
+                                  {purchase.estimatedDeliveryDate && (
+                                    <span>Est. Delivery: <strong className="text-amber-300">{new Date(purchase.estimatedDeliveryDate).toLocaleDateString()}</strong></span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           {/* Decision Area / Actions */}
                           <div className="border-t border-white/5 pt-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
                             {purchase.status === "pending" ? (
@@ -2765,6 +2868,142 @@ export default function AdminBooksPage() {
         </motion.div>
       )}
     </AnimatePresence>
+
+    {/* SHIPMENT UPDATE MODAL */}
+    {shipmentModalOpen && selectedShipmentPurchase && createPortal(
+      <AnimatePresence>
+        <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
+          <div className="relative w-full max-w-lg rounded-3xl border border-cyan-500/30 bg-zinc-950 p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-cyan-300">Logistics & Tracking Control</span>
+                <h3 className="text-lg font-bold text-white mt-0.5">Update Paperback Shipment</h3>
+                <p className="text-xs text-white/50">{selectedShipmentPurchase.bookId?.title} for {selectedShipmentPurchase.userId?.name}</p>
+              </div>
+              <button onClick={() => setShipmentModalOpen(false)} className="rounded-full p-2 text-white/50 hover:bg-white/10 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+
+            {shipmentError && (
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
+                {shipmentError}
+              </div>
+            )}
+
+            {shipmentSuccess && (
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-300">
+                {shipmentSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveShipmentDetails} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">Shipment Status *</label>
+                <select
+                  value={shipmentForm.shipmentStatus}
+                  onChange={(e) => setShipmentForm({ ...shipmentForm, shipmentStatus: e.target.value })}
+                  className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400 focus:outline-none"
+                >
+                  <option value="processing">Processing Order</option>
+                  <option value="packed">Packed & Ready for Courier</option>
+                  <option value="shipped">Shipped (In Transit)</option>
+                  <option value="out_for_delivery">Out for Delivery</option>
+                  <option value="delivered">Delivered</option>
+                </select>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">Courier / Partner Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. DTDC, Delhivery, India Post"
+                    value={shipmentForm.courierService}
+                    onChange={(e) => setShipmentForm({ ...shipmentForm, courierService: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">Tracking / AWB Number</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. DT123456789IN"
+                    value={shipmentForm.trackingNumber}
+                    onChange={(e) => setShipmentForm({ ...shipmentForm, trackingNumber: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">Current Location (Shows on User Tracking) *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Agartala Sorting Hub, Kolkata Transit Facility, Local Branch"
+                  value={shipmentForm.currentLocation}
+                  onChange={(e) => setShipmentForm({ ...shipmentForm, currentLocation: e.target.value })}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">Est. Delivery Date</label>
+                  <input
+                    type="date"
+                    value={shipmentForm.estimatedDeliveryDate}
+                    onChange={(e) => setShipmentForm({ ...shipmentForm, estimatedDeliveryDate: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">External Tracking URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://track.dtdc.com/..."
+                    value={shipmentForm.trackingUrl}
+                    onChange={(e) => setShipmentForm({ ...shipmentForm, trackingUrl: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">Checkpoint Note (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Dispatched from main warehouse"
+                  value={shipmentForm.note}
+                  onChange={(e) => setShipmentForm({ ...shipmentForm, note: e.target.value })}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShipmentModalOpen(false)}
+                  className="w-1/3 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-bold text-white transition hover:bg-white/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updatingShipment}
+                  className="flex-1 rounded-xl bg-cyan-400 py-2.5 text-xs font-black uppercase tracking-wider text-black transition hover:bg-cyan-300 disabled:opacity-50"
+                >
+                  {updatingShipment ? "Saving..." : "Save Tracking Update"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </AnimatePresence>,
+      document.body
+    )}
   </div>
 </PageTransition>
 );
