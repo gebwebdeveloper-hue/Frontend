@@ -1,13 +1,16 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube, ShieldCheck } from "lucide-react";
+import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube, ShieldCheck, ShoppingCart, PackageCheck } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import AuthModal from "./AuthModal.jsx";
+import CartModal from "./CartModal.jsx";
+import MyOrdersModal from "./MyOrdersModal.jsx";
+import { getCart } from "../utils/cart.js";
 import { API_BASE } from "../config.js";
 
 const baseLinks = [
-  { label: "Library", to: "/library" },
-  { label: "Short Stories", to: "/short-stories" },
+  { label: "Buy Books", to: "/library" },
+  { label: "Read Stories", to: "/short-stories" },
 ];
 
 export default function Navbar() {
@@ -17,9 +20,22 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalTab, setAuthModalTab] = useState("login");
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [ordersOpen, setOrdersOpen] = useState(false);
   const profileRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const updateCartCount = () => {
+    setCartCount(getCart().length);
+  };
+
+  useEffect(() => {
+    updateCartCount();
+    window.addEventListener("lekhak:cart-updated", updateCartCount);
+    return () => window.removeEventListener("lekhak:cart-updated", updateCartCount);
+  }, []);
 
   const checkSession = () => {
     fetch(`${API_BASE}/auth/me`, { credentials: "include" })
@@ -237,6 +253,21 @@ export default function Navbar() {
                 </a>
               </div>
 
+              {/* Shopping Cart Button */}
+              <button
+                type="button"
+                onClick={() => setCartOpen(true)}
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/80 transition hover:bg-white/10 hover:text-cyan-300 ml-2 shrink-0"
+                title="My Shopping Cart"
+              >
+                <ShoppingCart size={18} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-cyan-400 font-extrabold text-[10px] text-black shadow-glow">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+
               {/* Profile Avatar or Login/Register CTA */}
               {authUser ? (
                 <div className="relative ml-4" ref={profileRef}>
@@ -279,6 +310,17 @@ export default function Navbar() {
                             Admin Dashboard
                           </Link>
                         )}
+
+                        <button
+                          onClick={() => {
+                            setProfileOpen(false);
+                            setOrdersOpen(true);
+                          }}
+                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-medium text-white/80 hover:bg-white/10 hover:text-white transition mb-1"
+                        >
+                          <PackageCheck size={14} className="text-cyan-400" />
+                          My Orders & Status
+                        </button>
 
                         <button
                           onClick={handleLogout}
@@ -460,6 +502,12 @@ export default function Navbar() {
           }}
         />
       )}
+
+      {/* Cart Modal */}
+      <CartModal isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+
+      {/* My Orders / Approval Status Modal */}
+      <MyOrdersModal isOpen={ordersOpen} onClose={() => setOrdersOpen(false)} />
     </>
   );
 }

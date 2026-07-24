@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, Users, Download, Star } from "lucide-react";
+import { BookOpen, Users, Download, Star, ShoppingCart } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import ContinueReadingSection from "../sections/ContinueReadingSection.jsx";
 import PopularAuthorsSection from "../sections/PopularAuthorsSection.jsx";
 import PublicationsAuthorsSection from "../sections/PublicationsAuthorsSection.jsx";
 import LibraryFeaturedSection from "../sections/LibraryFeaturedSection.jsx";
+import CartModal from "../components/CartModal.jsx";
+import MyOrdersModal from "../components/MyOrdersModal.jsx";
+import { getCart } from "../utils/cart.js";
 import { API_BASE } from "../config.js";
 
 const STAT_ICONS = [BookOpen, Users, Download, Star];
@@ -37,6 +40,19 @@ export default function LibraryPage() {
   const [authUser, setAuthUser] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [stats, setStats] = useState(null);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [ordersOpen, setOrdersOpen] = useState(false);
+
+  const updateCartCount = () => {
+    setCartCount(getCart().length);
+  };
+
+  useEffect(() => {
+    updateCartCount();
+    window.addEventListener("lekhak:cart-updated", updateCartCount);
+    return () => window.removeEventListener("lekhak:cart-updated", updateCartCount);
+  }, []);
 
   // Auth check
   useEffect(() => {
@@ -122,6 +138,20 @@ export default function LibraryPage() {
               <p className="mt-4 max-w-lg text-sm leading-6 text-white/50">
                 Discover thousands of premium ebooks, track your reading journey, and explore your favourite authors — all in one place.
               </p>
+              <div className="mt-6 flex items-center gap-3">
+                <button
+                  onClick={() => setCartOpen(true)}
+                  className="group flex items-center gap-2.5 rounded-full bg-gradient-to-r from-cyan-400 to-indigo-500 px-6 py-3 text-xs font-extrabold uppercase tracking-wider text-black shadow-lg shadow-cyan-500/20 hover:scale-105 transition"
+                >
+                  <ShoppingCart size={18} />
+                  My Cart
+                  {cartCount > 0 && (
+                    <span className="grid h-5 w-5 place-items-center rounded-full bg-black text-[10px] font-black text-cyan-300">
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+              </div>
             </motion.div>
 
             {/* Stats grid */}
@@ -186,6 +216,8 @@ export default function LibraryPage() {
 
         </div>
       </div>
+      <CartModal isOpen={cartOpen} onClose={() => setCartOpen(false)} onOpenOrders={() => setOrdersOpen(true)} />
+      <MyOrdersModal isOpen={ordersOpen} onClose={() => setOrdersOpen(false)} />
       <FooterSection />
     </PageTransition>
   );

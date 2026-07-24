@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Star, Loader2, AlertCircle, CheckCircle2, Copy, Smartphone, Mail, KeyRound, ShieldCheck, Coins, X } from "lucide-react";
+import { Star, Loader2, AlertCircle, CheckCircle2, Copy, Smartphone, Mail, KeyRound, ShieldCheck, Coins, X, ShoppingCart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE, SERVER_URL } from "../config.js";
 import AuthModal from "./AuthModal.jsx";
+import { addToCart } from "../utils/cart.js";
 
 export default function BookCard({ book, onAuthorClick, isAuthorActive = false }) {
   const location = useLocation();
@@ -27,6 +28,13 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
   const [physicalLoading, setPhysicalLoading] = useState(false);
   const [physicalError, setPhysicalError] = useState("");
   const [physicalSuccess, setPhysicalSuccess] = useState("");
+  const [cartFeedback, setCartFeedback] = useState({ type: "", text: "" });
+
+  const handleAddToCartAction = () => {
+    const res = addToCart(book, selectedFormat);
+    setCartFeedback({ type: res.success ? "success" : "info", text: res.message });
+    setTimeout(() => setCartFeedback({ type: "", text: "" }), 3500);
+  };
   const [deliveryForm, setDeliveryForm] = useState({
     co: "",
     country: "India",
@@ -699,6 +707,30 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                               Listen in YouTube
                             </button>
                           )}
+                        </div>
+
+                        {/* Cart Feedback Toast */}
+                        {cartFeedback.text && (
+                          <div className={`mt-3 flex items-center gap-2 rounded-xl border p-3 text-xs font-semibold ${
+                            cartFeedback.type === "success"
+                              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                              : "border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
+                          }`}>
+                            <CheckCircle2 size={16} />
+                            <span>{cartFeedback.text}</span>
+                          </div>
+                        )}
+
+                        {/* Add to Cart Button */}
+                        <div className="mt-4 pt-3 border-t border-white/5">
+                          <button
+                            type="button"
+                            onClick={handleAddToCartAction}
+                            className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 py-3 text-xs font-extrabold uppercase tracking-wider text-black shadow-lg shadow-cyan-500/20 hover:scale-[1.01] transition"
+                          >
+                            <ShoppingCart size={16} />
+                            Add to Cart ({selectedFormat.toUpperCase()})
+                          </button>
                         </div>
                       </div>
                     </div>

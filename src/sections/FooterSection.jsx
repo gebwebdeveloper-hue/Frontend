@@ -158,7 +158,8 @@ export default function FooterSection() {
             <div className="space-y-4">
 
               {[
-                { name: "Library", to: "/library" },
+                { name: "Buy Books", to: "/library" },
+                { name: "Read Stories", to: "/short-stories" },
                 { name: "Publish with Us", to: "/reader" }
               ].map((item) => (
 
