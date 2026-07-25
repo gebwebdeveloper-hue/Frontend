@@ -258,26 +258,26 @@ export default function FooterSection() {
             <div className="space-y-4">
 
               {[
-                "Help Center",
-                "FAQ",
-                "Privacy Policy",
-                "Terms",
+                { label: "Help Center", to: "/help" },
+                { label: "FAQ", to: "/help" },
+                { label: "Privacy Policy", to: "#" },
+                { label: "Terms", to: "#" },
               ].map((item) => (
 
-                <a
-                  href="#"
-                  key={item}
+                <Link
+                  to={item.to}
+                  key={item.label}
                   className="group flex items-center justify-between text-white/60 transition hover:text-white"
                 >
 
-                  {item}
+                  {item.label}
 
                   <ArrowUpRight
                     size={16}
                     className="opacity-0 transition group-hover:opacity-100"
                   />
 
-                </a>
+                </Link>
 
               ))}
 

@@ -16,6 +16,7 @@ import Navbar from "./components/Navbar.jsx";
 import NewsletterListingPage from "./pages/NewsletterListingPage.jsx";
 import NewsletterReaderPage from "./pages/NewsletterReaderPage.jsx";
 import WhatsAppFloat from "./components/WhatsAppFloat.jsx";
+import HelpPage from "./pages/HelpPage.jsx";
 
 
 export default function App() {
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/short-stories" element={<NewsletterListingPage />} />
           <Route path="/short-stories/:slug" element={<NewsletterReaderPage />} />
           <Route path="/free-stories" element={<Navigate to="/short-stories" replace />} />
+          <Route path="/help" element={<HelpPage />} />
         </Routes>
       </AnimatePresence>
       <WhatsAppFloat />
