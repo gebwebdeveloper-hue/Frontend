@@ -15,6 +15,7 @@ import { useLenis } from "./hooks/useLenis.js";
 import Navbar from "./components/Navbar.jsx";
 import NewsletterListingPage from "./pages/NewsletterListingPage.jsx";
 import NewsletterReaderPage from "./pages/NewsletterReaderPage.jsx";
+import WhatsAppFloat from "./components/WhatsAppFloat.jsx";
 
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/free-stories" element={<Navigate to="/short-stories" replace />} />
         </Routes>
       </AnimatePresence>
+      <WhatsAppFloat />
       <BackToTop />
     </>
   );

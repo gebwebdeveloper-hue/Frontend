@@ -60,7 +60,7 @@ const initialForm = {
   bookTitle: "",
   genre: "রহস্য",
   pageCount: "20-50",
-  publishingType: "বই ছাপাতে (Paperback/Hardcover)",
+  publishingType: "Paperback (পেপারব্যাক)",
   nominee: "",
   bookAbout: "",
   manuscriptReady: "Yes",
@@ -678,12 +678,13 @@ export default function ReaderPage() {
                         {/* Publishing Format Preference */}
                         <fieldset className="md:col-span-2 rounded-xl border border-white/10 bg-white/5 p-4">
                           <legend className="px-2 text-sm font-bold text-white/70">আপনি কি চাইছেন? (Format Preference) *</legend>
-                          <div className="mt-3 flex flex-wrap gap-4">
+                          <div className="mt-3 flex flex-wrap gap-3">
                             {[
-                              { id: "paperback", label: "বই ছাপাতে (Paperback/Hardcover)", val: "বই ছাপাতে (Paperback/Hardcover)" },
-                              { id: "ebook", label: "Publish E-Book", val: "Publish E-Book" }
+                              { id: "paperback", label: "Paperback (পেপারব্যাক)", val: "Paperback (পেপারব্যাক)" },
+                              { id: "hardcover", label: "Hardcover (হার্ডকভার)", val: "Hardcover (হার্ডকভার)" },
+                              { id: "ebook", label: "Publish E-Book (ই-বুক)", val: "Publish E-Book (ই-বুক)" }
                             ].map((opt) => (
-                              <label key={opt.id} className={`flex cursor-pointer items-center gap-2 rounded-xl border px-5 py-3 text-sm font-bold transition ${form.publishingType === opt.val ? "border-cyan-300/45 bg-cyan-300/15 text-cyan-100" : "border-white/10 bg-black/20 text-white/55 hover:text-white"}`}>
+                              <label key={opt.id} className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-bold transition ${form.publishingType === opt.val ? "border-cyan-300/45 bg-cyan-300/15 text-cyan-100 shadow-glow shadow-cyan-300/5" : "border-white/10 bg-black/20 text-white/55 hover:text-white"}`}>
                                 <input type="radio" name="publishingType" value={opt.val} checked={form.publishingType === opt.val} onChange={setField("publishingType")} className="sr-only" />
                                 {opt.label}
                               </label>
