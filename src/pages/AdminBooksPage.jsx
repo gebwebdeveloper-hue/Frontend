@@ -7,7 +7,7 @@ import PageTransition from "../components/PageTransition.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
 import JoditEditor from "jodit-react";
 
-
+// Admin Dashboard Page for Lekhak Tripura Platform
 
 export default function AdminBooksPage() {
   const location = useLocation();
@@ -158,6 +158,7 @@ export default function AdminBooksPage() {
   // User management state
   const [usersList, setUsersList] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [usersError, setUsersError] = useState("");
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [expandedUser, setExpandedUser] = useState(null);
 
@@ -597,12 +598,26 @@ export default function AdminBooksPage() {
 
   const fetchAdminUsers = () => {
     setLoadingUsers(true);
+    setUsersError("");
     fetch(`${API_BASE}/admin/users`, { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) setUsersList(d.users || []);
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
       })
-      .catch(() => {})
+      .then((d) => {
+        if (d && d.success && Array.isArray(d.users)) {
+          setUsersList(d.users);
+        } else {
+          console.error("fetchAdminUsers error:", d?.message);
+          setUsersError(d?.message || "Failed to fetch users.");
+          setUsersList([]);
+        }
+      })
+      .catch((err) => {
+        console.error("fetchAdminUsers fetch failed:", err);
+        setUsersError("Failed to connect to backend server or load registered users.");
+        setUsersList([]);
+      })
       .finally(() => setLoadingUsers(false));
   };
 
@@ -917,6 +932,9 @@ export default function AdminBooksPage() {
     height: 400,
     theme: "dark",
     toolbarAdaptive: true,
+    limitWords: 50000,
+    showWordsCounter: true,
+    showCharsCounter: true,
     uploader: {
       insertImageAsBase64URI: false,
       withCredentials: true,
@@ -2675,7 +2693,7 @@ export default function AdminBooksPage() {
                 <div className="w-full sm:w-72">
                   <input
                     type="text"
-                    value={userSearchQuery}
+                    value={userSearchQuery || ""}
                     onChange={(e) => setUserSearchQuery(e.target.value)}
                     placeholder="Search reader name or email..."
                     className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder-white/30 focus:border-cyan-400/40 focus:outline-none"
@@ -2683,12 +2701,24 @@ export default function AdminBooksPage() {
                 </div>
               </div>
 
+              {usersError && (
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-xs text-red-300 flex items-center justify-between gap-3">
+                  <span>⚠ {usersError}</span>
+                  <button
+                    onClick={fetchAdminUsers}
+                    className="rounded-xl bg-red-500/20 px-3 py-1.5 font-bold hover:bg-red-500/30 text-white transition"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
               {loadingUsers ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3 text-white/50">
                   <Loader2 size={36} className="animate-spin text-cyan-400" />
                   <p className="text-xs font-semibold">Loading user accounts & purchase history...</p>
                 </div>
-              ) : usersList.length === 0 ? (
+              ) : (!Array.isArray(usersList) || usersList.length === 0) ? (
                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-12 text-center">
                   <User size={36} className="mx-auto mb-3 text-white/30" />
                   <p className="text-sm font-semibold text-white/60">No registered readers found</p>
@@ -2696,21 +2726,30 @@ export default function AdminBooksPage() {
               ) : (
                 <div className="grid gap-4">
                   {usersList
-                    .filter((u) =>
-                      (u.name || "").toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-                      (u.email || "").toLowerCase().includes(userSearchQuery.toLowerCase())
-                    )
-                    .map((u) => {
-                      const isExpanded = expandedUser === u._id;
+                    .filter((u) => {
+                      if (!u) return false;
+                      const query = (userSearchQuery || "").toLowerCase();
+                      const nameMatch = (u.name || "").toLowerCase().includes(query);
+                      const emailMatch = (u.email || "").toLowerCase().includes(query);
+                      return nameMatch || emailMatch;
+                    })
+                    .map((u, idx) => {
+                      if (!u) return null;
+                      const uId = u._id || `user-${idx}`;
+                      const isExpanded = expandedUser === uId;
+                      const initial = u.name
+                        ? u.name.charAt(0).toUpperCase()
+                        : (u.email || "U").charAt(0).toUpperCase();
+
                       return (
                         <div
-                          key={u._id}
+                          key={uId}
                           className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 backdrop-blur-xl transition hover:border-white/20"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
                               <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-cyan-400 to-indigo-500 font-bold text-black text-lg shadow-md">
-                                {u.name ? u.name.charAt(0).toUpperCase() : u.email.charAt(0).toUpperCase()}
+                                {initial}
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
@@ -2719,7 +2758,7 @@ export default function AdminBooksPage() {
                                     {u.totalBooksBought || 0} Books Purchased
                                   </span>
                                 </div>
-                                <p className="text-xs text-white/50">{u.email} {u.phone ? `· ${u.phone}` : ""}</p>
+                                <p className="text-xs text-white/50">{u.email || "No Email"} {u.phone ? `· ${u.phone}` : ""}</p>
                               </div>
                             </div>
 
@@ -2730,7 +2769,7 @@ export default function AdminBooksPage() {
                               </div>
 
                               <button
-                                onClick={() => setExpandedUser(isExpanded ? null : u._id)}
+                                onClick={() => setExpandedUser(isExpanded ? null : uId)}
                                 className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-white hover:bg-white/10 transition"
                               >
                                 {isExpanded ? "Hide Books" : `Inspect Books (${(u.purchases || []).length})`}
@@ -2745,18 +2784,20 @@ export default function AdminBooksPage() {
                                 Purchased Books & Access Status
                               </h4>
 
-                              {(!u.purchases || u.purchases.length === 0) ? (
+                              {(!Array.isArray(u.purchases) || u.purchases.length === 0) ? (
                                 <p className="text-xs text-white/40 italic">This user has not placed any book orders yet.</p>
                               ) : (
-                                u.purchases.map((p) => {
-                                  const book = p.bookId;
-                                  const isApproved = p.status === "approved";
-                                  const isPending = p.status === "pending";
-                                  const isRejected = p.status === "rejected";
+                                u.purchases.map((p, pIdx) => {
+                                  if (!p) return null;
+                                  const pId = p._id || `p-${pIdx}`;
+                                  const book = p.bookId || {};
+                                  const pStatus = (p.status || "pending").toLowerCase();
+                                  const isApproved = pStatus === "approved";
+                                  const isPending = pStatus === "pending";
 
                                   return (
                                     <div
-                                      key={p._id}
+                                      key={pId}
                                       className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-3.5"
                                     >
                                       <div className="flex items-center gap-3 min-w-0">
@@ -2764,7 +2805,7 @@ export default function AdminBooksPage() {
                                           {book?.cover?.url ? (
                                             <img
                                               src={book.cover.url.startsWith("http") ? book.cover.url : `${SERVER_URL}${book.cover.url}`}
-                                              alt={book.title}
+                                              alt={book.title || "Book"}
                                               className="h-full w-full object-cover"
                                             />
                                           ) : (
@@ -2776,12 +2817,12 @@ export default function AdminBooksPage() {
 
                                         <div className="min-w-0">
                                           <h5 className="truncate text-sm font-bold text-white">{book?.title || "Unknown Book"}</h5>
-                                          <p className="truncate text-xs text-white/45">{book?.author} · Format: <strong className="uppercase text-cyan-300">{p.format}</strong></p>
+                                          <p className="truncate text-xs text-white/45">{book?.author || "Author"} · Format: <strong className="uppercase text-cyan-300">{p.format || "ebook"}</strong></p>
                                         </div>
                                       </div>
 
                                       <div className="flex items-center gap-3 shrink-0">
-                                        <span className="text-xs font-bold text-white">₹{p.amount}</span>
+                                        <span className="text-xs font-bold text-white">₹{p.amount ?? 0}</span>
 
                                         <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
                                           isApproved
@@ -2790,7 +2831,7 @@ export default function AdminBooksPage() {
                                             ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
                                             : "bg-red-500/10 text-red-400 border border-red-500/20"
                                         }`}>
-                                          {p.status.toUpperCase()}
+                                          {pStatus.toUpperCase()}
                                         </span>
 
                                         {isApproved && (
