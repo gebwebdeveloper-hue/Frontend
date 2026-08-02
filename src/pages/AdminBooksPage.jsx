@@ -1131,14 +1131,12 @@ export default function AdminBooksPage() {
                     >
                       Manage Books
                     </button>
-                    <button
-                      onClick={() => setActiveTab("purchases")}
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 ${
-                        activeTab === "purchases" ? "bg-white text-black" : "text-white/60 hover:text-white"
-                      }`}
+                    <Link
+                      to="/admin/purchases"
+                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
                     >
-                      Purchase Requests
-                    </button>
+                      Razorpay Payments
+                    </Link>
                     <button
                       onClick={() => setActiveTab("authors")}
                       className={`rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 ${
@@ -1635,12 +1633,20 @@ export default function AdminBooksPage() {
 
               {/* TAB 2: PURCHASE REQUESTS */}
               {activeTab === "purchases" && (
-                <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-                  {/* LEFT: Access Requests */}
+                <div className="w-full">
+                  {/* Access Requests */}
                   <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
-                    <div className="border-b border-white/10 pb-6 mb-8">
-                      <h2 className="text-2xl font-bold text-white">Access Requests</h2>
-                      <p className="mt-1 text-sm text-white/55">Verify transaction numbers and approve ebook access for readers.</p>
+                    <div className="border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-bold text-white">Access Requests</h2>
+                        <p className="mt-1 text-sm text-white/55">Verify transaction numbers and approve ebook access for readers.</p>
+                      </div>
+                      <Link
+                        to="/admin/purchases"
+                        className="rounded-xl bg-cyan-400 px-4 py-2 text-xs font-bold text-black hover:bg-cyan-300 transition"
+                      >
+                        View Full Razorpay History →
+                      </Link>
                     </div>
 
                   {loadingPurchases ? (
@@ -1685,6 +1691,11 @@ export default function AdminBooksPage() {
                                     Rejected
                                   </span>
                                 )}
+                                {purchase.status === "cancelled" && (
+                                  <span className="rounded-full bg-zinc-800/80 px-3 py-1 text-[10px] font-semibold text-zinc-400 border border-zinc-700">
+                                    Cancelled / Unpaid
+                                  </span>
+                                )}
                                 {purchase.status === "pending" && (
                                   <span className="rounded-full bg-amber-500/10 px-3 py-1 text-[10px] font-semibold text-amber-400 border border-amber-500/20 animate-pulse">
                                     Pending Review
@@ -1704,41 +1715,36 @@ export default function AdminBooksPage() {
                               <p><span className="text-white/40">Country:</span> {purchase.userId?.country || "India"}</p>
                             </div>
 
-                            {/* Column 2: Address */}
+                            {/* Column 2: Detailed Location / Dispatch Info */}
                             <div className="space-y-2">
-                              <p className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Location details</p>
+                              <p className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Location Details</p>
                               <p><span className="text-white/40">District:</span> {purchase.userId?.district || "N/A"}</p>
                               <p><span className="text-white/40">Block:</span> {purchase.userId?.block || "N/A"}</p>
                               <p><span className="text-white/40">Post Office:</span> {purchase.userId?.postOffice || "N/A"}</p>
                               <p><span className="text-white/40">PIN:</span> {purchase.userId?.pin || "N/A"}</p>
                             </div>
 
-                            {/* Column 3: Nearby Location & Landmark details */}
+                            {/* Column 3: Payment Ref / Landmarks */}
                             <div className="space-y-2">
-                              <p className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Payment ref & landmarks</p>
-                              <p className="text-white/90 font-medium">
-                                <span className="text-white/40">UPI Ref:</span>{" "}
-                                <span className="font-mono text-cyan-300 font-bold bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-800/30 select-all">
-                                  {purchase.transactionNumber || "N/A"}
-                                </span>
-                              </p>
+                              <p className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Payment Ref & Landmarks</p>
+                              <p><span className="text-white/40">UPI Ref:</span> <span className="font-mono text-cyan-300">{purchase.transactionNumber || "N/A"}</span></p>
                               <p><span className="text-white/40">Landmark:</span> {purchase.userId?.nearbyLocation || "N/A"}</p>
                               <p><span className="text-white/40">Date:</span> {new Date(purchase.createdAt).toLocaleString()}</p>
                             </div>
                           </div>
 
-                          {/* Screenshot area if any */}
+                          {/* Payment Screenshot if uploaded */}
                           {purchase.paymentScreenshot?.url && (
                             <div className="border-t border-white/5 pt-4">
-                              <p className="text-[10px] uppercase font-bold text-white/40 tracking-wider mb-2">Attached Payment Screenshot</p>
+                              <p className="text-[10px] uppercase font-bold text-white/40 mb-2">Payment Verification Proof</p>
                               <a 
-                                href={purchase.paymentScreenshot.url.startsWith("http") ? purchase.paymentScreenshot.url : `${API_BASE.replace("/api", "")}${purchase.paymentScreenshot.url}`} 
+                                href={purchase.paymentScreenshot.url.startsWith("http") ? purchase.paymentScreenshot.url : `${SERVER_URL}${purchase.paymentScreenshot.url}`} 
                                 target="_blank" 
                                 rel="noreferrer"
-                                className="inline-block rounded-xl overflow-hidden border border-white/10 hover:border-cyan-400/40 transition max-w-[200px]"
+                                className="inline-block border border-white/10 rounded-xl overflow-hidden hover:opacity-80 transition"
                               >
                                 <img 
-                                  src={purchase.paymentScreenshot.url.startsWith("http") ? purchase.paymentScreenshot.url : `${API_BASE.replace("/api", "")}${purchase.paymentScreenshot.url}`} 
+                                  src={purchase.paymentScreenshot.url.startsWith("http") ? purchase.paymentScreenshot.url : `${SERVER_URL}${purchase.paymentScreenshot.url}`} 
                                   alt="Screenshot" 
                                   className="max-w-[200px] h-auto object-contain bg-zinc-900" 
                                 />
@@ -1785,20 +1791,18 @@ export default function AdminBooksPage() {
                             </div>
                           )}
 
-                          {/* Decision Area / Actions */}
+                          {/* Lower: Note input & Action buttons */}
                           <div className="border-t border-white/5 pt-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
                             {purchase.status === "pending" ? (
                               <>
-                                <div className="flex-1">
-                                  <input
-                                    type="text"
-                                    placeholder="Add approval or rejection reason (optional)..."
-                                    value={adminNotes[purchase._id] || ""}
-                                    onChange={(e) => handleNoteChange(purchase._id, e.target.value)}
-                                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder-white/30 focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
-                                  />
-                                </div>
-                                <div className="flex gap-3 shrink-0">
+                                <input
+                                  type="text"
+                                  placeholder="Add approval or rejection reason (optional note to user)..."
+                                  value={adminNotes[purchase._id] || ""}
+                                  onChange={(e) => handleNoteChange(purchase._id, e.target.value)}
+                                  className="flex-1 rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-xs text-white placeholder-white/30 focus:border-cyan-400/40 focus:outline-none"
+                                />
+                                <div className="flex items-center gap-3 shrink-0">
                                   <button
                                     onClick={() => handleRejectPurchase(purchase._id)}
                                     className="rounded-xl border border-red-500/20 bg-red-500/10 px-5 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-500 hover:text-white transition"
@@ -1832,84 +1836,6 @@ export default function AdminBooksPage() {
                       ))}
                     </div>
                   )}
-                </div>
-
-                {/* RIGHT: Payment Config Settings */}
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl h-fit">
-                  <div className="border-b border-white/10 pb-6 mb-6">
-                    <h2 className="text-2xl font-bold text-white">Payment Configuration</h2>
-                    <p className="mt-1 text-sm text-white/55">Configure the active UPI ID and scanner QR code image.</p>
-                  </div>
-
-                  {configError && (
-                    <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-xs text-red-300">
-                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                      <span>{configError}</span>
-                    </div>
-                  )}
-
-                  {configSuccess && (
-                    <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-xs text-emerald-300">
-                      <span>{configSuccess}</span>
-                    </div>
-                  )}
-
-                  <form onSubmit={handleUpdatePaymentConfig} className="space-y-5">
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Active UPI ID</label>
-                      <input
-                        type="text"
-                        required
-                        value={upiIdInput}
-                        onChange={(e) => setUpiIdInput(e.target.value)}
-                        placeholder="e.g. name@upi"
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Scanner QR Code Image</label>
-                      
-                      {/* Current Scanner Image display */}
-                      {currentQrUrl && (
-                        <div className="mb-4 flex items-center justify-center p-3 rounded-xl border border-white/10 bg-white/5">
-                          <img
-                            src={currentQrUrl.startsWith("http") ? currentQrUrl : `${SERVER_URL}${currentQrUrl}`}
-                            alt="Current QR Code"
-                            className="h-32 w-32 object-contain rounded-lg bg-white p-1"
-                          />
-                        </div>
-                      )}
-
-                      <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-white/10 p-6 transition hover:border-cyan-400/30 hover:bg-white/[0.03]">
-                        {qrImageFile ? (
-                          <>
-                            <Upload size={20} className="text-cyan-300" />
-                            <span className="text-xs text-cyan-300 truncate max-w-full">{qrImageFile.name}</span>
-                          </>
-                        ) : (
-                          <>
-                            <Upload size={20} className="text-white/30" />
-                            <span className="text-xs text-white/40">Select new QR image (JPEG/PNG/WEBP)</span>
-                          </>
-                        )}
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/jpeg,image/png,image/webp"
-                          onChange={(e) => setQrImageFile(e.target.files[0] || null)}
-                        />
-                      </label>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={loadingConfig}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-black transition-all hover:scale-[1.02] disabled:opacity-50"
-                    >
-                      {loadingConfig ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : "Save Payment Config"}
-                    </button>
-                  </form>
                 </div>
               </div>
             )}

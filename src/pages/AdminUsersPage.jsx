@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User, Loader2, Search, Trash2, ArrowLeft,
-  RefreshCw, CheckCircle2, Shield, Phone, Mail, BookOpen
+  RefreshCw, CheckCircle2, Shield, Phone, Mail, BookOpen, Sparkles
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
@@ -52,23 +52,36 @@ export default function AdminUsersPage() {
       .finally(() => setChecking(false));
   }, [navigate]);
 
-  // 2. Fetch All Registered Users
+  // 2. Fetch All Registered Users & Story Purchases
   const fetchUsers = () => {
     setLoading(true);
     setError("");
-    fetch(`${API_BASE}/admin/users`, { credentials: "include" })
-      .then((r) => {
+    Promise.all([
+      fetch(`${API_BASE}/admin/users`, { credentials: "include" }).then((r) => {
         if (!r.ok) {
           if (r.status === 401) throw new Error("Admin session required. Please log in.");
           throw new Error(`Server returned HTTP ${r.status}`);
         }
         return r.json();
-      })
-      .then((d) => {
-        if (d.success && Array.isArray(d.users)) {
-          setUsers(d.users);
+      }),
+      fetch(`${API_BASE}/newsletter/admin/access-requests`, { credentials: "include" }).then((r) => r.json()).catch(() => ({ success: false, requests: [] }))
+    ])
+      .then(([usersRes, storyRes]) => {
+        if (usersRes.success && Array.isArray(usersRes.users)) {
+          const allStories = (storyRes.success && Array.isArray(storyRes.requests)) ? storyRes.requests : [];
+          
+          const enrichedUsers = usersRes.users.map((u) => {
+            const userEmail = (u.email || "").toLowerCase().trim();
+            const userStories = allStories.filter((s) => (s.userEmail || "").toLowerCase().trim() === userEmail);
+            return {
+              ...u,
+              storyPurchases: userStories
+            };
+          });
+
+          setUsers(enrichedUsers);
         } else {
-          setError(d.message || "Failed to load registered users.");
+          setError(usersRes.message || "Failed to load registered users.");
           setUsers([]);
         }
       })
@@ -138,22 +151,54 @@ export default function AdminUsersPage() {
       <div className="min-h-screen bg-zinc-950 text-white px-4 py-8 sm:px-8 max-w-7xl mx-auto pt-24 pb-16">
         
         {/* Navigation & Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/10 pb-6 mb-8 gap-4">
-          <div className="flex items-center gap-4">
-            <Link
-              to="/admin"
-              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/70 hover:bg-white/10 hover:text-white transition"
-            >
-              <ArrowLeft size={14} /> Back to Dashboard
-            </Link>
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between border-b border-white/10 pb-6 mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-white">Registered Users Directory</h1>
+            <p className="text-xs text-white/50 mt-1">
+              All registered platform members ({users.length} total readers), purchase history, and access management.
+            </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+            {/* Tabs */}
+            <div className="flex rounded-full bg-white/5 p-1 border border-white/10 overflow-x-auto max-w-full whitespace-nowrap scrollbar-none">
+              <Link
+                to="/admin"
+                className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
+              >
+                Manage Books
+              </Link>
+              <Link
+                to="/admin/purchases"
+                className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
+              >
+                Razorpay Payments
+              </Link>
+              <Link
+                to="/admin"
+                className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
+              >
+                Authors
+              </Link>
+              <Link
+                to="/admin/stories"
+                className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
+              >
+                Free Stories
+              </Link>
+              <Link
+                to="/admin/users"
+                className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 bg-white text-black"
+              >
+                Manage Users
+              </Link>
+            </div>
+
             <button
               onClick={fetchUsers}
-              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10 transition"
+              className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10 transition shrink-0"
             >
-              <RefreshCw size={13} className={loading ? "animate-spin text-cyan-400" : ""} /> Refresh Users
+              <RefreshCw size={13} className={loading ? "animate-spin text-cyan-400" : ""} /> Refresh List
             </button>
           </div>
         </div>
@@ -224,8 +269,16 @@ export default function AdminUsersPage() {
                 ? u.name.charAt(0).toUpperCase()
                 : (u.email || "U").charAt(0).toUpperCase();
 
-              const totalBought = u.totalBooksBought || (Array.isArray(u.purchases) ? u.purchases.filter(p => p.status === 'approved').length : 0);
-              const totalSpent = u.totalSpent || (Array.isArray(u.purchases) ? u.purchases.filter(p => p.status === 'approved').reduce((acc, curr) => acc + (curr.amount || 0), 0) : 0);
+              const bookPurchases = Array.isArray(u.purchases) ? u.purchases : [];
+              const storyPurchases = Array.isArray(u.storyPurchases) ? u.storyPurchases : [];
+
+              const approvedBooksCount = bookPurchases.filter((p) => p.status === "approved").length;
+              const approvedStoriesCount = storyPurchases.filter((s) => s.status === "approved").length;
+
+              const booksSpent = bookPurchases.filter((p) => p.status === "approved").reduce((acc, curr) => acc + (curr.amount || 0), 0);
+              const storiesSpent = storyPurchases.filter((s) => s.status === "approved").reduce((acc, curr) => acc + (curr.amount || 0), 0);
+              const totalSpent = booksSpent + storiesSpent;
+              const totalItems = bookPurchases.length + storyPurchases.length;
 
               return (
                 <div
@@ -241,7 +294,7 @@ export default function AdminUsersPage() {
 
                       {/* User Info */}
                       <div>
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-2.5 flex-wrap">
                           <h3 className="text-base font-extrabold text-white">{u.name || "Reader Account"}</h3>
                           {u.role === "admin" && (
                             <span className="rounded-full bg-indigo-500/20 border border-indigo-500/30 px-2.5 py-0.5 text-[10px] font-black uppercase text-indigo-300 flex items-center gap-1">
@@ -249,7 +302,7 @@ export default function AdminUsersPage() {
                             </span>
                           )}
                           <span className="rounded-full bg-cyan-400/10 border border-cyan-400/20 px-2.5 py-0.5 text-[10px] font-bold text-cyan-300">
-                            {totalBought} Books Purchased
+                            {approvedBooksCount} Books · {approvedStoriesCount} Stories
                           </span>
                         </div>
                         
@@ -277,84 +330,139 @@ export default function AdminUsersPage() {
                         onClick={() => setExpandedUser(isExpanded ? null : uId)}
                         className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-white hover:bg-white/10 transition"
                       >
-                        {isExpanded ? "Hide Details" : `Inspect Books (${(u.purchases || []).length})`}
+                        {isExpanded ? "Hide Details" : `Inspect Purchases (${totalItems})`}
                       </button>
                     </div>
                   </div>
 
-                  {/* Expanded Purchased Books & Order History */}
+                  {/* Expanded Purchased Books & Stories History */}
                   {isExpanded && (
-                    <div className="mt-5 pt-4 border-t border-white/10 space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-2 flex items-center gap-1.5">
-                        <BookOpen size={13} /> Reader Purchases & Access Grants
-                      </h4>
+                    <div className="mt-5 pt-4 border-t border-white/10 space-y-4">
+                      {/* Section 1: Book Purchases */}
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-300 mb-2 flex items-center gap-1.5">
+                          <BookOpen size={13} /> Book Purchases ({bookPurchases.length})
+                        </h4>
 
-                      {(!Array.isArray(u.purchases) || u.purchases.length === 0) ? (
-                        <p className="text-xs text-white/40 italic">This user has not placed any book orders yet.</p>
-                      ) : (
-                        u.purchases.map((p, pIdx) => {
-                          if (!p) return null;
-                          const pId = p._id || `p-${pIdx}`;
-                          const book = p.bookId || {};
-                          const pStatus = (p.status || "pending").toLowerCase();
-                          const isApproved = pStatus === "approved";
-                          const isPending = pStatus === "pending";
+                        {bookPurchases.length === 0 ? (
+                          <p className="text-xs text-white/40 italic">No book orders placed yet.</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {bookPurchases.map((p, pIdx) => {
+                              if (!p) return null;
+                              const pId = p._id || `p-${pIdx}`;
+                              const book = p.bookId || {};
+                              const pStatus = (p.status || "pending").toLowerCase();
+                              const isApproved = pStatus === "approved";
+                              const isPending = pStatus === "pending";
 
-                          return (
-                            <div
-                              key={pId}
-                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-3.5"
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="h-12 w-9 shrink-0 overflow-hidden rounded-lg bg-zinc-900 border border-white/10">
-                                  {book?.cover?.url ? (
-                                    <img
-                                      src={book.cover.url.startsWith("http") ? book.cover.url : `${SERVER_URL}${book.cover.url}`}
-                                      alt={book.title || "Book"}
-                                      className="h-full w-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="h-full w-full bg-cyan-500 grid place-items-center text-[8px] text-white">
-                                      BOOK
+                              return (
+                                <div
+                                  key={pId}
+                                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-3.5"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="h-12 w-9 shrink-0 overflow-hidden rounded-lg bg-zinc-900 border border-white/10">
+                                      {book?.cover?.url ? (
+                                        <img
+                                          src={book.cover.url.startsWith("http") ? book.cover.url : `${SERVER_URL}${book.cover.url}`}
+                                          alt={book.title || "Book"}
+                                          className="h-full w-full object-cover"
+                                        />
+                                      ) : (
+                                        <div className="h-full w-full bg-cyan-500 grid place-items-center text-[8px] text-white">
+                                          BOOK
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
+
+                                    <div className="min-w-0">
+                                      <h5 className="truncate text-sm font-bold text-white">{book?.title || "Unknown Title"}</h5>
+                                      <p className="truncate text-xs text-white/45">
+                                        {book?.author || "Author"} · Format: <strong className="uppercase text-cyan-300">{p.format || "ebook"}</strong>
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-3 shrink-0">
+                                    <span className="text-xs font-bold text-white">₹{p.amount ?? 0}</span>
+
+                                    <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                      isApproved
+                                        ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
+                                        : isPending
+                                        ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                                        : "bg-red-500/10 text-red-400 border border-red-500/20"
+                                    }`}>
+                                      {pStatus.toUpperCase()}
+                                    </span>
+
+                                    {isApproved && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRevokeUserAccess(p._id)}
+                                        className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-extrabold text-red-300 hover:bg-red-500/20 transition flex items-center gap-1.5"
+                                      >
+                                        <Trash2 size={13} /> Revoke Access
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
 
-                                <div className="min-w-0">
-                                  <h5 className="truncate text-sm font-bold text-white">{book?.title || "Unknown Title"}</h5>
-                                  <p className="truncate text-xs text-white/45">
-                                    {book?.author || "Author"} · Format: <strong className="uppercase text-cyan-300">{p.format || "ebook"}</strong>
-                                  </p>
+                      {/* Section 2: Short Story Access Purchases */}
+                      <div className="pt-2 border-t border-white/5">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-fuchsia-300 mb-2 flex items-center gap-1.5">
+                          <Sparkles size={13} /> Short Story Access Purchases ({storyPurchases.length})
+                        </h4>
+
+                        {storyPurchases.length === 0 ? (
+                          <p className="text-xs text-white/40 italic">No short story access purchased yet.</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {storyPurchases.map((s, sIdx) => {
+                              const sId = s._id || `s-${sIdx}`;
+                              const storyObj = s.newsletterId || {};
+                              const sStatus = (s.status || "pending").toLowerCase();
+                              const isApproved = sStatus === "approved";
+
+                              return (
+                                <div
+                                  key={sId}
+                                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-3.5"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="h-10 w-10 shrink-0 grid place-items-center rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-300">
+                                      <Sparkles size={18} />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <h5 className="truncate text-sm font-bold text-white">{storyObj.title || "Short Story Access"}</h5>
+                                      <p className="truncate text-xs text-white/45">
+                                        by {storyObj.author || "Lekhok Tripura"} · Ref: <span className="font-mono text-cyan-300">{s.razorpayPaymentId || s.transactionId || "N/A"}</span>
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-3 shrink-0">
+                                    <span className="text-xs font-bold text-emerald-400">₹{s.amount ?? 0}</span>
+                                    <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                      isApproved
+                                        ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
+                                        : "bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                                    }`}>
+                                      {sStatus.toUpperCase()}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-
-                              <div className="flex items-center gap-3 shrink-0">
-                                <span className="text-xs font-bold text-white">₹{p.amount ?? 0}</span>
-
-                                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                                  isApproved
-                                    ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
-                                    : isPending
-                                    ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
-                                    : "bg-red-500/10 text-red-400 border border-red-500/20"
-                                }`}>
-                                  {pStatus.toUpperCase()}
-                                </span>
-
-                                {isApproved && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRevokeUserAccess(p._id)}
-                                    className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-extrabold text-red-300 hover:bg-red-500/20 transition flex items-center gap-1.5"
-                                  >
-                                    <Trash2 size={13} /> Revoke Access
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
