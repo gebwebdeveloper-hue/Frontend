@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, BookOpen, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X, CheckCircle2, Truck, Box, Package, MapPin } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
+import AdminUsersPage from "./AdminUsersPage.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
 import JoditEditor from "jodit-react";
 
@@ -143,6 +144,18 @@ export default function AdminBooksPage() {
   const [formError, setFormError] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState({ title: "", description: "" });
+
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    if (showSuccessPopup || shipmentModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [showSuccessPopup, shipmentModalOpen]);
 
   const MAX_FILE_MB = 10;
   const MAX_FILE_SIZE = MAX_FILE_MB * 1024 * 1024; // 10 MB in bytes
@@ -1142,14 +1155,12 @@ export default function AdminBooksPage() {
                     >
                       Free Stories
                     </button>
-                    <button
-                      onClick={() => setActiveTab("users")}
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 ${
-                        activeTab === "users" ? "bg-white text-black" : "text-white/60 hover:text-white"
-                      }`}
+                    <Link
+                      to="/admin/users"
+                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
                     >
                       Manage Users
-                    </button>
+                    </Link>
                   </div>
                   
                   <button
@@ -2679,184 +2690,7 @@ export default function AdminBooksPage() {
           )}
 
           {/* TAB 5: USERS MANAGEMENT */}
-          {activeTab === "users" && (
-            <div className="space-y-6">
-              {/* Header & Search */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl">
-                <div>
-                  <h2 className="text-2xl font-bold text-white">User Access & Purchase Management</h2>
-                  <p className="text-xs text-white/50 mt-1">
-                    Inspect registered readers, check their purchased books, and revoke access for violations.
-                  </p>
-                </div>
-
-                <div className="w-full sm:w-72">
-                  <input
-                    type="text"
-                    value={userSearchQuery || ""}
-                    onChange={(e) => setUserSearchQuery(e.target.value)}
-                    placeholder="Search reader name or email..."
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder-white/30 focus:border-cyan-400/40 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {usersError && (
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-xs text-red-300 flex items-center justify-between gap-3">
-                  <span>⚠ {usersError}</span>
-                  <button
-                    onClick={fetchAdminUsers}
-                    className="rounded-xl bg-red-500/20 px-3 py-1.5 font-bold hover:bg-red-500/30 text-white transition"
-                  >
-                    Retry
-                  </button>
-                </div>
-              )}
-
-              {loadingUsers ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-3 text-white/50">
-                  <Loader2 size={36} className="animate-spin text-cyan-400" />
-                  <p className="text-xs font-semibold">Loading user accounts & purchase history...</p>
-                </div>
-              ) : (!Array.isArray(usersList) || usersList.length === 0) ? (
-                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-12 text-center">
-                  <User size={36} className="mx-auto mb-3 text-white/30" />
-                  <p className="text-sm font-semibold text-white/60">No registered readers found</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {usersList
-                    .filter((u) => {
-                      if (!u) return false;
-                      const query = (userSearchQuery || "").toLowerCase();
-                      const nameMatch = (u.name || "").toLowerCase().includes(query);
-                      const emailMatch = (u.email || "").toLowerCase().includes(query);
-                      return nameMatch || emailMatch;
-                    })
-                    .map((u, idx) => {
-                      if (!u) return null;
-                      const uId = u._id || `user-${idx}`;
-                      const isExpanded = expandedUser === uId;
-                      const initial = u.name
-                        ? u.name.charAt(0).toUpperCase()
-                        : (u.email || "U").charAt(0).toUpperCase();
-
-                      return (
-                        <div
-                          key={uId}
-                          className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 backdrop-blur-xl transition hover:border-white/20"
-                        >
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
-                              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-cyan-400 to-indigo-500 font-bold text-black text-lg shadow-md">
-                                {initial}
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <h3 className="text-base font-extrabold text-white">{u.name || "Reader"}</h3>
-                                  <span className="rounded-full bg-cyan-400/10 border border-cyan-400/20 px-2.5 py-0.5 text-[10px] font-extrabold text-cyan-300">
-                                    {u.totalBooksBought || 0} Books Purchased
-                                  </span>
-                                </div>
-                                <p className="text-xs text-white/50">{u.email || "No Email"} {u.phone ? `· ${u.phone}` : ""}</p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                              <div className="text-right hidden sm:block">
-                                <p className="text-[10px] uppercase font-bold text-white/40">Total Spent</p>
-                                <p className="text-base font-black text-cyan-300">₹{u.totalSpent || 0}</p>
-                              </div>
-
-                              <button
-                                onClick={() => setExpandedUser(isExpanded ? null : uId)}
-                                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-white hover:bg-white/10 transition"
-                              >
-                                {isExpanded ? "Hide Books" : `Inspect Books (${(u.purchases || []).length})`}
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Expanded Purchased Books List */}
-                          {isExpanded && (
-                            <div className="mt-5 pt-4 border-t border-white/10 space-y-3">
-                              <h4 className="text-xs font-bold uppercase tracking-wider text-white/60 mb-2">
-                                Purchased Books & Access Status
-                              </h4>
-
-                              {(!Array.isArray(u.purchases) || u.purchases.length === 0) ? (
-                                <p className="text-xs text-white/40 italic">This user has not placed any book orders yet.</p>
-                              ) : (
-                                u.purchases.map((p, pIdx) => {
-                                  if (!p) return null;
-                                  const pId = p._id || `p-${pIdx}`;
-                                  const book = p.bookId || {};
-                                  const pStatus = (p.status || "pending").toLowerCase();
-                                  const isApproved = pStatus === "approved";
-                                  const isPending = pStatus === "pending";
-
-                                  return (
-                                    <div
-                                      key={pId}
-                                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/[0.02] p-3.5"
-                                    >
-                                      <div className="flex items-center gap-3 min-w-0">
-                                        <div className="h-12 w-9 shrink-0 overflow-hidden rounded-lg bg-zinc-900 border border-white/10">
-                                          {book?.cover?.url ? (
-                                            <img
-                                              src={book.cover.url.startsWith("http") ? book.cover.url : `${SERVER_URL}${book.cover.url}`}
-                                              alt={book.title || "Book"}
-                                              className="h-full w-full object-cover"
-                                            />
-                                          ) : (
-                                            <div className="h-full w-full bg-cyan-500 grid place-items-center text-[8px] text-white">
-                                              BOOK
-                                            </div>
-                                          )}
-                                        </div>
-
-                                        <div className="min-w-0">
-                                          <h5 className="truncate text-sm font-bold text-white">{book?.title || "Unknown Book"}</h5>
-                                          <p className="truncate text-xs text-white/45">{book?.author || "Author"} · Format: <strong className="uppercase text-cyan-300">{p.format || "ebook"}</strong></p>
-                                        </div>
-                                      </div>
-
-                                      <div className="flex items-center gap-3 shrink-0">
-                                        <span className="text-xs font-bold text-white">₹{p.amount ?? 0}</span>
-
-                                        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                                          isApproved
-                                            ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
-                                            : isPending
-                                            ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
-                                            : "bg-red-500/10 text-red-400 border border-red-500/20"
-                                        }`}>
-                                          {pStatus.toUpperCase()}
-                                        </span>
-
-                                        {isApproved && (
-                                          <button
-                                            type="button"
-                                            onClick={() => handleRevokeUserAccess(p._id)}
-                                            className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-extrabold text-red-300 hover:bg-red-500/20 transition flex items-center gap-1.5"
-                                          >
-                                            <Trash2 size={13} /> Revoke Access
-                                          </button>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
-            </div>
-          )}
+          {activeTab === "users" && <AdminUsersPage />}
         </div>
       )}
     </div>

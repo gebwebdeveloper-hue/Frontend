@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Trash2, X, AlertCircle, CheckCircle2, Loader2, Sparkles, ArrowRight, Copy, MapPin, CreditCard, ShieldCheck } from "lucide-react";
 import { getCart, removeFromCart, clearCart } from "../utils/cart.js";
 import { API_BASE, SERVER_URL } from "../config.js";
+import { loadRazorpayScript } from "../utils/razorpay.js";
 import AuthModal from "./AuthModal.jsx";
 
 import { PackageCheck } from "lucide-react";
@@ -13,10 +14,7 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
   const [step, setStep] = useState("cart"); // 'cart', 'address', 'payment', 'success'
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [upiConfig, setUpiConfig] = useState({ upiId: "pritamchakrabrty@slc", upiQrImageUrl: "" });
-  const [transactionNumber, setTransactionNumber] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
 
   // Delivery Address Form
   const [deliveryForm, setDeliveryForm] = useState({
@@ -44,17 +42,6 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
       refreshCart();
       setStep("cart");
       setErrorMsg("");
-      fetch(`${API_BASE}/purchase/config`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            setUpiConfig({
-              upiId: data.upiId || "pritamchakrabrty@slc",
-              upiQrImageUrl: data.upiQrImageUrl || ""
-            });
-          }
-        })
-        .catch(() => {});
     }
   }, [isOpen]);
 
@@ -97,39 +84,37 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
         setErrorMsg("Please fill out all required address fields.");
         return;
       }
+      if (deliveryForm.pin.length !== 6) {
+        setErrorMsg("Please enter a valid 6-digit numeric PIN code.");
+        return;
+      }
     }
     setErrorMsg("");
     setStep("payment");
   };
 
-  const handleBatchPaymentSubmit = async (e) => {
-    e.preventDefault();
-    if (!transactionNumber) {
-      setErrorMsg("Please enter your UPI transaction number.");
-      return;
-    }
-
+  const handleRazorpayCheckout = async () => {
     setLoading(true);
     setErrorMsg("");
 
     try {
-      const formData = new FormData();
-      formData.append("items", JSON.stringify(cartItems));
-      formData.append("transactionNumber", transactionNumber);
-      formData.append(
-        "note",
-        `Cart Purchase of ${cartItems.length} books totaling ₹${totalPrice}`
-      );
-
-      if (hasPhysicalItems) {
-        Object.entries(deliveryForm).forEach(([key, val]) => {
-          formData.append(key, val);
-        });
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        setErrorMsg("Failed to load Razorpay Payment Gateway. Please check your internet connection.");
+        setLoading(false);
+        return;
       }
 
-      const res = await fetch(`${API_BASE}/purchase/batch`, {
+      const orderPayload = {
+        items: cartItems,
+        note: `Cart purchase of ${cartItems.length} items totaling ₹${totalPrice}`,
+        ...(hasPhysicalItems ? deliveryForm : {})
+      };
+
+      const res = await fetch(`${API_BASE}/purchase/razorpay/create-order`, {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload),
         credentials: "include"
       });
 
@@ -137,26 +122,74 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
 
       if (res.status === 401) {
         setShowAuthModal(true);
+        setLoading(false);
         return;
       }
 
-      if (data.success) {
-        clearCart();
-        setStep("success");
-      } else {
-        setErrorMsg(data.message || "Failed to complete purchase request.");
+      if (!data.success || !data.orderId) {
+        setErrorMsg(data.message || "Failed to initiate Razorpay payment order.");
+        setLoading(false);
+        return;
       }
-    } catch {
-      setErrorMsg("Connection error submitting payment details.");
-    } finally {
+
+      const options = {
+        key: data.keyId,
+        amount: data.amount,
+        currency: data.currency || "INR",
+        name: "Lekhok Tripura",
+        description: `Order for ${cartItems.length} books (₹${totalPrice})`,
+        order_id: data.orderId,
+        handler: async function (response) {
+          setLoading(true);
+          try {
+            const verifyRes = await fetch(`${API_BASE}/purchase/razorpay/verify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              }),
+              credentials: "include"
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.success) {
+              clearCart();
+              setStep("success");
+            } else {
+              setErrorMsg(verifyData.message || "Payment verification failed.");
+            }
+          } catch {
+            setErrorMsg("Network error verifying payment with backend.");
+          } finally {
+            setLoading(false);
+          }
+        },
+        prefill: {
+          name: "",
+          email: "",
+          contact: ""
+        },
+        theme: {
+          color: "#06b6d4"
+        }
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.on("payment.failed", function (response) {
+        setErrorMsg(response.error.description || "Payment failed or was cancelled.");
+        setLoading(false);
+      });
+
+      setLoading(false);
+      paymentObject.open();
+    } catch (err) {
+      console.error("Razorpay Error:", err);
+      setErrorMsg("Error communicating with Razorpay payment gateway.");
       setLoading(false);
     }
-  };
-
-  const handleCopyUpi = () => {
-    navigator.clipboard.writeText(upiConfig.upiId);
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2000);
   };
 
   if (!isOpen) return null;
@@ -399,11 +432,13 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                       <label className="block text-[10px] font-extrabold uppercase tracking-wider text-white/60 mb-1">Pin Code *</label>
                       <input
                         type="text"
+                        inputMode="numeric"
+                        maxLength={6}
                         required
                         value={deliveryForm.pin}
-                        onChange={(e) => setDeliveryForm({ ...deliveryForm, pin: e.target.value })}
+                        onChange={(e) => setDeliveryForm({ ...deliveryForm, pin: e.target.value.replace(/\D/g, "").slice(0, 6) })}
                         placeholder="e.g. 799001"
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/50 focus:outline-none"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/50 focus:outline-none font-mono"
                       />
                     </div>
                     <div>
@@ -449,9 +484,9 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
 
               {/* ─────────── 3. PAYMENT STEP ─────────── */}
               {step === "payment" && (
-                <form onSubmit={handleBatchPaymentSubmit} className="space-y-4 py-1">
+                <div className="space-y-5 py-1">
                   {/* Summary Box */}
-                  <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 via-indigo-500/5 to-zinc-950 p-5 text-center shadow-lg">
+                  <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 via-indigo-500/5 to-zinc-950 p-6 text-center shadow-lg">
                     <p className="text-xs font-black uppercase tracking-widest text-cyan-300">Total Order Amount</p>
                     <p className="mt-1 text-4xl font-black bg-gradient-to-r from-cyan-300 via-white to-indigo-300 bg-clip-text text-transparent">
                       {formatPrice(totalPrice)}
@@ -459,67 +494,50 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                     <p className="mt-1 text-xs font-semibold text-white/50">{cartItems.length} books in this order</p>
                   </div>
 
-                  {/* Payment Details Box */}
-                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 space-y-4 backdrop-blur-sm">
-                    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/40 p-3.5">
-                      <div className="flex items-center gap-2">
-                        <CreditCard size={18} className="text-cyan-400" />
-                        <span className="text-xs font-bold text-white/70">UPI ID:</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleCopyUpi}
-                        className="flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-extrabold text-cyan-300 hover:bg-cyan-400/20 transition"
-                      >
-                        <Copy size={13} /> {copySuccess ? "Copied!" : upiConfig.upiId}
-                      </button>
+                  {/* Razorpay Automatic Checkout Card */}
+                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 space-y-4 backdrop-blur-sm text-center">
+                    <div className="flex items-center justify-center gap-2 text-cyan-300 font-extrabold text-xs uppercase tracking-wider">
+                      <ShieldCheck size={18} /> 100% Secure & Automated Payment
                     </div>
 
-                    {upiConfig.upiQrImageUrl && (
-                      <div className="flex flex-col items-center justify-center py-2">
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-white/50 mb-2">Scan QR to Pay</p>
-                        <div className="rounded-2xl border border-white/20 bg-white p-3 shadow-2xl">
-                          <img
-                            src={upiConfig.upiQrImageUrl.startsWith("http") ? upiConfig.upiQrImageUrl : `${SERVER_URL}${upiConfig.upiQrImageUrl}`}
-                            alt="UPI QR Code"
-                            className="h-44 w-44 object-contain"
-                          />
-                        </div>
-                      </div>
-                    )}
+                    <p className="text-xs text-white/70 leading-relaxed max-w-md mx-auto">
+                      Pay instantly via <strong>UPI (GPay, PhonePe, Paytm, BHIM)</strong>, <strong>Credit/Debit Cards</strong>, <strong>NetBanking</strong>, or <strong>Wallets</strong>. Access will be granted automatically upon payment verification!
+                    </p>
 
-                    <div>
-                      <label className="block text-[11px] font-black uppercase tracking-wider text-white/80 mb-2">
-                        UPI Transaction ID / Reference Number *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={transactionNumber}
-                        onChange={(e) => setTransactionNumber(e.target.value.replace(/[^0-9]/g, ""))}
-                        placeholder="Enter 12-digit UPI reference number"
-                        className="w-full rounded-2xl border border-cyan-400/30 bg-white/5 px-4 py-3.5 text-sm font-black tracking-widest text-cyan-200 placeholder-white/20 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400"
-                      />
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1 text-[11px] font-bold text-white/40">
+                      <span className="rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-cyan-300">✓ Instant Approval</span>
+                      <span className="rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-emerald-300">✓ Automatic Reader Access</span>
+                      <span className="rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-indigo-300">✓ 256-bit Encryption</span>
                     </div>
+
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={handleRazorpayCheckout}
+                      className="w-full flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-500 py-4 text-sm font-black uppercase tracking-wider text-black transition hover:scale-[1.02] active:scale-[0.99] disabled:opacity-50 shadow-[0_0_40px_rgba(6,182,212,0.3)] mt-4"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" /> Processing Payment...
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard size={18} /> Pay {formatPrice(totalPrice)} via Razorpay
+                        </>
+                      )}
+                    </button>
                   </div>
 
-                  <div className="flex gap-3 pt-2">
+                  <div className="flex justify-start">
                     <button
                       type="button"
                       onClick={() => setStep(hasPhysicalItems ? "address" : "cart")}
-                      className="w-1/3 rounded-2xl border border-white/10 bg-white/5 py-3.5 text-xs font-extrabold text-white transition hover:bg-white/10"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-6 py-2.5 text-xs font-extrabold text-white transition hover:bg-white/10"
                     >
-                      Back
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-500 py-3.5 text-xs font-black uppercase tracking-wider text-black transition hover:scale-[1.02] disabled:opacity-50 shadow-lg shadow-cyan-500/25"
-                    >
-                      {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Submit Order Request"}
+                      ← Back to Cart
                     </button>
                   </div>
-                </form>
+                </div>
               )}
 
               {/* ─────────── 4. SUCCESS STEP ─────────── */}
@@ -528,15 +546,18 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                   <div className="relative mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.3)] border border-emerald-500/40">
                     <CheckCircle2 size={42} className="animate-bounce" />
                   </div>
-                  <h4 className="text-2xl font-black text-white">Order Submitted Successfully!</h4>
-                  <p className="mt-3 max-w-md text-xs font-medium text-white/60 leading-relaxed">
-                    Your purchase request has been submitted to the admin team. Once verified, your books will be unlocked in your account!
+                  <h4 className="text-2xl font-black text-white">Payment Verified & Access Granted!</h4>
+                  <p className="mt-3 max-w-md text-xs font-medium text-white/65 leading-relaxed">
+                    Your payment was successfully verified via Razorpay! Your eBooks have been unlocked instantly in your account.
                   </p>
                   <button
-                    onClick={onClose}
+                    onClick={() => {
+                      onClose();
+                      if (onOpenOrders) onOpenOrders();
+                    }}
                     className="mt-8 w-full max-w-xs rounded-2xl bg-emerald-400 py-3.5 text-xs font-black uppercase tracking-wider text-black hover:bg-emerald-300 transition shadow-lg shadow-emerald-500/20"
                   >
-                    OK, Got It
+                    View My Purchased Books
                   </button>
                 </div>
               )}

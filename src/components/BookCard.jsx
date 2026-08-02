@@ -63,6 +63,48 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
   const [transactionNumber, setTransactionNumber] = useState("");
   const [upiConfig, setUpiConfig] = useState({ upiId: "pritamchakrabrty@slc", upiQrImageUrl: "" });
 
+  // Automatically check purchase status on mount and when cart updates
+  useEffect(() => {
+    let isMounted = true;
+    if (book?.comingSoon) {
+      setAccessStatus("coming_soon");
+      return;
+    }
+
+    const checkAccess = () => {
+      fetch(`${API_BASE}/purchase/me`, { credentials: "include" })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!isMounted) return;
+          if (data.success && Array.isArray(data.purchases)) {
+            const bookId = book._id || book.id;
+            const userPurchase = data.purchases.find((p) => {
+              const pid = p.bookId?._id?.toString() || p.bookId?.toString();
+              return pid === bookId?.toString();
+            });
+            if (userPurchase) {
+              if (userPurchase.status === "approved") {
+                setAccessStatus("approved");
+              } else if (userPurchase.status === "pending" && userPurchase.paymentMethod !== "razorpay") {
+                setAccessStatus("pending");
+              }
+            }
+          }
+        })
+        .catch(() => {});
+    };
+
+    checkAccess();
+    window.addEventListener("lekhak:cart-updated", checkAccess);
+    window.addEventListener("focus", checkAccess);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener("lekhak:cart-updated", checkAccess);
+      window.removeEventListener("focus", checkAccess);
+    };
+  }, [book]);
+
   const formatPrice = (price) => {
     if (typeof price === "number") return `₹${price}`;
     return String(price || "").replace("$", "₹");
@@ -133,8 +175,13 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
           if (bookPurchase.status === "approved") {
             setAccessStatus("approved");
           } else if (bookPurchase.status === "pending") {
-            setAccessStatus("pending");
-            if (bookPurchase.transactionNumber) setTransactionNumber(bookPurchase.transactionNumber);
+            if (bookPurchase.paymentMethod === "razorpay") {
+              // Uncompleted Razorpay payment - allow user to retry/buy directly
+              setAccessStatus("no_purchase");
+            } else {
+              setAccessStatus("pending");
+              if (bookPurchase.transactionNumber) setTransactionNumber(bookPurchase.transactionNumber);
+            }
           } else {
             setAccessStatus("no_purchase");
             setErrorMsg(`Your previous request was rejected: "${bookPurchase.adminNote || 'No reason provided'}". You can pay and submit a new transaction ID.`);
@@ -429,7 +476,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
           {/* Hover overlay details button */}
           <div className="absolute inset-0 bg-black/60 opacity-0 transition-all duration-300 group-hover:opacity-100 flex items-center justify-center pointer-events-none">
             <span className="rounded-full bg-white/95 px-5 py-2.5 text-[11px] font-extrabold uppercase tracking-wider text-black shadow-glow transform translate-y-3 transition-all duration-300 group-hover:translate-y-0">
-              Preview Ebook
+              {accessStatus === "approved" ? "Read Ebook" : "Preview Ebook"}
             </span>
           </div>
           {/* Coming Soon badge */}
@@ -458,9 +505,19 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
             </button>
           </div>
           {!book.comingSoon && (
-            <span className="shrink-0 text-xs font-bold text-cyan-200 drop-shadow-[0_0_14px_rgba(103,232,249,0.45)] group-hover:text-cyan-50 transition">
-              Buy now
-            </span>
+            accessStatus === "approved" ? (
+              <span className="shrink-0 rounded-full border border-emerald-400/40 bg-emerald-400/15 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.3)]">
+                Owned
+              </span>
+            ) : accessStatus === "pending" ? (
+              <span className="shrink-0 rounded-full border border-amber-400/40 bg-amber-400/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                Pending
+              </span>
+            ) : (
+              <span className="shrink-0 text-xs font-bold text-cyan-200 drop-shadow-[0_0_14px_rgba(103,232,249,0.45)] group-hover:text-cyan-50 transition">
+                Buy now
+              </span>
+            )
           )}
         </div>
         <div className="mt-2 flex items-center justify-between text-xs text-white/[0.58]">
@@ -614,7 +671,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                             <button
                               type="button"
                               disabled
-                              className="book-format-button flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/40 cursor-not-allowed"
+                              className="flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/30 cursor-not-allowed"
                             >
                               E-Book
                             </button>
@@ -624,10 +681,10 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                               onClick={() => {
                                 setSelectedFormat("ebook");
                               }}
-                              className={`flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold transition ${
+                              className={`flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold uppercase tracking-[0.04em] transition ${
                                 selectedFormat === "ebook"
-                                  ? "bg-white text-black"
-                                  : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
+                                  ? "bg-white text-black border border-white hover:bg-white hover:text-black shadow-md"
+                                  : "border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/40"
                               }`}
                             >
                               E-Book ({formatPrice(book.price)})
@@ -641,10 +698,10 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                               onClick={() => {
                                 setSelectedFormat("paperback");
                               }}
-                              className={`book-format-button book-format-button-active flex items-center justify-center rounded-xl border py-3 text-xs font-bold uppercase tracking-[0.04em] transition ${
+                              className={`flex items-center justify-center rounded-xl py-3 text-xs font-bold uppercase tracking-[0.04em] transition ${
                                 selectedFormat === "paperback"
-                                  ? "bg-white text-black border-white"
-                                  : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
+                                  ? "bg-white text-black border border-white hover:bg-white hover:text-black shadow-md"
+                                  : "border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/40"
                               }`}
                             >
                               Paperback ({formatPrice(book.paperbackPrice)})
@@ -653,7 +710,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                             <button
                               type="button"
                               disabled
-                              className="book-format-button flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/40 cursor-not-allowed"
+                              className="flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/30 cursor-not-allowed"
                               title="Paperback edition is not available for this book"
                             >
                               Paperback
@@ -667,10 +724,10 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                               onClick={() => {
                                 setSelectedFormat("hardcover");
                               }}
-                              className={`book-format-button book-format-button-active flex items-center justify-center rounded-xl border py-3 text-xs font-bold uppercase tracking-[0.04em] transition ${
+                              className={`flex items-center justify-center rounded-xl py-3 text-xs font-bold uppercase tracking-[0.04em] transition ${
                                 selectedFormat === "hardcover"
-                                  ? "bg-white text-black border-white"
-                                  : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
+                                  ? "bg-white text-black border border-white hover:bg-white hover:text-black shadow-md"
+                                  : "border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/40"
                               }`}
                             >
                               Hardcover ({formatPrice(book.hardcoverPrice)})
@@ -679,7 +736,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                             <button
                               type="button"
                               disabled
-                              className="book-format-button flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/40 cursor-not-allowed"
+                              className="flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/30 cursor-not-allowed"
                               title="Hardcover edition is not available for this book"
                             >
                               Hardcover
@@ -692,7 +749,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                               href={book.youtubeLink}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="book-format-button book-format-button-active flex items-center justify-center rounded-xl border border-white/10 bg-white/5 py-3 text-xs font-bold uppercase tracking-[0.04em] text-white/80 transition hover:bg-white/10 hover:text-white"
+                              className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 py-3 text-xs font-bold uppercase tracking-[0.04em] text-white/80 transition hover:bg-white/10 hover:text-white hover:border-cyan-400/40"
                             >
                               Listen in YouTube
                             </a>
@@ -700,7 +757,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                             <button
                               type="button"
                               disabled
-                              className="book-format-button flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/40 cursor-not-allowed"
+                              className="flex items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] py-3 text-xs font-semibold uppercase tracking-[0.04em] text-white/30 cursor-not-allowed"
                               title="YouTube listening option is not available yet"
                             >
                               Listen in YouTube
@@ -845,11 +902,13 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                         <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/50 mb-1.5">Pin Code *</label>
                         <input
                           type="text"
+                          inputMode="numeric"
+                          maxLength={6}
                           required
                           value={pin}
-                          onChange={(e) => setPin(e.target.value)}
+                          onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
                           placeholder="e.g. 799001"
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none font-mono"
                         />
                       </div>
                       <div>
@@ -1049,12 +1108,23 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                       <p className="text-[10px] uppercase text-white/40">Payment reference</p>
                       <p className="text-xs font-mono text-cyan-300">{transactionNumber || "Review code pending"}</p>
                     </div>
-                    <button
-                      onClick={handleCloseModal}
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-semibold text-white hover:bg-white/10 transition mt-4"
-                    >
-                      Close Window
-                    </button>
+                    <div className="flex flex-col gap-2.5 mt-4">
+                      <button
+                        onClick={() => {
+                          handleCloseModal();
+                          window.dispatchEvent(new Event("lekhak:open-cart"));
+                        }}
+                        className="w-full rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-4 py-3 text-xs font-extrabold uppercase tracking-wider text-black hover:scale-[1.01] transition shadow-lg shadow-cyan-500/20"
+                      >
+                        Complete Payment via Razorpay
+                      </button>
+                      <button
+                        onClick={handleCloseModal}
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white/70 hover:bg-white/10 hover:text-white transition"
+                      >
+                        Close Window
+                      </button>
+                    </div>
                   </div>
                 )}
 

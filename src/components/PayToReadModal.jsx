@@ -2,25 +2,18 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Lock, CheckCircle2, AlertCircle, Loader2, Copy, Check, QrCode, Smartphone } from "lucide-react";
-import { API_BASE, SERVER_URL } from "../config.js";
+import { X, Lock, CheckCircle2, AlertCircle, Loader2, ShieldCheck } from "lucide-react";
+import { API_BASE } from "../config.js";
+import { loadRazorpayScript } from "../utils/razorpay.js";
 
 export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [transactionId, setTransactionId] = useState("");
-  const [paymentConfig, setPaymentConfig] = useState({ upiId: "pritamchakrabrty@slc", upiQrUrl: "" });
-  const [copiedUpi, setCopiedUpi] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [submittedStatus, setSubmittedStatus] = useState(null); // 'pending' | 'approved' | 'rejected'
-
-  // Build UPI deep link URL for opening payment apps directly
-  const upiUrl = paymentConfig.upiId && story?.price
-    ? `upi://pay?pa=${encodeURIComponent(paymentConfig.upiId)}&pn=${encodeURIComponent("Lekhok Tripura")}&am=${story.price}&cu=INR&tn=${encodeURIComponent("Story: " + (story?.title || ""))}`
-    : "#";
+  const [submittedStatus, setSubmittedStatus] = useState(null); // 'pending' | 'approved'
 
   useEffect(() => {
     if (isOpen) {
@@ -28,28 +21,13 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
       document.body.style.overflow = "hidden";
       if (window.lenis) window.lenis.stop();
 
-      fetch(`${API_BASE}/purchase/config`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && data.config) {
-            const qrUrl = data.config.upiQrImageUrl || data.config.upiQrImage?.url || "";
-            setPaymentConfig({
-              upiId: data.config.upiId || "pritamchakrabrty@slc",
-              upiQrUrl: qrUrl ? (qrUrl.startsWith("http") ? qrUrl : `${SERVER_URL}${qrUrl}`) : ""
-            });
-          }
-        })
-        .catch(() => {
-          setPaymentConfig((prev) => ({ ...prev, upiId: "pritamchakrabrty@slc" }));
-        });
-
       const savedUser = JSON.parse(localStorage.getItem("story_reader_info") || "{}");
       if (savedUser.name) setName(savedUser.name);
       if (savedUser.email) setEmail(savedUser.email);
       if (savedUser.phone) setPhone(savedUser.phone);
 
-      if (story?._id && (savedUser.email || savedUser.transactionId)) {
-        checkExistingStatus(story._id, savedUser.email, savedUser.transactionId);
+      if (story?._id && savedUser.email) {
+        checkExistingStatus(story._id, savedUser.email);
       }
 
       return () => {
@@ -59,10 +37,8 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
     }
   }, [isOpen, story]);
 
-  const checkExistingStatus = (storyId, userEmail, trxId) => {
-    let url = `${API_BASE}/newsletter/access-status?newsletterId=${storyId}`;
-    if (userEmail) url += `&userEmail=${encodeURIComponent(userEmail)}`;
-    if (trxId) url += `&transactionId=${encodeURIComponent(trxId)}`;
+  const checkExistingStatus = (storyId, userEmail) => {
+    const url = `${API_BASE}/newsletter/access-status?newsletterId=${storyId}&userEmail=${encodeURIComponent(userEmail)}`;
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
@@ -74,19 +50,12 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
       .catch(console.error);
   };
 
-  const copyUpiId = () => {
-    if (!paymentConfig.upiId) return;
-    navigator.clipboard.writeText(paymentConfig.upiId);
-    setCopiedUpi(true);
-    setTimeout(() => setCopiedUpi(false), 2000);
-  };
-
-  const handleSubmit = (e) => {
+  const handleRazorpayPay = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!name.trim() || !email.trim() || !phone.trim() || !transactionId.trim()) {
-      setError("Please fill in all required fields including Transaction ID / UTR.");
+    if (!name.trim() || !email.trim() || !phone.trim()) {
+      setError("Please fill in all required contact details.");
       return;
     }
     if (phone.trim().length !== 10) {
@@ -95,29 +64,94 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
     }
 
     setLoading(true);
-    fetch(`${API_BASE}/newsletter/access-request`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        newsletterId: story._id,
-        userName: name.trim(),
-        userEmail: email.trim(),
-        userPhone: phone.trim(),
-        transactionId: transactionId.trim()
-      })
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          localStorage.setItem("story_reader_info", JSON.stringify({ name, email, phone, transactionId }));
-          localStorage.setItem(`story_access_${story._id}`, JSON.stringify({ email, transactionId, status: "pending" }));
-          setSubmittedStatus("pending");
-        } else {
-          setError(data.message || "Failed to submit transaction details.");
+
+    try {
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        setError("Failed to load Razorpay Payment Gateway. Please check your internet connection.");
+        setLoading(false);
+        return;
+      }
+
+      // 1. Create order on backend
+      const res = await fetch(`${API_BASE}/newsletter/razorpay/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          newsletterId: story._id,
+          userName: name.trim(),
+          userEmail: email.trim(),
+          userPhone: phone.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.message || "Failed to initiate payment.");
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem("story_reader_info", JSON.stringify({ name: name.trim(), email: email.trim(), phone: phone.trim() }));
+
+      // 2. Open Razorpay modal
+      const options = {
+        key: data.keyId,
+        amount: data.amount,
+        currency: data.currency || "INR",
+        name: "Lekhok Tripura",
+        description: `Access for: ${story.title}`,
+        order_id: data.orderId,
+        prefill: {
+          name: name.trim(),
+          email: email.trim(),
+          contact: phone.trim()
+        },
+        theme: {
+          color: "#06b6d4"
+        },
+        handler: async function (response) {
+          try {
+            const verifyRes = await fetch(`${API_BASE}/newsletter/razorpay/verify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              setSubmittedStatus("approved");
+              if (onSuccess) onSuccess();
+            } else {
+              setError(verifyData.message || "Payment verification failed.");
+            }
+          } catch {
+            setError("Error verifying payment signature.");
+          } finally {
+            setLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+          }
         }
-      })
-      .catch(() => setError("Network error. Please try again."))
-      .finally(() => setLoading(false));
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", function (resp) {
+        setError(resp.error?.description || "Payment was cancelled or failed.");
+        setLoading(false);
+      });
+      rzp.open();
+    } catch {
+      setError("Network error. Please try again.");
+      setLoading(false);
+    }
   };
 
   return createPortal(
@@ -164,142 +198,115 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess }) {
                 <Lock size={22} />
               </div>
               <div className="min-w-0 pr-8">
-                <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-cyan-300">Paid Story Access</span>
+                <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-cyan-300">Automated Razorpay Checkout</span>
                 <h2 className="text-lg font-black text-white truncate">{story.title}</h2>
               </div>
             </div>
 
-            {/* ── SUCCESS STATE ── */}
-            {submittedStatus === "pending" ? (
-              <div className="py-4 space-y-5 text-center">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-amber-400/20 to-orange-500/20 text-amber-300 border border-amber-400/30">
-                  <CheckCircle2 size={40} />
-                </div>
-                <div>
-                  <span className="rounded-full bg-amber-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-300 border border-amber-400/30">Verification Pending</span>
-                  <h3 className="text-xl font-black text-white mt-3">Thank You for Your Support!</h3>
-                  <p className="mt-2 text-sm text-white/70 leading-relaxed">Your payment transaction reference has been received. You'll be notified via email once approved.</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left text-xs space-y-2.5 text-white/70">
-                  <div className="flex justify-between border-b border-white/5 pb-2">
-                    <span className="text-white/40">Transaction ID:</span>
-                    <span className="font-mono text-cyan-300 font-bold">{transactionId || "Submitted"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/40">Email:</span>
-                    <span className="text-amber-300 font-semibold truncate max-w-[200px]">{email || "Saved"}</span>
-                  </div>
-                </div>
-                <button type="button" onClick={onClose}
-                  className="w-full rounded-2xl bg-cyan-400 px-6 py-3.5 text-sm font-black text-black hover:bg-cyan-300 transition uppercase tracking-wider">
-                  Okay, Got It
-                </button>
-              </div>
-
-            ) : submittedStatus === "approved" ? (
-              /* ── APPROVED STATE ── */
-              <div className="py-4 space-y-5 text-center">
+            {/* ── APPROVED STATE ── */}
+            {submittedStatus === "approved" ? (
+              <div className="py-6 space-y-5 text-center">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-400/20 to-teal-500/20 text-emerald-300 border border-emerald-400/30">
                   <CheckCircle2 size={40} />
                 </div>
                 <div>
-                  <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-300 border border-emerald-400/30">Access Approved</span>
+                  <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-300 border border-emerald-400/30">
+                    Payment Verified
+                  </span>
                   <h3 className="text-2xl font-black text-white mt-3">Access Granted!</h3>
-                  <p className="mt-2 text-sm text-white/70">Your payment has been verified. You can now read the full story!</p>
+                  <p className="mt-2 text-sm text-white/70">Your payment of ₹{story.price} has been verified automatically via Razorpay. Enjoy reading!</p>
                 </div>
-                <button type="button"
-                  onClick={() => { onClose(); if (onSuccess) onSuccess(); if (story?.slug) navigate(`/short-stories/${story.slug}`); }}
-                  className="w-full rounded-2xl bg-emerald-400 px-6 py-3.5 text-sm font-black text-black hover:bg-emerald-300 transition uppercase tracking-wider">
-                  Read Story Now
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    if (onSuccess) onSuccess();
+                    if (story?.slug) navigate(`/short-stories/${story.slug}`);
+                  }}
+                  className="w-full rounded-2xl bg-emerald-400 px-6 py-3.5 text-sm font-black text-black hover:bg-emerald-300 transition uppercase tracking-wider shadow-lg shadow-emerald-400/20"
+                >
+                  Read Story Now →
                 </button>
               </div>
-
             ) : (
               /* ── PAYMENT FORM ── */
-              <>
-                {/* Price + UPI Button */}
-                <div className="my-4 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/50 to-indigo-950/40 p-4 flex items-center justify-between gap-3">
+              <form onSubmit={handleRazorpayPay} className="mt-5 space-y-4">
+                {/* Price Display */}
+                <div className="rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/50 to-indigo-950/40 p-4 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs text-white/60">Story Reading Fee</p>
+                    <p className="text-xs text-white/60">Story Access Fee</p>
                     <p className="text-3xl font-black text-white">₹{story.price}</p>
                   </div>
-                  <a href={upiUrl} className="rounded-full bg-cyan-400 px-4 py-2 text-xs font-black text-black uppercase tracking-wider hover:bg-cyan-300 transition flex items-center gap-1.5 shrink-0">
-                    <Smartphone size={14} /> Open UPI App
-                  </a>
+                  <div className="flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-3 py-1 text-[10px] font-bold text-emerald-300 border border-emerald-400/30">
+                    <ShieldCheck size={14} /> Instant Access
+                  </div>
                 </div>
 
-                {/* UPI Details */}
-                <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-xs font-bold uppercase tracking-wider text-white/50">1. Pay via UPI</p>
-                  <a href={upiUrl} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-400 px-4 py-3 text-sm font-black text-black hover:opacity-90 transition uppercase tracking-wider">
-                    <Smartphone size={16} /> Open UPI App (Pay ₹{story.price})
-                  </a>
-                  {paymentConfig.upiId && (
-                    <div className="flex items-center justify-between rounded-xl border border-cyan-400/20 bg-cyan-950/30 px-3 py-2.5">
-                      <span className="font-mono text-xs font-bold text-cyan-200 truncate mr-2">{paymentConfig.upiId}</span>
-                      <button type="button" onClick={copyUpiId}
-                        className="shrink-0 flex items-center gap-1.5 rounded-lg bg-cyan-400/20 px-3 py-1.5 text-xs font-bold text-cyan-300 hover:bg-cyan-400/30 transition">
-                        {copiedUpi ? <Check size={14} /> : <Copy size={14} />}
-                        {copiedUpi ? "Copied!" : "Copy"}
-                      </button>
-                    </div>
-                  )}
-                  {paymentConfig.upiQrUrl && (
-                    <div className="flex flex-col items-center p-3 rounded-xl border border-white/10 bg-white/5">
-                      <img src={paymentConfig.upiQrUrl} alt="UPI QR" className="h-32 w-32 object-contain rounded-lg bg-white p-1" />
-                      <span className="text-[10px] text-white/40 mt-2 flex items-center gap-1"><QrCode size={12} /> Scan with GPay, PhonePe, Paytm, BHIM</span>
-                    </div>
-                  )}
+                {error && (
+                  <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-white/50 mb-1.5">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your full name"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-cyan-400/50 focus:outline-none placeholder-white/20"
+                  />
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-                  <p className="text-xs font-bold uppercase tracking-wider text-white/50">2. Enter Your Details</p>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-white/50 mb-1.5">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-cyan-400/50 focus:outline-none placeholder-white/20"
+                  />
+                </div>
 
-                  {error && (
-                    <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
-                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" /><span>{error}</span>
-                    </div>
-                  )}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-white/50 mb-1.5">Phone Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    maxLength={10}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    placeholder="10-digit mobile number"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-cyan-400/50 focus:outline-none font-mono placeholder-white/20"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-white/50 mb-1.5">Full Name *</label>
-                    <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-cyan-400/50 focus:outline-none placeholder-white/20" />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-white/50 mb-1.5">Email *</label>
-                    <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-cyan-400/50 focus:outline-none placeholder-white/20" />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-white/50 mb-1.5">Phone Number *</label>
-                    <input type="tel" required maxLength={10} value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                      placeholder="10-digit mobile number"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-cyan-400/50 focus:outline-none font-mono placeholder-white/20" />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-white/50 mb-1.5">UPI Transaction ID / UTR *</label>
-                    <input type="text" required value={transactionId} onChange={(e) => setTransactionId(e.target.value)} placeholder="e.g. 312456789012"
-                      className="w-full rounded-xl border border-cyan-400/30 bg-cyan-950/30 px-4 py-3 text-base font-mono font-bold text-cyan-200 focus:border-cyan-400 focus:outline-none placeholder-cyan-500/30" />
-                  </div>
-
-                  <div className="flex gap-3 pt-2 pb-4">
-                    <button type="button" onClick={onClose}
-                      className="w-1/3 rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm font-semibold text-white/70 hover:bg-white/10 transition">
-                      Cancel
-                    </button>
-                    <button type="submit" disabled={loading}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-cyan-400 px-5 py-3.5 text-sm font-black text-black hover:bg-cyan-300 transition disabled:opacity-50">
-                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit Transaction ID"}
-                    </button>
-                  </div>
-                </form>
-              </>
+                <div className="flex gap-3 pt-2 pb-4">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="w-1/3 rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm font-semibold text-white/70 hover:bg-white/10 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-400 px-5 py-3.5 text-sm font-black text-black hover:opacity-90 transition disabled:opacity-50 shadow-lg shadow-cyan-400/20"
+                  >
+                    {loading ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-black" />
+                    ) : (
+                      <>Pay ₹{story.price} via Razorpay</>
+                    )}
+                  </button>
+                </div>
+              </form>
             )}
           </motion.div>
         </motion.div>

@@ -217,7 +217,7 @@ export default function Navbar() {
                       isActive ? "text-white" : "text-white/65 hover:text-white"
                     }`}
                   >
-                    Publish with us
+                    Publish in Just ₹999
                     {isActive && (
                       <motion.div
                         layoutId="nav-pill"
@@ -401,7 +401,7 @@ export default function Navbar() {
               animate="visible"
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
             >
-              {[{ label: "Home", to: "/" }, ...navLinks, { label: "Join Club", to: "/club" }, { label: "Publish with us", to: "/reader" }].map((item) => (
+              {[{ label: "Home", to: "/" }, ...navLinks, { label: "Join Club", to: "/club" }, { label: "Publish in Just ₹999", to: "/reader" }].map((item) => (
                 <motion.div
                   key={item.to}
                   variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}

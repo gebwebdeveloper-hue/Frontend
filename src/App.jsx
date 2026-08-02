@@ -6,6 +6,7 @@ import LibraryPage from "./pages/LibraryPage.jsx";
 import AdminBooksPage from "./pages/AdminBooksPage.jsx";
 import AdminDatabasePage from "./pages/AdminDatabasePage.jsx";
 import AdminStoriesDatabasePage from "./pages/AdminStoriesDatabasePage.jsx";
+import AdminUsersPage from "./pages/AdminUsersPage.jsx";
 import ClubPage from "./pages/ClubPage.jsx";
 import PageLoader from "./components/PageLoader.jsx";
 import ScrollProgress from "./components/ScrollProgress.jsx";
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/admin" element={<AdminBooksPage />} />
           <Route path="/admin/database" element={<AdminDatabasePage />} />
           <Route path="/admin/stories" element={<AdminStoriesDatabasePage />} />
+          <Route path="/admin/users" element={<AdminUsersPage />} />
           <Route path="/club" element={<ClubPage />} />
           <Route path="/short-stories" element={<NewsletterListingPage />} />
           <Route path="/short-stories/:slug" element={<NewsletterReaderPage />} />
