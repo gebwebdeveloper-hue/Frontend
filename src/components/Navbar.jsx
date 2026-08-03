@@ -11,6 +11,7 @@ import { API_BASE } from "../config.js";
 const baseLinks = [
   { label: "Buy Books", to: "/library" },
   { label: "Read Stories", to: "/short-stories" },
+  { label: "News & Updates", to: "/news" },
 ];
 
 export default function Navbar() {
@@ -141,12 +142,12 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-5 sm:px-5">
+      <header className="fixed inset-x-0 top-3 z-50 px-2 sm:top-5 sm:px-6">
         <motion.nav
           initial={{ y: -80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="relative mx-auto max-w-7xl rounded-[1.4rem] sm:rounded-full"
+          className="relative mx-auto max-w-[96rem] rounded-[1.4rem] sm:rounded-full"
         >
           {/* Animated Border */}
           <div className="animated-nav-border absolute inset-0 rounded-[inherit]" />
@@ -159,27 +160,27 @@ export default function Navbar() {
           />
 
           {/* Navbar Content */}
-          <div className="relative z-10 flex items-center justify-between gap-3 px-4 py-3 sm:px-5 md:px-7 md:py-4">
+          <div className="relative z-10 flex items-center justify-between gap-3 px-4 py-3 sm:px-6 md:px-8 md:py-4">
             {/* Logo */}
-            <Link to="/" onClick={handleLogoClick} className="group flex min-w-0 items-center gap-2.5 sm:gap-3">
+            <Link to="/" onClick={handleLogoClick} className="group flex shrink-0 items-center gap-2.5 sm:gap-3">
               <img
                 src="/logo.png"
                 alt="Lekhok Logo"
                 className="h-9 w-9 shrink-0 object-contain transition duration-500 group-hover:rotate-12 group-hover:scale-110 sm:h-11 sm:w-11"
               />
-              <div className="min-w-0">
-                <h3 className="truncate text-[11px] font-bold uppercase tracking-[0.22em] text-white sm:text-sm sm:tracking-[0.35em]">LEKHOK TRIPURA</h3>
+              <div className="shrink-0">
+                <h3 className="whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.15em] text-white sm:text-sm sm:tracking-[0.25em]">LEKHOK TRIPURA</h3>
                 <p className="truncate text-[11px] text-white/45 sm:text-xs">Premium eBooks</p>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden items-center gap-2 lg:flex">
+            <div className="hidden items-center gap-1.5 xl:gap-2.5 lg:flex">
               {navLinks.map((link) => (
                 <NavLink key={link.to} to={link.to}>
                   {({ isActive }) => (
                     <div
-                      className={`relative rounded-full px-5 py-3 text-sm font-medium transition-all duration-300 ${
+                      className={`relative rounded-full px-3.5 py-2.5 text-xs xl:text-sm font-medium transition-all duration-300 ${
                         isActive ? "text-white" : "text-white/65 hover:text-white"
                       }`}
                     >
@@ -199,7 +200,7 @@ export default function Navbar() {
               <NavLink to="/club">
                 {({ isActive }) => (
                   <div
-                    className={`flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
+                    className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs xl:text-sm font-semibold transition-all duration-300 ${
                       isActive
                         ? "border-cyan-400/50 bg-cyan-400/10 text-cyan-300"
                         : "border-white/10 bg-white/5 text-white/80 hover:border-white/25 hover:bg-white/10 hover:text-white"
@@ -213,7 +214,7 @@ export default function Navbar() {
               <NavLink to="/reader">
                 {({ isActive }) => (
                   <div
-                    className={`relative rounded-full px-5 py-3 text-sm font-medium transition-all duration-300 ${
+                    className={`relative rounded-full px-3.5 py-2.5 text-xs xl:text-sm font-medium transition-all duration-300 ${
                       isActive ? "text-white" : "text-white/65 hover:text-white"
                     }`}
                   >

@@ -274,7 +274,7 @@ export default function HelpPage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="relative section-shell max-w-3xl mx-auto"
+          className="relative pt-28 pb-8 md:pt-36 md:pb-10 max-w-3xl mx-auto px-5 text-center"
         >
           <span className="inline-block mb-5 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.25em] text-cyan-300">
             Help & Support
@@ -370,7 +370,7 @@ export default function HelpPage() {
       </section>
 
       {/* ── Quick-access category cards ───────────── */}
-      <section className="section-shell pb-16">
+      <section className="relative mx-auto max-w-7xl px-5 pt-2 pb-16">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {categories.map(({ icon: Icon, label, color }, i) => (
             <motion.button
@@ -397,7 +397,7 @@ export default function HelpPage() {
       </section>
 
       {/* ── FAQ accordion ─────────────────────────── */}
-      <section id="faq-section" className="section-shell pb-24">
+      <section id="faq-section" className="relative mx-auto max-w-7xl px-5 pt-4 pb-12">
         <div className="flex items-center gap-3 mb-8">
           <HelpCircle size={22} className="text-cyan-400" />
           <h2 className="text-xl font-black text-white">
@@ -437,7 +437,7 @@ export default function HelpPage() {
       </section>
 
       {/* ── Quick Links ───────────────────────────── */}
-      <section className="section-shell pb-24">
+      <section className="relative mx-auto max-w-7xl px-5 pt-4 pb-12">
         <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
           <h2 className="text-lg font-black text-white mb-6">Quick Links</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -459,7 +459,7 @@ export default function HelpPage() {
       </section>
 
       {/* ── Contact section ───────────────────────── */}
-      <section className="section-shell pb-28">
+      <section className="relative mx-auto max-w-7xl px-5 pt-4 pb-20">
         <div className="grid gap-8 lg:grid-cols-[1fr_1.3fr] lg:gap-12">
 
           {/* Contact info */}

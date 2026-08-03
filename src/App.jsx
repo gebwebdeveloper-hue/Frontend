@@ -19,7 +19,8 @@ import NewsletterListingPage from "./pages/NewsletterListingPage.jsx";
 import NewsletterReaderPage from "./pages/NewsletterReaderPage.jsx";
 import WhatsAppFloat from "./components/WhatsAppFloat.jsx";
 import HelpPage from "./pages/HelpPage.jsx";
-
+import NewsPage from "./pages/NewsPage.jsx";
+import AdminNewsPage from "./pages/AdminNewsPage.jsx";
 
 export default function App() {
   const location = useLocation();
@@ -41,6 +42,9 @@ export default function App() {
           <Route path="/admin/stories" element={<AdminStoriesDatabasePage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
           <Route path="/admin/purchases" element={<AdminPurchasesPage />} />
+          <Route path="/admin/news" element={<AdminNewsPage />} />
+          <Route path="/news" element={<NewsPage />} />
+          <Route path="/news-updates" element={<Navigate to="/news" replace />} />
           <Route path="/club" element={<ClubPage />} />
           <Route path="/short-stories" element={<NewsletterListingPage />} />
           <Route path="/short-stories/:slug" element={<NewsletterReaderPage />} />

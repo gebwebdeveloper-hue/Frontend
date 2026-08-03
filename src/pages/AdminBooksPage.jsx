@@ -32,8 +32,20 @@ export default function AdminBooksPage() {
   // Purchase requests state
   const [purchasesList, setPurchasesList] = useState([]);
   const [loadingPurchases, setLoadingPurchases] = useState(false);
-  const [activeTab, setActiveTab] = useState("books"); // 'books', 'purchases', 'authors'
+  const [activeTab, setActiveTab] = useState("books"); // 'books', 'purchases', 'authors', 'newsletter'
   const [adminNotes, setAdminNotes] = useState({});
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    if (tabParam === "newsletter" || tabParam === "freestories" || tabParam === "stories") {
+      setActiveTab("newsletter");
+    } else if (tabParam === "authors") {
+      setActiveTab("authors");
+    } else if (tabParam === "books") {
+      setActiveTab("books");
+    }
+  }, [location.search]);
 
   // Shipment tracking state
   const [shipmentModalOpen, setShipmentModalOpen] = useState(false);
@@ -1136,6 +1148,12 @@ export default function AdminBooksPage() {
                       className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
                     >
                       Razorpay Payments
+                    </Link>
+                    <Link
+                      to="/admin/news"
+                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
+                    >
+                      News &amp; Updates
                     </Link>
                     <button
                       onClick={() => setActiveTab("authors")}

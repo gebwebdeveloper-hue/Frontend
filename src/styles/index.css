@@ -89,6 +89,33 @@ a {
   animation: gradientShift 10s ease-in-out infinite alternate;
 }
 
+@keyframes textGradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-text-gradient {
+  background: linear-gradient(
+    135deg,
+    #38bdf8 0%,
+    #818cf8 25%,
+    #c084fc 50%,
+    #f472b6 75%,
+    #38bdf8 100%
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textGradientShift 6s ease-in-out infinite;
+}
+
 .noise {
   pointer-events: none;
   position: absolute;

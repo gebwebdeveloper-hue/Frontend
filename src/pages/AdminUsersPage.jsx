@@ -175,13 +175,19 @@ export default function AdminUsersPage() {
                 Razorpay Payments
               </Link>
               <Link
+                to="/admin/news"
+                className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
+              >
+                News &amp; Updates
+              </Link>
+              <Link
                 to="/admin"
                 className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
               >
                 Authors
               </Link>
               <Link
-                to="/admin/stories"
+                to="/admin?tab=newsletter"
                 className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
               >
                 Free Stories
