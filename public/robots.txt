@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 
-Sitemap: https://lekhoktripura.in/sitemap.xml
+Sitemap: https://www.lekhoktripura.in/sitemap.xml
