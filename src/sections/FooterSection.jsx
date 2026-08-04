@@ -2,6 +2,8 @@ import {
   Facebook,
   Instagram,
   Youtube,
+  Linkedin,
+  MapPin,
   Send,
   ArrowUpRight,
   BookOpen,
@@ -14,17 +16,67 @@ import { API_BASE } from "../config.js";
 
 const social = [
   {
-    icon: Facebook,
-    href: "https://www.facebook.com/share/1DLfEnitkJ/",
+    name: "Facebook",
+    href: "https://www.facebook.com/lekhoktripurapublishers",
+    icon: (props) => <Facebook {...props} />,
+    color: "hover:border-[#1877F2]/50 hover:text-[#1877F2]"
   },
   {
-    icon: Instagram,
-    href: "https://www.instagram.com/lekhok_tripura_publishers?igsh=MTJmMTZjcnVwM3NyeQ==",
+    name: "Instagram",
+    href: "https://www.instagram.com/lekhok_tripura_publishers/",
+    icon: (props) => <Instagram {...props} />,
+    color: "hover:border-[#E4405F]/50 hover:text-[#E4405F]"
   },
   {
-    icon: Youtube,
-    href: "https://youtube.com/@lekhoktripura?si=1dc97jaclcr8Gzs2",
+    name: "YouTube",
+    href: "https://www.youtube.com/@LekhokTripura",
+    icon: (props) => <Youtube {...props} />,
+    color: "hover:border-[#FF0000]/50 hover:text-[#FF0000]"
   },
+  {
+    name: "WhatsApp Channel",
+    href: "https://whatsapp.com/channel/0029VbBjHPVLY6d0YBZ74H2N",
+    icon: () => (
+      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.461c-1.826 0-3.614-.492-5.188-1.424l-.372-.222-3.854 1.01 1.028-3.757-.243-.388c-.998-1.592-1.526-3.433-1.526-5.32 0-5.503 4.478-9.981 9.984-9.981 2.665 0 5.172 1.037 7.054 2.92 1.882 1.883 2.918 4.39 2.917 7.057 0 5.505-4.478 9.983-9.983 9.983m0-21.729C6.273.114.115 6.27.115 13.843c0 2.42.632 4.783 1.83 6.862L0 24l3.418-.897c2.012 1.096 4.28 1.674 6.582 1.674 7.575 0 13.731-6.156 13.732-13.729 0-3.67-1.428-7.117-4.02-9.71-2.59-2.59-6.037-4.019-9.712-4.019"/>
+      </svg>
+    ),
+    color: "hover:border-[#25D366]/50 hover:text-[#25D366]"
+  },
+  {
+    name: "X (Twitter)",
+    href: "https://x.com/lekhoktripurapb",
+    icon: () => (
+      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+    ),
+    color: "hover:border-white/50 hover:text-white"
+  },
+  {
+    name: "LinkedIn",
+    href: "https://www.linkedin.com/company/lekhok-tripura-publishers/",
+    icon: (props) => <Linkedin {...props} />,
+    color: "hover:border-[#0A66C2]/50 hover:text-[#0A66C2]"
+  },
+  {
+    name: "Threads",
+    href: "https://www.threads.net/@lekhok_tripura_publishers",
+    icon: () => (
+      <img
+        src="/Threads_(app).png"
+        alt="Threads"
+        className="h-5 w-5 object-contain invert brightness-200"
+      />
+    ),
+    color: "hover:border-white/50 hover:text-white"
+  },
+  {
+    name: "Google Location",
+    href: "https://share.google/7vpNUS2mIYyADWZow",
+    icon: (props) => <MapPin {...props} />,
+    color: "hover:border-[#EA4335]/50 hover:text-[#EA4335]"
+  }
 ];
 
 const partners = [
@@ -285,15 +337,15 @@ export default function FooterSection() {
 
           </div>
 
-          {/* Community */}
+          {/* Community & Social */}
 
           <div>
 
             <h3 className="mb-6 text-lg font-semibold text-white">
-              Community
+              Connect With Us
             </h3>
 
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-2.5 sm:gap-3">
 
               {social.map((item, index) => {
 
@@ -304,12 +356,18 @@ export default function FooterSection() {
                   <motion.a
                     key={index}
                     href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={item.name}
+                    aria-label={item.name}
                     whileHover={{
-                      y: -5,
+                      scale: 1.1,
+                      y: -3,
                     }}
-                    className="grid h-14 w-14 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white backdrop-blur-xl transition hover:border-cyan-400/30"
+                    whileTap={{ scale: 0.95 }}
+                    className={`grid h-11 w-11 place-items-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/70 backdrop-blur-xl transition-all duration-300 ${item.color}`}
                   >
-                    <Icon size={20} />
+                    <Icon size={18} />
                   </motion.a>
 
                 );
