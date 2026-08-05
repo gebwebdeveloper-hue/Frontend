@@ -5,9 +5,10 @@ import { Calendar, Clock, ArrowRight, BookOpen, Loader2, ChevronDown, User, Sear
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import PayToReadModal from "../components/PayToReadModal.jsx";
+import AuthModal from "../components/AuthModal.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
 
-function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
+function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal, authUser, onOpenAuthModal }) {
   const [showAllTags, setShowAllTags] = useState(false);
   const navigate = useNavigate();
 
@@ -16,15 +17,19 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
   const remainingCount = categories.length - 1;
 
   const handleCardClick = () => {
+    if (!authUser) {
+      onOpenAuthModal();
+      return;
+    }
+
     if (story.isPaid && story.price > 0) {
-      // Immediately open modal (synchronous) so mobile browsers don't block it.
-      // Then check if user already has access and auto-navigate if approved.
       const savedUser = JSON.parse(localStorage.getItem("story_reader_info") || "{}");
-      if (savedUser.email || savedUser.transactionId) {
+      const emailToCheck = authUser?.email || savedUser.email;
+      if (emailToCheck || savedUser.transactionId) {
         let url = `${API_BASE}/newsletter/access-status?newsletterId=${story._id}`;
-        if (savedUser.email) url += `&userEmail=${encodeURIComponent(savedUser.email)}`;
+        if (emailToCheck) url += `&userEmail=${encodeURIComponent(emailToCheck)}`;
         if (savedUser.transactionId) url += `&transactionId=${encodeURIComponent(savedUser.transactionId)}`;
-        fetch(url)
+        fetch(url, { credentials: "include" })
           .then((res) => res.json())
           .then((data) => {
             if (data.success && data.approved) {
@@ -35,7 +40,6 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal }) {
           })
           .catch(() => onOpenPayModal(story));
       } else {
-        // No saved user info — open modal immediately (synchronous, mobile-safe)
         onOpenPayModal(story);
       }
     } else {
@@ -168,6 +172,39 @@ export default function NewsletterListingPage() {
   const [authorsList, setAuthorsList] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState("");
   const [payModalStory, setPayModalStory] = useState(null);
+  const [authUser, setAuthUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const checkSession = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.user) {
+          setAuthUser(data.user);
+          return data.user;
+        }
+      }
+      setAuthUser(false);
+      setShowAuthModal(true);
+      return false;
+    } catch {
+      setAuthUser(false);
+      setShowAuthModal(true);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    checkSession();
+    const handleLogin = () => checkSession();
+    window.addEventListener("lekhak:login", handleLogin);
+    window.addEventListener("lekhak:logout", handleLogin);
+    return () => {
+      window.removeEventListener("lekhak:login", handleLogin);
+      window.removeEventListener("lekhak:logout", handleLogin);
+    };
+  }, []);
 
   // Category filter state
   const [categories, setCategories] = useState([]);
@@ -531,6 +568,8 @@ export default function NewsletterListingPage() {
                             getCoverUrl={getCoverUrl}
                             formatDate={formatDate}
                             onOpenPayModal={(st) => setPayModalStory(st)}
+                            authUser={authUser}
+                            onOpenAuthModal={() => setShowAuthModal(true)}
                           />
                         ))}
                     </div>
@@ -633,6 +672,7 @@ export default function NewsletterListingPage() {
         story={payModalStory}
         isOpen={!!payModalStory}
         onClose={() => setPayModalStory(null)}
+        onOpenAuthModal={() => setShowAuthModal(true)}
         onSuccess={() => {
           if (payModalStory?.slug) {
             navigate(`/short-stories/${payModalStory.slug}`);
@@ -640,6 +680,14 @@ export default function NewsletterListingPage() {
           setPayModalStory(null);
         }}
       />
+      {showAuthModal && (
+        <AuthModal
+          onClose={(user) => {
+            setShowAuthModal(false);
+            if (user) checkSession();
+          }}
+        />
+      )}
       <FooterSection />
     </PageTransition>
   );

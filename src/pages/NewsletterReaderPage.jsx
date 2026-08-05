@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Calendar, Clock, ArrowLeft, Loader2, Sparkles, User, Sun, Moon, Lock } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import PayToReadModal from "../components/PayToReadModal.jsx";
+import AuthModal from "../components/AuthModal.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
 
 export default function NewsletterReaderPage() {
@@ -13,13 +14,45 @@ export default function NewsletterReaderPage() {
   const [error, setError] = useState("");
   const [isLightMode, setIsLightMode] = useState(false);
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const checkSession = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.user) {
+          setAuthUser(data.user);
+          return data.user;
+        }
+      }
+      setAuthUser(false);
+      setShowAuthModal(true);
+      return false;
+    } catch {
+      setAuthUser(false);
+      setShowAuthModal(true);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    checkSession();
+    const handleLogin = () => {
+      checkSession().then(() => fetchStory());
+    };
+    window.addEventListener("lekhak:login", handleLogin);
+    return () => window.removeEventListener("lekhak:login", handleLogin);
+  }, []);
 
   const fetchStory = () => {
     setLoading(true);
     const savedUser = JSON.parse(localStorage.getItem("story_reader_info") || "{}");
     let url = `${API_BASE}/newsletter/${slug}`;
     const params = [];
-    if (savedUser.email) params.push(`email=${encodeURIComponent(savedUser.email)}`);
+    const emailToCheck = authUser?.email || savedUser.email;
+    if (emailToCheck) params.push(`email=${encodeURIComponent(emailToCheck)}`);
     if (savedUser.transactionId) params.push(`transactionId=${encodeURIComponent(savedUser.transactionId)}`);
     if (params.length > 0) url += `?${params.join("&")}`;
 
@@ -36,7 +69,6 @@ export default function NewsletterReaderPage() {
       .then((data) => {
         if (data.success) {
           setStory(data.newsletter);
-          // Don't auto-open modal — show the lock screen so user can tap button to pay
         } else {
           setError(data.message || "Failed to load the story.");
         }
@@ -50,7 +82,7 @@ export default function NewsletterReaderPage() {
 
   useEffect(() => {
     fetchStory();
-  }, [slug]);
+  }, [slug, authUser]);
 
   useEffect(() => {
     const clearSelection = () => {
@@ -328,14 +360,20 @@ export default function NewsletterReaderPage() {
                       Paid Story Access Required
                     </h2>
                     <p className={`mt-2 text-sm max-w-md mx-auto ${isLightMode ? "text-slate-600" : "text-white/60"}`}>
-                      This story requires a reading fee of <strong className="text-cyan-400">₹{story.price}</strong>. Submit your UPI transaction ID for verification to unlock full reading access.
+                      This story requires a reading fee of <strong className="text-cyan-400">₹{story.price}</strong>. Please sign in to your account and complete the payment to unlock full reading access.
                     </p>
                   </div>
                   <button
-                    onClick={() => setIsPayModalOpen(true)}
+                    onClick={() => {
+                      if (!authUser) {
+                        setShowAuthModal(true);
+                      } else {
+                        setIsPayModalOpen(true);
+                      }
+                    }}
                     className="rounded-full bg-cyan-400 px-8 py-3.5 text-sm font-black text-black hover:bg-cyan-300 transition shadow-glow shadow-cyan-400/20"
                   >
-                    Pay ₹{story.price} via UPI / Submit Transaction ID
+                    {!authUser ? `Sign In or Register to Unlock Story (₹${story.price})` : `Pay ₹${story.price} via Razorpay`}
                   </button>
                 </div>
               ) : (
@@ -376,8 +414,19 @@ export default function NewsletterReaderPage() {
         story={story}
         isOpen={isPayModalOpen}
         onClose={() => setIsPayModalOpen(false)}
+        onOpenAuthModal={() => setShowAuthModal(true)}
         onSuccess={() => fetchStory()}
       />
+      {showAuthModal && (
+        <AuthModal
+          onClose={(user) => {
+            setShowAuthModal(false);
+            if (user) {
+              checkSession().then(() => fetchStory());
+            }
+          }}
+        />
+      )}
     </PageTransition>
   );
 }

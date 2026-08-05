@@ -408,7 +408,7 @@ export default function AuthModal({ onClose, initialTab = "login" }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+        className="fixed inset-0 z-[200] flex items-start justify-center pt-20 sm:pt-24 md:pt-28 p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
         onClick={(e) => { if (e.target === e.currentTarget) onClose(null); }}
       >
         <motion.div
@@ -416,7 +416,7 @@ export default function AuthModal({ onClose, initialTab = "login" }) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 16, scale: 0.97 }}
           transition={{ type: "spring", stiffness: 300, damping: 26 }}
-          className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#0e0e0e] p-7 shadow-2xl custom-scrollbar"
+          className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#0e0e0e] p-7 shadow-2xl custom-scrollbar mb-10"
           onClick={(e) => e.stopPropagation()}
           data-lenis-prevent
         >
