@@ -313,7 +313,7 @@ export default function FooterSection() {
                 { label: "Help Center", to: "/help" },
                 { label: "FAQ", to: "/help" },
                 { label: "Privacy Policy", to: "/privacy" },
-                { label: "Terms", to: "#" },
+                { label: "Terms & Conditions", to: "/terms" },
               ].map((item) => (
 
                 <Link
@@ -447,9 +447,9 @@ export default function FooterSection() {
               Privacy
             </Link>
 
-            <a href="#">
+            <Link to="/terms" className="hover:text-white transition">
               Terms
-            </a>
+            </Link>
 
             <a href="#">
               Cookies

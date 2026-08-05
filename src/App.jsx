@@ -23,6 +23,7 @@ import HelpPage from "./pages/HelpPage.jsx";
 import NewsPage from "./pages/NewsPage.jsx";
 import AdminNewsPage from "./pages/AdminNewsPage.jsx";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage.jsx";
+import TermsPage from "./pages/TermsPage.jsx";
 
 // Helper component to normalize URLs (strip trailing slashes, decode spaces/encoded URIs)
 function RouteNormalizer() {
@@ -86,6 +87,8 @@ export default function App() {
           <Route path="/help" element={<HelpPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/privacy-policy" element={<Navigate to="/privacy" replace />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/terms-and-conditions" element={<Navigate to="/terms" replace />} />
 
           {/* Sitelinks & Legacy URL Alias Redirects */}
           <Route path="/buy-books" element={<Navigate to="/library" replace />} />
