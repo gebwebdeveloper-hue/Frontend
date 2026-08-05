@@ -374,6 +374,136 @@ function ForgotPasswordForm({ onBack, onSuccess }) {
   );
 }
 
+// ── GOOGLE AUTH BUTTON ────────────────────────────────────────────────────────
+function GoogleAuthButton({ onSuccess }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleGoogleClick = () => {
+    setLoading(true);
+    setError("");
+
+    if (!window.google) {
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.onload = () => initGoogleSignIn();
+      script.onerror = () => {
+        setLoading(false);
+        setError("Failed to load Google Auth SDK.");
+      };
+      document.body.appendChild(script);
+    } else {
+      initGoogleSignIn();
+    }
+  };
+
+  const initGoogleSignIn = () => {
+    try {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (!clientId || clientId.includes("placeholder")) {
+        setLoading(false);
+        setError("Google OAuth Client ID is missing. Please add VITE_GOOGLE_CLIENT_ID to your Client/.env file, or log in with email.");
+        return;
+      }
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: async (response) => {
+            if (response.credential) {
+              await verifyGoogleToken(response.credential);
+            } else {
+              setLoading(false);
+            }
+          }
+        });
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            setLoading(false);
+          }
+        });
+      } else {
+        setLoading(false);
+      }
+    } catch {
+      setLoading(false);
+      setError("Could not initialize Google Sign-In.");
+    }
+  };
+
+  const verifyGoogleToken = async (credential) => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ credential })
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.dispatchEvent(new Event("lekhak:login"));
+        onSuccess(data.user);
+      } else {
+        setError(data.message || "Google sign in failed.");
+      }
+    } catch {
+      setError("Network error connecting to server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mb-5 space-y-3">
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
+          <AlertCircle size={14} className="shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={handleGoogleClick}
+        disabled={loading}
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/15 hover:border-white/30 disabled:opacity-50 shadow-md"
+      >
+        {loading ? (
+          <Loader2 size={18} className="animate-spin text-cyan-400" />
+        ) : (
+          <>
+            <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.24v3.15C3.26 21.39 7.34 24 12 24z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.24C.45 8.18 0 10.03 0 12s.45 3.82 1.24 5.39l4.04-3.15z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.61 1.24 6.61l4.04 3.15c.95-2.85 3.6-4.96 6.72-4.96z"
+              />
+            </svg>
+            <span>Continue with Google</span>
+          </>
+        )}
+      </button>
+
+      <div className="relative flex items-center justify-center my-4">
+        <div className="w-full border-t border-white/10" />
+        <span className="absolute bg-[#0e0e0e] px-3 text-[10px] uppercase font-bold tracking-wider text-white/35">
+          or email
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ── MAIN AUTH MODAL ───────────────────────────────────────────────────────────
 export default function AuthModal({ onClose, initialTab = "login" }) {
   const [tab, setTab] = useState(initialTab); // 'login' | 'register' | 'forgot'
@@ -462,10 +592,13 @@ export default function AuthModal({ onClose, initialTab = "login" }) {
             <>
               {/* Tab switcher (login/register only) */}
               {tab !== "forgot" && (
-                <div className="flex gap-1 rounded-full bg-white/5 p-1 border border-white/10 mb-6">
-                  {tabBtn("login", "Login")}
-                  {tabBtn("register", "Sign In")}
-                </div>
+                <>
+                  <div className="flex gap-1 rounded-full bg-white/5 p-1 border border-white/10 mb-6">
+                    {tabBtn("login", "Login")}
+                    {tabBtn("register", "Sign In")}
+                  </div>
+                  <GoogleAuthButton onSuccess={handleSuccess} />
+                </>
               )}
 
               <AnimatePresence mode="wait">
