@@ -170,7 +170,7 @@ export default function Navbar() {
               />
               <div className="shrink-0">
                 <h3 className="whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.15em] text-white sm:text-sm sm:tracking-[0.25em]">LEKHOK TRIPURA</h3>
-                <p className="truncate text-[11px] text-white/45 sm:text-xs">Premium eBooks</p>
+                <p className="truncate text-[10px] text-cyan-300/80 font-medium tracking-wide sm:text-xs">Publish Books & Read Unlimited Books</p>
               </div>
             </Link>
 

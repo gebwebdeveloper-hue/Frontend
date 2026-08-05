@@ -211,8 +211,8 @@ export default function FooterSection() {
                   LEKHOK TRIPURA
                 </h2>
 
-                <p className="text-white/45">
-                  Premium eBooks
+                <p className="text-xs sm:text-sm text-cyan-300/80 font-medium tracking-wide">
+                  Publish Books & Read Unlimited Books
                 </p>
 
               </div>
@@ -312,7 +312,7 @@ export default function FooterSection() {
               {[
                 { label: "Help Center", to: "/help" },
                 { label: "FAQ", to: "/help" },
-                { label: "Privacy Policy", to: "#" },
+                { label: "Privacy Policy", to: "/privacy" },
                 { label: "Terms", to: "#" },
               ].map((item) => (
 
@@ -443,9 +443,9 @@ export default function FooterSection() {
 
           <div className="flex gap-8">
 
-            <a href="#">
+            <Link to="/privacy" className="hover:text-white transition">
               Privacy
-            </a>
+            </Link>
 
             <a href="#">
               Terms

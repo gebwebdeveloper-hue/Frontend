@@ -22,6 +22,7 @@ import WhatsAppFloat from "./components/WhatsAppFloat.jsx";
 import HelpPage from "./pages/HelpPage.jsx";
 import NewsPage from "./pages/NewsPage.jsx";
 import AdminNewsPage from "./pages/AdminNewsPage.jsx";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage.jsx";
 
 // Helper component to normalize URLs (strip trailing slashes, decode spaces/encoded URIs)
 function RouteNormalizer() {
@@ -83,6 +84,8 @@ export default function App() {
           <Route path="/short-stories" element={<NewsletterListingPage />} />
           <Route path="/short-stories/:slug" element={<NewsletterReaderPage />} />
           <Route path="/help" element={<HelpPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/privacy-policy" element={<Navigate to="/privacy" replace />} />
 
           {/* Sitelinks & Legacy URL Alias Redirects */}
           <Route path="/buy-books" element={<Navigate to="/library" replace />} />
