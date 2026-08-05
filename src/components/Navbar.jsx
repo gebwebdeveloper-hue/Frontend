@@ -347,13 +347,13 @@ export default function Navbar() {
                     onClick={() => { setAuthModalTab("login"); setShowAuthModal(true); }}
                     className="rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition"
                   >
-                    Sign In
+                    Login
                   </button>
                   <button
                     onClick={() => { setAuthModalTab("register"); setShowAuthModal(true); }}
                     className="group flex items-center gap-2 rounded-full bg-white px-5 py-2.5 font-semibold text-black text-sm transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/20"
                   >
-                    <Sparkles size={14} /> Register
+                    <Sparkles size={14} /> Sign In
                   </button>
                 </div>
               )}
@@ -451,13 +451,13 @@ export default function Navbar() {
                     onClick={() => { setAuthModalTab("login"); setShowAuthModal(true); setOpen(false); }}
                     className="w-48 rounded-full border border-white/15 bg-white/5 py-3.5 text-base font-semibold text-white hover:bg-white/10 transition"
                   >
-                    Sign In
+                    Login
                   </button>
                   <button
                     onClick={() => { setAuthModalTab("register"); setShowAuthModal(true); setOpen(false); }}
                     className="w-48 rounded-full bg-white py-3.5 text-base font-semibold text-black transition hover:scale-105"
                   >
-                    Register
+                    Sign In
                   </button>
                 </motion.div>
               )}

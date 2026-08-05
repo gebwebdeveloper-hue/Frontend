@@ -108,12 +108,12 @@ function LoginForm({ onSuccess, onForgot, onRegister }) {
         disabled={loading}
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3.5 text-sm font-bold text-black hover:bg-cyan-50 transition disabled:opacity-50"
       >
-        {loading ? <Loader2 size={16} className="animate-spin" /> : "Sign In"}
+        {loading ? <Loader2 size={16} className="animate-spin" /> : "Login"}
       </button>
       <p className="text-center text-xs text-white/40">
         Don't have an account?{" "}
         <button type="button" onClick={onRegister} className="text-cyan-400 hover:text-cyan-300 transition font-medium">
-          Register here
+          Sign in here
         </button>
       </p>
     </form>
@@ -254,7 +254,7 @@ function RegisterForm({ onSuccess, onLogin }) {
       <p className="text-center text-xs text-white/40">
         Already have an account?{" "}
         <button type="button" onClick={onLogin} className="text-cyan-400 hover:text-cyan-300 transition font-medium">
-          Sign in
+          Login here
         </button>
       </p>
     </form>
@@ -437,8 +437,8 @@ export default function AuthModal({ onClose, initialTab = "login" }) {
               {tab === "forgot" && "Password Recovery"}
             </h2>
             <p className="text-xs text-white/40 mt-1">
-              {tab === "login" && "Sign in to access your purchased ebooks"}
-              {tab === "register" && "Register to purchase and read ebooks"}
+              {tab === "login" && "Login to access your purchased ebooks"}
+              {tab === "register" && "Sign In to purchase and read ebooks"}
               {tab === "forgot" && "We'll help you get back into your account"}
             </p>
           </div>
@@ -463,8 +463,8 @@ export default function AuthModal({ onClose, initialTab = "login" }) {
               {/* Tab switcher (login/register only) */}
               {tab !== "forgot" && (
                 <div className="flex gap-1 rounded-full bg-white/5 p-1 border border-white/10 mb-6">
-                  {tabBtn("login", "Sign In")}
-                  {tabBtn("register", "Register")}
+                  {tabBtn("login", "Login")}
+                  {tabBtn("register", "Sign In")}
                 </div>
               )}
 

@@ -317,7 +317,7 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess, onOp
                         }}
                         className="w-full rounded-xl bg-amber-400 px-4 py-2.5 text-xs font-black text-black hover:bg-amber-300 transition uppercase tracking-wider shadow-md"
                       >
-                        Sign In or Register Now
+                        Login or Sign In Now
                       </button>
                     </div>
                   )}
@@ -390,7 +390,7 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess, onOp
                       {loading ? (
                         <Loader2 className="h-5 w-5 animate-spin text-black" />
                       ) : !authUser ? (
-                        <>Sign In to Pay</>
+                        <>Login / Sign In to Pay</>
                       ) : (
                         <>Pay ₹{story.price} via Razorpay</>
                       )}
