@@ -21,6 +21,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [expandedUser, setExpandedUser] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   // Popup Feedback
   const [popupMessage, setPopupMessage] = useState(null);
@@ -120,6 +121,35 @@ export default function AdminUsersPage() {
         }
       })
       .catch(() => alert("Error communicating with server."));
+  };
+
+  // Delete Registered User Handler
+  const handleDeleteUser = (userToDelete) => {
+    if (!userToDelete || !userToDelete._id) return;
+    const userName = userToDelete.name || userToDelete.email || "this reader";
+    if (!window.confirm(`Are you sure you want to permanently delete user "${userName}"? This will remove their account permanently.`)) {
+      return;
+    }
+
+    setDeletingId(userToDelete._id);
+    fetch(`${API_BASE}/admin/users/${userToDelete._id}`, {
+      method: "DELETE",
+      credentials: "include"
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setPopupMessage({
+            title: "User Account Deleted!",
+            description: `User "${userName}" has been successfully removed from the system.`
+          });
+          fetchUsers();
+        } else {
+          alert(data.message || "Failed to delete user account.");
+        }
+      })
+      .catch(() => alert("Error communicating with server."))
+      .finally(() => setDeletingId(null));
   };
 
   // 4. Filter Users
@@ -338,6 +368,21 @@ export default function AdminUsersPage() {
                       >
                         {isExpanded ? "Hide Details" : `Inspect Purchases (${totalItems})`}
                       </button>
+
+                      {u.role !== "admin" && (
+                        <button
+                          onClick={() => handleDeleteUser(u)}
+                          disabled={deletingId === u._id}
+                          title="Delete User Account"
+                          className="rounded-2xl border border-red-500/20 bg-red-500/10 p-2.5 text-red-400 hover:bg-red-500/20 hover:border-red-500/40 transition disabled:opacity-40 flex items-center justify-center shrink-0"
+                        >
+                          {deletingId === u._id ? (
+                            <Loader2 size={16} className="animate-spin text-red-400" />
+                          ) : (
+                            <Trash2 size={16} />
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
 

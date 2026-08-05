@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube, ShieldCheck, ShoppingCart, PackageCheck } from "lucide-react";
+import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube, ShieldCheck, ShoppingCart, PackageCheck, User } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import AuthModal from "./AuthModal.jsx";
 import CartModal from "./CartModal.jsx";
 import MyOrdersModal from "./MyOrdersModal.jsx";
+import EditProfileModal from "./EditProfileModal.jsx";
 import { getCart, clearCart } from "../utils/cart.js";
 import { API_BASE } from "../config.js";
 
@@ -24,6 +25,7 @@ export default function Navbar() {
   const [cartOpen, setCartOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [ordersOpen, setOrdersOpen] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
   const profileRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -281,10 +283,14 @@ export default function Navbar() {
                 <div className="relative ml-4" ref={profileRef}>
                   <button
                     onClick={() => setProfileOpen((p) => !p)}
-                    className="group flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-indigo-500 font-bold text-black text-lg shadow-lg hover:scale-110 transition-transform duration-200 select-none"
+                    className="group flex h-11 w-11 items-center justify-center rounded-full border border-cyan-400/40 bg-gradient-to-br from-cyan-400 to-indigo-500 font-bold text-black text-lg shadow-lg hover:scale-110 transition-transform duration-200 overflow-hidden select-none"
                     title={authUser.name || authUser.email}
                   >
-                    {userInitial}
+                    {authUser.avatarUrl ? (
+                      <img src={authUser.avatarUrl} alt={authUser.name || "User Avatar"} className="h-full w-full object-cover" />
+                    ) : (
+                      userInitial
+                    )}
                   </button>
 
                   <AnimatePresence>
@@ -294,7 +300,7 @@ export default function Navbar() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 8, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-14 w-56 rounded-2xl border border-white/10 bg-black/90 backdrop-blur-xl p-3 shadow-2xl"
+                        className="absolute right-0 top-14 w-60 rounded-2xl border border-white/10 bg-black/90 backdrop-blur-xl p-3 shadow-2xl"
                       >
                         <div className="mb-3 border-b border-white/10 pb-3">
                           <div className="flex items-center justify-between gap-1">
@@ -318,6 +324,22 @@ export default function Navbar() {
                             Admin Dashboard
                           </Link>
                         )}
+
+                        <button
+                          onClick={() => {
+                            setProfileOpen(false);
+                            setShowEditProfile(true);
+                          }}
+                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-medium text-white/80 hover:bg-white/10 hover:text-white transition mb-1"
+                        >
+                          <User size={14} className="text-cyan-400" />
+                          <span>Edit Profile & Photo</span>
+                          {!authUser.phone && (
+                            <span className="ml-auto rounded-full bg-amber-400/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-300 border border-amber-400/30">
+                              No phone
+                            </span>
+                          )}
+                        </button>
 
                         <button
                           onClick={() => {
@@ -516,6 +538,15 @@ export default function Navbar() {
 
       {/* My Orders / Approval Status Modal */}
       <MyOrdersModal isOpen={ordersOpen} onClose={() => setOrdersOpen(false)} />
+
+      {/* Edit Profile & Photo Modal */}
+      {showEditProfile && authUser && (
+        <EditProfileModal
+          user={authUser}
+          onClose={() => setShowEditProfile(false)}
+          onUpdated={() => checkSession()}
+        />
+      )}
     </>
   );
 }
