@@ -30,10 +30,24 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
   const [physicalSuccess, setPhysicalSuccess] = useState("");
   const [cartFeedback, setCartFeedback] = useState({ type: "", text: "" });
 
-  const handleAddToCartAction = () => {
-    const res = addToCart(book, selectedFormat);
-    setCartFeedback({ type: res.success ? "success" : "info", text: res.message });
-    setTimeout(() => setCartFeedback({ type: "", text: "" }), 3500);
+  const handleAddToCartAction = async () => {
+    try {
+      const meRes = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
+      if (!meRes.ok) {
+        setShowAuthModal(true);
+        return;
+      }
+      const meData = await meRes.json();
+      if (!meData.success || !meData.user) {
+        setShowAuthModal(true);
+        return;
+      }
+      const res = addToCart(book, selectedFormat);
+      setCartFeedback({ type: res.success ? "success" : "info", text: res.message });
+      setTimeout(() => setCartFeedback({ type: "", text: "" }), 3500);
+    } catch {
+      setShowAuthModal(true);
+    }
   };
   const [deliveryForm, setDeliveryForm] = useState({
     co: "",

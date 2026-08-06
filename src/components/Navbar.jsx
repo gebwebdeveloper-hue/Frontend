@@ -36,14 +36,21 @@ export default function Navbar() {
 
   useEffect(() => {
     updateCartCount();
-    const handleOpenCart = () => setCartOpen(true);
+    const handleOpenCart = () => {
+      if (authUser) {
+        setCartOpen(true);
+      } else {
+        setAuthModalTab("login");
+        setShowAuthModal(true);
+      }
+    };
     window.addEventListener("lekhak:cart-updated", updateCartCount);
     window.addEventListener("lekhak:open-cart", handleOpenCart);
     return () => {
       window.removeEventListener("lekhak:cart-updated", updateCartCount);
       window.removeEventListener("lekhak:open-cart", handleOpenCart);
     };
-  }, []);
+  }, [authUser]);
 
   const checkSession = () => {
     fetch(`${API_BASE}/auth/me`, { credentials: "include" })
@@ -263,20 +270,22 @@ export default function Navbar() {
                 </a>
               </div>
 
-              {/* Shopping Cart Button */}
-              <button
-                type="button"
-                onClick={() => setCartOpen(true)}
-                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/80 transition hover:bg-white/10 hover:text-cyan-300 ml-2 shrink-0"
-                title="My Shopping Cart"
-              >
-                <ShoppingCart size={18} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-cyan-400 font-extrabold text-[10px] text-black shadow-glow">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
+              {/* Shopping Cart Button (Only for logged in users) */}
+              {authUser && (
+                <button
+                  type="button"
+                  onClick={() => setCartOpen(true)}
+                  className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/80 transition hover:bg-white/10 hover:text-cyan-300 ml-2 shrink-0"
+                  title="My Shopping Cart"
+                >
+                  <ShoppingCart size={18} />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-cyan-400 font-extrabold text-[10px] text-black shadow-glow">
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+              )}
 
               {/* Profile Avatar or Login/Register CTA */}
               {authUser ? (
@@ -513,15 +522,6 @@ export default function Navbar() {
                   variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
                   className="mt-2 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-5"
                 >
-                  <button
-                    onClick={() => {
-                      setOpen(false);
-                      setCartOpen(true);
-                    }}
-                    className="w-full flex items-center justify-center gap-2.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 py-3 text-xs font-bold text-cyan-300 transition"
-                  >
-                    <ShoppingCart size={16} /> View Cart ({cartCount})
-                  </button>
                   <div className="flex gap-3 w-full">
                     <button
                       onClick={() => { setAuthModalTab("login"); setShowAuthModal(true); setOpen(false); }}

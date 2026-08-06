@@ -27,10 +27,9 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           >
-            <h1 className="font-serif-display text-6xl sm:text-7xl md:text-8xl lg:text-[7.2rem] font-medium tracking-tight leading-[0.92] select-none">
-              <span className="gradient-text-animated font-bold">Publish</span> <br />
-              <span className="font-normal font-serif-display italic text-white">your</span>{" "}
-              <span className="gradient-text-animated font-bold">Book</span>
+            <h1 className="font-serif-display text-6xl sm:text-7xl md:text-8xl lg:text-[7.2rem] font-medium tracking-tight text-white leading-[0.92] select-none">
+              Publish <br />
+              <span className="font-normal font-serif-display italic">your</span> Book
             </h1>
           </motion.div>
 
@@ -45,7 +44,7 @@ export default function HeroSection() {
             
             <div className="py-1">
               <p className="text-2xl sm:text-3xl md:text-4xl text-white/90 font-serif-display leading-tight">
-                with <span className="font-bold font-sans tracking-tight gradient-text-animated">India’s #1</span>
+                with <span className="font-bold text-white font-sans tracking-tight">India’s #1</span>
               </p>
               <p className="text-2xl sm:text-3xl md:text-4xl text-white/90 font-serif-display leading-tight mt-0.5">
                 Publishing Platform

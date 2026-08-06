@@ -39,9 +39,22 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
 
   useEffect(() => {
     if (isOpen) {
-      refreshCart();
-      setStep("cart");
-      setErrorMsg("");
+      fetch(`${API_BASE}/auth/me`, { credentials: "include" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!data?.success || !data?.user) {
+            onClose();
+            setShowAuthModal(true);
+          } else {
+            refreshCart();
+            setStep("cart");
+            setErrorMsg("");
+          }
+        })
+        .catch(() => {
+          onClose();
+          setShowAuthModal(true);
+        });
     }
   }, [isOpen]);
 
