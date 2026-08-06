@@ -363,6 +363,38 @@ export default function AdminNewsPage() {
       .catch(() => alert("Error communicating with backend."));
   };
 
+  const handleTogglePin = (item) => {
+    const formData = new FormData();
+    formData.append("title", item.title);
+    formData.append("summary", item.summary);
+    formData.append("content", item.content);
+    formData.append("category", item.category || "General News");
+    formData.append("author", item.author || "Lekhok Tripura Team");
+    formData.append("isPinned", (!item.isPinned).toString());
+
+    fetch(`${API_BASE}/news/${item._id}`, {
+      method: "PUT",
+      credentials: "include",
+      body: formData
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setPopupMessage({
+            title: item.isPinned ? "Unpinned from Spotlight" : "Pinned to Spotlight!",
+            description: item.isPinned
+              ? "This announcement is no longer featured in the top Spotlight."
+              : "This announcement is now featured at the top of the News page."
+          });
+          setShowSuccessPopup(true);
+          fetchNews();
+        } else {
+          alert(data.message || "Failed to update pin status.");
+        }
+      })
+      .catch(() => alert("Error communicating with backend."));
+  };
+
   const filteredNews = useMemo(() => {
     if (!searchQuery.trim()) return newsList;
     const q = searchQuery.toLowerCase().trim();
@@ -631,6 +663,19 @@ export default function AdminNewsPage() {
                       </div>
 
                       <div className="flex items-center gap-3 shrink-0 self-end md:self-center">
+                        <button
+                          onClick={() => handleTogglePin(item)}
+                          className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                            item.isPinned
+                              ? "bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30"
+                              : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                          }`}
+                          title={item.isPinned ? "Unpin from Featured Spotlight" : "Pin to Featured Spotlight"}
+                        >
+                          <Pin size={13} className={item.isPinned ? "rotate-45 text-amber-400" : ""} />
+                          {item.isPinned ? "Unpin Spotlight" : "Pin Spotlight"}
+                        </button>
+
                         <Link
                           to="/news"
                           target="_blank"
