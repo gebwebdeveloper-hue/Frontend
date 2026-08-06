@@ -116,8 +116,6 @@ export default function NewsPage() {
         <div className="absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-amber-500/10 blur-[150px] pointer-events-none" />
 
         <div>
-          <Navbar />
-
           <main className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-32 pb-24">
             
             {/* Page Header Banner */}
