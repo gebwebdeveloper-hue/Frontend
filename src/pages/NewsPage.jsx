@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Newspaper,
@@ -17,7 +18,8 @@ import {
   CheckCircle2,
   Megaphone,
   Mail,
-  Layers
+  Layers,
+  BookOpen
 } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import Navbar from "../components/Navbar.jsx";
@@ -325,21 +327,33 @@ export default function NewsPage() {
               {/* Right Column: Pressroom Sidebar */}
               <aside className="space-y-6">
                 
-                {/* Official Media Contact Card */}
-                <div className="rounded-3xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/10 via-white/[0.02] to-transparent p-6 backdrop-blur-xl space-y-4">
-                  <div className="flex items-center gap-2 text-cyan-300">
-                    <Mail size={18} />
-                    <h3 className="text-sm font-bold uppercase tracking-wider">Media &amp; Press Contact</h3>
+                {/* Author Publishing CTA Card */}
+                <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 via-white/[0.02] to-indigo-950/20 p-6 backdrop-blur-xl space-y-4 shadow-xl">
+                  <div className="flex items-center gap-2.5 text-cyan-300">
+                    <BookOpen size={20} className="text-cyan-400" />
+                    <h3 className="text-sm font-extrabold uppercase tracking-wider text-white">Publish Your Book</h3>
                   </div>
-                  <p className="text-xs text-white/65 leading-relaxed">
-                    For press inquiries, official author interviews, or media partnerships, reach out to our communications desk.
+                  
+                  <p className="text-xs text-white/70 leading-relaxed font-light">
+                    Transform your manuscript into a professionally published book. Self-publishing packages starting at just <strong className="text-cyan-300 font-bold">₹999</strong> with full distribution &amp; ISBN support.
                   </p>
-                  <a
-                    href="mailto:lekhoktripura@gmail.com"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/10 py-2.5 text-xs font-bold text-cyan-300 hover:bg-cyan-400/20 transition"
-                  >
-                    Email Press Desk
-                  </a>
+
+                  <div className="pt-1 space-y-2">
+                    <Link
+                      to="/reader"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 py-3 text-xs font-black text-black hover:bg-cyan-300 transition shadow-glow"
+                    >
+                      <span>Publish in Just ₹999</span>
+                      <ArrowRight size={14} />
+                    </Link>
+
+                    <Link
+                      to="/club"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-bold text-white/80 hover:bg-white/10 hover:text-white transition"
+                    >
+                      <Sparkles size={14} className="text-amber-400" /> Join Authors Club
+                    </Link>
+                  </div>
                 </div>
 
                 {/* Bulletin Categories Breakdown */}
