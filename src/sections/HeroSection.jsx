@@ -4,21 +4,21 @@ import { Link } from "react-router-dom";
 
 export default function HeroSection() {
   return (
-    <section className="relative flex min-h-[90vh] md:min-h-screen items-center justify-start px-6 pt-32 pb-20 sm:px-12 lg:px-20 bg-black">
+    <section className="relative flex min-h-[90vh] md:min-h-screen items-center justify-start px-4 sm:px-8 md:px-12 xl:px-16 pt-32 pb-20 bg-black">
       {/* Background Image Container (With overflow-hidden for image scaling) */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <img
           src="/hero-bg-author.png"
           alt="Publish your Book with Lekhok Tripura"
-          className="h-full w-full object-cover object-right sm:object-center opacity-100 scale-105"
+          className="h-full w-full object-cover object-[85%_center] opacity-100 scale-105"
         />
         
-        {/* Soft Vignette and Gradient overlays for razor-sharp typography contrast while keeping background bright */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent w-full md:w-3/5 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 pointer-events-none" />
+        {/* Soft, minimal gradient overlay so the background image is fully vibrant and bright */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/35 25% to-transparent 55% w-full pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl w-full">
+      <div className="relative z-10 mx-auto max-w-[96rem] w-full">
         <div className="max-w-2xl text-left">
           
           {/* Main Headline */}

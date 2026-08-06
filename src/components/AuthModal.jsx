@@ -375,7 +375,7 @@ function ForgotPasswordForm({ onBack, onSuccess }) {
 }
 
 // ── GOOGLE AUTH BUTTON ────────────────────────────────────────────────────────
-function GoogleAuthButton({ onSuccess }) {
+function GoogleAuthButton({ mode = "login", onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -437,14 +437,14 @@ function GoogleAuthButton({ onSuccess }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ credential })
+        body: JSON.stringify({ credential, mode })
       });
       const data = await res.json();
       if (data.success) {
         window.dispatchEvent(new Event("lekhak:login"));
         onSuccess(data.user);
       } else {
-        setError(data.message || "Google sign in failed.");
+        setError(data.message || "Google auth failed.");
       }
     } catch {
       setError("Network error connecting to server.");
@@ -489,7 +489,7 @@ function GoogleAuthButton({ onSuccess }) {
                 d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.61 1.24 6.61l4.04 3.15c.95-2.85 3.6-4.96 6.72-4.96z"
               />
             </svg>
-            <span>Continue with Google</span>
+            <span>{mode === "register" ? "Sign Up with Google" : "Login with Google"}</span>
           </>
         )}
       </button>
@@ -597,7 +597,7 @@ export default function AuthModal({ onClose, initialTab = "login" }) {
                     {tabBtn("login", "Login")}
                     {tabBtn("register", "Sign In")}
                   </div>
-                  <GoogleAuthButton onSuccess={handleSuccess} />
+                  <GoogleAuthButton mode={tab} onSuccess={handleSuccess} />
                 </>
               )}
 

@@ -379,32 +379,14 @@ export default function Navbar() {
                   </button>
                 </div>
               )}
-            </div>            {/* Mobile Actions: Cart & Menu Button */}
-            <div className="flex items-center gap-2 lg:hidden">
-              {/* Shopping Cart Button */}
-              <button
-                type="button"
-                onClick={() => setCartOpen(true)}
-                className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-white/80 transition hover:bg-white/10 hover:text-cyan-300 sm:h-11 sm:w-11"
-                title="My Shopping Cart"
-              >
-                <ShoppingCart size={19} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-cyan-400 font-extrabold text-[10px] text-black shadow-glow">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setOpen(true)}
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10 sm:h-11 sm:w-11"
-                aria-label="Open navigation menu"
-              >
-                <Menu size={20} />
-              </button>
-            </div>
+            </div>            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setOpen(true)}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10 sm:h-11 sm:w-11 lg:hidden"
+              aria-label="Open navigation menu"
+            >
+              <Menu size={20} />
+            </button>
           </div>
         </motion.nav>
       </header>
