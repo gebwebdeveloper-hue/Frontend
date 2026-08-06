@@ -1,8 +1,12 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.font-serif-display {
+  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+}
 
 * {
   box-sizing: border-box;
@@ -114,6 +118,48 @@ a {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: textGradientShift 6s ease-in-out infinite;
+}
+
+@keyframes shimmerGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-text-animated {
+  background: linear-gradient(
+    120deg,
+    #ffffff 0%,
+    #38bdf8 22%,
+    #f472b6 48%,
+    #67e8f9 74%,
+    #ffffff 100%
+  );
+  background-size: 240% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmerGradient 6s ease-in-out infinite;
+}
+
+.shimmer-text-silver {
+  background: linear-gradient(
+    110deg,
+    #ffffff 0%,
+    #7dd3fc 25%,
+    #f472b6 50%,
+    #bae6fd 75%,
+    #ffffff 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmerGradient 5s ease-in-out infinite;
 }
 
 .noise {

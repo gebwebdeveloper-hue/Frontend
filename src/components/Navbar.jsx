@@ -379,16 +379,32 @@ export default function Navbar() {
                   </button>
                 </div>
               )}
-            </div>
+            </div>            {/* Mobile Actions: Cart & Menu Button */}
+            <div className="flex items-center gap-2 lg:hidden">
+              {/* Shopping Cart Button */}
+              <button
+                type="button"
+                onClick={() => setCartOpen(true)}
+                className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-white/80 transition hover:bg-white/10 hover:text-cyan-300 sm:h-11 sm:w-11"
+                title="My Shopping Cart"
+              >
+                <ShoppingCart size={19} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 grid h-5 w-5 place-items-center rounded-full bg-cyan-400 font-extrabold text-[10px] text-black shadow-glow">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setOpen(true)}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10 sm:h-11 sm:w-11 lg:hidden"
-              aria-label="Open navigation menu"
-            >
-              <Menu size={20} />
-            </button>
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setOpen(true)}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10 sm:h-11 sm:w-11"
+                aria-label="Open navigation menu"
+              >
+                <Menu size={20} />
+              </button>
+            </div>
           </div>
         </motion.nav>
       </header>
@@ -419,20 +435,20 @@ export default function Navbar() {
             </div>
 
             <motion.div
-              className="mx-auto mt-10 flex max-w-sm flex-col items-stretch gap-4 pb-10 sm:mt-16 sm:max-w-md"
+              className="mx-auto mt-6 flex max-w-sm flex-col items-stretch gap-3.5 pb-10 sm:mt-10 sm:max-w-md"
               initial="hidden"
               animate="visible"
-              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
             >
               {[{ label: "Home", to: "/" }, ...navLinks, { label: "Join Club", to: "/club" }, { label: "Publish in Just ₹999", to: "/reader" }].map((item) => (
                 <motion.div
                   key={item.to}
-                  variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
+                  variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
                 >
                   <Link
                     to={item.to}
                     onClick={() => setOpen(false)}
-                    className="block rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-4 text-center text-3xl font-black uppercase tracking-tight text-white transition hover:border-cyan-300/30 hover:bg-white/[0.07] hover:text-cyan-300 sm:text-5xl"
+                    className="block rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-3.5 text-center text-2xl sm:text-4xl font-black uppercase tracking-tight text-white transition hover:border-cyan-300/30 hover:bg-white/[0.07] hover:text-cyan-300"
                   >
                     {item.label}
                   </Link>
@@ -441,52 +457,109 @@ export default function Navbar() {
 
               {authUser ? (
                 <motion.div
-                  variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
-                  className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-5"
+                  variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+                  className="flex flex-col items-center gap-3.5 rounded-2xl border border-white/10 bg-white/[0.04] p-5"
                 >
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-indigo-500 text-2xl font-black text-black">
-                    {userInitial}
+                  <div className="flex flex-col items-center text-center">
+                    <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full border-2 border-cyan-400/40 bg-gradient-to-br from-cyan-400 to-indigo-500 text-2xl font-black text-black overflow-hidden shadow-lg select-none">
+                      {authUser.avatarUrl ? (
+                        <img src={authUser.avatarUrl} alt={authUser.name || "User Avatar"} className="h-full w-full object-cover" />
+                      ) : (
+                        userInitial
+                      )}
+                    </div>
+                    <p className="text-white font-bold text-base">{authUser.name || "Reader"}</p>
+                    <p className="text-white/45 text-xs truncate max-w-[240px]">{authUser.email}</p>
+                    {authUser.role === "admin" && (
+                      <span className="mt-1.5 rounded-md bg-cyan-400/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-cyan-300 border border-cyan-400/30">
+                        Admin
+                      </span>
+                    )}
                   </div>
-                  <p className="text-white/60 text-sm">{authUser.name || authUser.email}</p>
-                  {authUser.role === "admin" && (
-                    <Link
-                      to="/admin"
-                      onClick={() => setOpen(false)}
-                      className="flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-6 py-2.5 text-xs font-extrabold text-cyan-300 transition"
+
+                  <div className="flex flex-col w-full gap-2.5 mt-1">
+                    {authUser.role === "admin" && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center justify-center gap-2.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 text-xs font-extrabold text-cyan-300 hover:bg-cyan-400/20 transition"
+                      >
+                        <ShieldCheck size={16} /> Admin Dashboard
+                      </Link>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        setOpen(false);
+                        setShowEditProfile(true);
+                      }}
+                      className="flex items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-semibold text-white/90 hover:bg-white/10 hover:text-white transition"
                     >
-                      <ShieldCheck size={15} /> Admin Dashboard
-                    </Link>
-                  )}
-                  <button
-                    onClick={() => { handleLogout(); setOpen(false); }}
-                    className="flex items-center gap-2 rounded-full border border-red-500/30 px-6 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 transition"
-                  >
-                    <LogOut size={15} /> Sign Out
-                  </button>
+                      <User size={16} className="text-cyan-400" /> Edit Profile & Photo
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setOpen(false);
+                        setOrdersOpen(true);
+                      }}
+                      className="flex items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-semibold text-white/90 hover:bg-white/10 hover:text-white transition"
+                    >
+                      <PackageCheck size={16} className="text-cyan-400" /> My Orders & Status
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setOpen(false);
+                        setCartOpen(true);
+                      }}
+                      className="flex items-center justify-center gap-2.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 text-xs font-semibold text-cyan-300 hover:bg-cyan-400/20 transition"
+                    >
+                      <ShoppingCart size={16} /> View Cart ({cartCount})
+                    </button>
+
+                    <button
+                      onClick={() => { handleLogout(); setOpen(false); }}
+                      className="flex items-center justify-center gap-2.5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-400 hover:bg-red-500/20 transition mt-1"
+                    >
+                      <LogOut size={16} /> Sign Out
+                    </button>
+                  </div>
                 </motion.div>
               ) : (
                 <motion.div
-                  variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
+                  variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
                   className="mt-2 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-5"
                 >
                   <button
-                    onClick={() => { setAuthModalTab("login"); setShowAuthModal(true); setOpen(false); }}
-                    className="w-48 rounded-full border border-white/15 bg-white/5 py-3.5 text-base font-semibold text-white hover:bg-white/10 transition"
+                    onClick={() => {
+                      setOpen(false);
+                      setCartOpen(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-2.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 py-3 text-xs font-bold text-cyan-300 transition"
                   >
-                    Login
+                    <ShoppingCart size={16} /> View Cart ({cartCount})
                   </button>
-                  <button
-                    onClick={() => { setAuthModalTab("register"); setShowAuthModal(true); setOpen(false); }}
-                    className="w-48 rounded-full bg-white py-3.5 text-base font-semibold text-black transition hover:scale-105"
-                  >
-                    Sign In
-                  </button>
+                  <div className="flex gap-3 w-full">
+                    <button
+                      onClick={() => { setAuthModalTab("login"); setShowAuthModal(true); setOpen(false); }}
+                      className="flex-1 rounded-xl border border-white/15 bg-white/5 py-3 text-xs font-semibold text-white hover:bg-white/10 transition"
+                    >
+                      Login
+                    </button>
+                    <button
+                      onClick={() => { setAuthModalTab("register"); setShowAuthModal(true); setOpen(false); }}
+                      className="flex-1 rounded-xl bg-white py-3 text-xs font-semibold text-black transition hover:scale-105"
+                    >
+                      Sign In
+                    </button>
+                  </div>
                 </motion.div>
               )}
 
               {/* Mobile Social Links */}
               <motion.div
-                variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
+                variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
                 className="mt-4 flex items-center justify-center gap-6"
               >
                 <a
