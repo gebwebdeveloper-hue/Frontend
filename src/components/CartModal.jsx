@@ -235,7 +235,7 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-xl"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-xl"
           onClick={onClose}
           data-lenis-prevent
         >
@@ -244,7 +244,7 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            className="relative flex max-h-[88vh] w-full max-w-2xl flex-col rounded-3xl border border-cyan-500/25 bg-zinc-950/95 p-6 sm:p-8 shadow-[0_0_60px_rgba(6,182,212,0.15)] overflow-hidden"
+            className="relative flex max-h-[90vh] sm:max-h-[88vh] w-full max-w-2xl flex-col rounded-3xl border border-cyan-500/25 bg-zinc-950/95 p-4 sm:p-7 shadow-[0_0_60px_rgba(6,182,212,0.15)] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
             data-lenis-prevent
           >
@@ -253,57 +253,57 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
             <div className="pointer-events-none absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-indigo-500/15 blur-[100px]" />
 
             {/* Header Bar */}
-            <div className="relative z-10 mb-5 flex items-center justify-between border-b border-white/10 pb-5">
-              <div className="flex items-center gap-3.5">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-cyan-400 to-indigo-500 text-black shadow-lg shadow-cyan-500/25 ring-1 ring-cyan-400/40">
-                  <ShoppingCart size={22} className="stroke-[2.5]" />
+            <div className="relative z-10 mb-4 sm:mb-5 flex items-center justify-between border-b border-white/10 pb-4 sm:pb-5">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="grid h-10 w-10 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-cyan-400 to-indigo-500 text-black shadow-lg shadow-cyan-500/25 ring-1 ring-cyan-400/40">
+                  <ShoppingCart size={20} className="stroke-[2.5]" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-black uppercase tracking-wider text-white">
+                    <h3 className="text-base sm:text-xl font-black uppercase tracking-wider text-white truncate">
                       My Shopping Cart
                     </h3>
-                    <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-0.5 text-xs font-black text-cyan-300">
+                    <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[11px] sm:text-xs font-black text-cyan-300 shrink-0">
                       {cartItems.length}
                     </span>
                   </div>
-                  <p className="text-xs text-white/50 mt-0.5">Review items & checkout securely</p>
+                  <p className="text-[11px] sm:text-xs text-white/50 mt-0.5 truncate">Review items & checkout securely</p>
                 </div>
               </div>
 
               <button
                 onClick={onClose}
-                className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/5 text-white/60 transition hover:border-white/25 hover:bg-white/10 hover:text-white"
+                className="grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-white/60 transition hover:border-white/25 hover:bg-white/10 hover:text-white ml-2"
                 aria-label="Close"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
             {/* Step Wizard Bar (When Items Exist) */}
             {cartItems.length > 0 && step !== "success" && (
-              <div className="relative z-10 mb-5 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-xs font-bold text-white/60">
-                <div className={`flex items-center gap-2 ${step === "cart" ? "text-cyan-300" : "text-white/40"}`}>
-                  <span className={`grid h-5 w-5 place-items-center rounded-full text-[10px] ${step === "cart" ? "bg-cyan-400 text-black" : "bg-white/10 text-white"}`}>1</span>
-                  <span>Cart Items</span>
+              <div className="relative z-10 mb-4 sm:mb-5 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-2.5 sm:p-3 text-[11px] sm:text-xs font-bold text-white/60 overflow-x-auto no-scrollbar">
+                <div className={`flex items-center gap-1.5 sm:gap-2 ${step === "cart" ? "text-cyan-300" : "text-white/40"}`}>
+                  <span className={`grid h-4 w-4 sm:h-5 sm:w-5 place-items-center rounded-full text-[9px] sm:text-[10px] ${step === "cart" ? "bg-cyan-400 text-black font-black" : "bg-white/10 text-white"}`}>1</span>
+                  <span className="whitespace-nowrap">Cart Items</span>
                 </div>
 
                 {hasPhysicalItems && (
                   <>
-                    <div className="h-0.5 w-6 bg-white/10" />
-                    <div className={`flex items-center gap-2 ${step === "address" ? "text-cyan-300" : "text-white/40"}`}>
-                      <span className={`grid h-5 w-5 place-items-center rounded-full text-[10px] ${step === "address" ? "bg-cyan-400 text-black" : "bg-white/10 text-white"}`}>2</span>
-                      <span>Address</span>
+                    <div className="h-0.5 w-3 sm:w-6 bg-white/10 shrink" />
+                    <div className={`flex items-center gap-1.5 sm:gap-2 ${step === "address" ? "text-cyan-300" : "text-white/40"}`}>
+                      <span className={`grid h-4 w-4 sm:h-5 sm:w-5 place-items-center rounded-full text-[9px] sm:text-[10px] ${step === "address" ? "bg-cyan-400 text-black font-black" : "bg-white/10 text-white"}`}>2</span>
+                      <span className="whitespace-nowrap">Address</span>
                     </div>
                   </>
                 )}
 
-                <div className="h-0.5 w-6 bg-white/10" />
-                <div className={`flex items-center gap-2 ${step === "payment" ? "text-cyan-300" : "text-white/40"}`}>
-                  <span className={`grid h-5 w-5 place-items-center rounded-full text-[10px] ${step === "payment" ? "bg-cyan-400 text-black" : "bg-white/10 text-white"}`}>
+                <div className="h-0.5 w-3 sm:w-6 bg-white/10 shrink" />
+                <div className={`flex items-center gap-1.5 sm:gap-2 ${step === "payment" ? "text-cyan-300" : "text-white/40"}`}>
+                  <span className={`grid h-4 w-4 sm:h-5 sm:w-5 place-items-center rounded-full text-[9px] sm:text-[10px] ${step === "payment" ? "bg-cyan-400 text-black font-black" : "bg-white/10 text-white"}`}>
                     {hasPhysicalItems ? "3" : "2"}
                   </span>
-                  <span>Payment</span>
+                  <span className="whitespace-nowrap">Payment</span>
                 </div>
               </div>
             )}
@@ -356,58 +356,59 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                       {cartItems.map((item, idx) => (
                         <div
                           key={`${item.bookId}-${item.format}-${idx}`}
-                          className="group relative flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.06] shadow-md backdrop-blur-sm"
+                          className="group relative rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 sm:p-4 transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.06] shadow-md backdrop-blur-sm"
                         >
-                          <div className="flex items-center gap-4 min-w-0">
-                            {/* Book Cover Thumbnail */}
-                            <div className="h-20 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-900 border border-white/15 shadow-md">
-                              {item.cover ? (
-                                <img
-                                  src={item.cover.startsWith("http") ? item.cover : `${SERVER_URL}${item.cover}`}
-                                  alt={item.title}
-                                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                />
-                              ) : (
-                                <div className="h-full w-full bg-gradient-to-br from-cyan-500 to-indigo-600 grid place-items-center text-[10px] font-black text-white">
-                                  BOOK
-                                </div>
-                              )}
-                            </div>
+                          <div className="flex items-start sm:items-center justify-between gap-3 sm:gap-4">
+                            {/* Book Cover Thumbnail & Details */}
+                            <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                              <div className="h-16 w-12 sm:h-20 sm:w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-900 border border-white/15 shadow-md">
+                                {item.cover ? (
+                                  <img
+                                    src={item.cover.startsWith("http") ? item.cover : `${SERVER_URL}${item.cover}`}
+                                    alt={item.title}
+                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                  />
+                                ) : (
+                                  <div className="h-full w-full bg-gradient-to-br from-cyan-500 to-indigo-600 grid place-items-center text-[9px] font-black text-white">
+                                    BOOK
+                                  </div>
+                                )}
+                              </div>
 
-                            {/* Book Details */}
-                            <div className="min-w-0">
-                              <h4 className="truncate text-base font-extrabold text-white group-hover:text-cyan-300 transition">
-                                {item.title}
-                              </h4>
-                              <p className="truncate text-xs font-medium text-white/50">{item.author}</p>
-                              
-                              <div className="mt-2 flex items-center gap-2">
-                                <span className="rounded-lg border border-cyan-400/30 bg-cyan-400/15 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-cyan-300 shadow-glow">
-                                  {item.format}
-                                </span>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="line-clamp-2 sm:line-clamp-1 text-sm sm:text-base font-extrabold text-white group-hover:text-cyan-300 transition leading-snug">
+                                  {item.title}
+                                </h4>
+                                <p className="truncate text-xs font-medium text-white/50 mt-0.5">{item.author}</p>
+                                
+                                <div className="mt-1.5 flex items-center gap-2">
+                                  <span className="rounded-md border border-cyan-400/30 bg-cyan-400/15 px-2 py-0.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-cyan-300 shadow-glow">
+                                    {item.format}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          {/* Price & Actions */}
-                          <div className="flex items-center gap-4 shrink-0">
-                            <div className="text-right">
-                              <span className="text-lg font-black text-white tracking-wide">
-                                {formatPrice(item.price)}
-                              </span>
-                              {item.basePrice && item.basePrice !== item.price && (
-                                <p className="text-[10px] text-white/35 mt-0.5">
-                                  Base ₹{item.basePrice} + 18% GST
-                                </p>
-                              )}
+                            {/* Price & Delete Button */}
+                            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-4 shrink-0">
+                              <div className="text-right">
+                                <span className="text-base sm:text-lg font-black text-white tracking-wide">
+                                  {formatPrice(item.price)}
+                                </span>
+                                {item.basePrice && item.basePrice !== item.price && (
+                                  <p className="text-[9px] sm:text-[10px] text-white/40 mt-0.5 whitespace-nowrap">
+                                    Base ₹{item.basePrice} + 18% GST
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => removeFromCart(item.bookId, item.format)}
+                                className="grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/40 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400"
+                                title="Remove book from cart"
+                              >
+                                <Trash2 size={15} />
+                              </button>
                             </div>
-                            <button
-                              onClick={() => removeFromCart(item.bookId, item.format)}
-                              className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/40 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400"
-                              title="Remove book from cart"
-                            >
-                              <Trash2 size={16} />
-                            </button>
                           </div>
                         </div>
                       ))}
@@ -645,22 +646,24 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
 
             {/* Sticky Bottom Footer Summary (Cart Step) */}
             {step === "cart" && cartItems.length > 0 && (
-              <div className="relative z-10 mt-5 border-t border-white/10 pt-4 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Total Amount</p>
-                  <p className="text-3xl font-black bg-gradient-to-r from-cyan-300 via-white to-indigo-300 bg-clip-text text-transparent">
+              <div className="relative z-10 mt-3.5 sm:mt-5 border-t border-white/10 pt-3 sm:pt-4 flex items-center justify-between gap-3 sm:gap-4">
+                <div className="min-w-0">
+                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-white/40 truncate">Total Amount</p>
+                  <p className="text-xl sm:text-3xl font-black bg-gradient-to-r from-cyan-300 via-white to-indigo-300 bg-clip-text text-transparent">
                     {formatPrice(totalPrice)}
                   </p>
-                  <p className="text-[10px] text-white/30 mt-0.5">incl. 18% GST (₹{totalGST.toFixed(2)}){hasPhysicalItems ? " + delivery" : ""}</p>
+                  <p className="text-[9px] sm:text-[10px] text-white/35 mt-0.5 truncate">
+                    incl. 18% GST (₹{totalGST.toFixed(2)}){hasPhysicalItems ? " + delivery" : ""}
+                  </p>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleProceedToCheckout}
-                  className="group flex items-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-500 px-7 py-3.5 text-xs font-black uppercase tracking-wider text-black shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:scale-[1.02] transition"
+                  className="group flex items-center justify-center gap-2 sm:gap-3 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-500 px-4 sm:px-7 py-3 sm:py-3.5 text-xs font-black uppercase tracking-wider text-black shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:scale-[1.02] transition shrink-0 whitespace-nowrap"
                 >
-                  Checkout ({cartItems.length})
-                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                  <span>Checkout ({cartItems.length})</span>
+                  <ArrowRight size={15} className="transition-transform group-hover:translate-x-1 shrink-0" />
                 </button>
               </div>
             )}
