@@ -153,48 +153,92 @@ export default function AboutPage() {
         </section>
 
         {/* ══════════════ OUR STORY ══════════════ */}
-        <section className="section-shell relative z-10 py-16">
-          <div className="text-center">
+        <section id="our-story" className="section-shell relative z-10 py-16">
+          <div className="text-center mb-12">
             <p data-reveal className="text-xs font-black uppercase tracking-[0.35em] text-cyan-400">Where It All Began</p>
-            <h2 data-reveal className="mt-2 text-3xl font-black text-white sm:text-4xl md:text-5xl">Our Story</h2>
+            <h2 data-reveal className="mt-2 text-3xl font-black text-white sm:text-4xl md:text-5xl">The Story Behind Lekhok Tripura Publishers</h2>
+            <p data-reveal className="mx-auto mt-3 max-w-2xl text-sm sm:text-base text-white/60">
+              Every publishing house has a story, but not every publishing house is born from a struggle.
+            </p>
           </div>
 
-          <div className="mt-12 grid gap-8 lg:grid-cols-2">
-            <article data-reveal className="flex flex-col justify-between rounded-3xl border border-white/10 bg-white/[0.03] p-8 shadow-card backdrop-blur-xl md:p-10">
-              <div>
-                <div className="grid h-12 w-12 place-items-center rounded-2xl border border-cyan-400/30 bg-cyan-400/10 text-cyan-300 mb-6">
-                  <Feather size={24} />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-4">Overcoming Publishing Barriers</h3>
-                <p className="text-sm sm:text-base leading-relaxed text-white/70 space-y-4">
-                  The journey of Lekhok Tripura Publishers began with a realization that many talented writers struggle not because of a lack of creativity, but because of a lack of opportunities.
-                </p>
-                <p className="mt-4 text-sm sm:text-base leading-relaxed text-white/70">
-                  Many aspiring authors face confusing publishing processes, expensive service charges, poor communication, limited marketing support, or publishing models that fail to recognize the value of their work. These challenges discourage countless writers from publishing their stories.
-                </p>
-              </div>
-              <div className="mt-8 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-xs font-semibold text-cyan-200">
-                💡 Lekhok Tripura Publishers was created to solve these exact problems.
-              </div>
-            </article>
+          <div data-reveal className="mx-auto max-w-4xl rounded-3xl border border-cyan-500/20 bg-gradient-to-b from-white/[0.04] via-zinc-950/80 to-zinc-950 p-6 sm:p-10 md:p-14 shadow-2xl backdrop-blur-xl space-y-6 text-sm sm:text-base leading-relaxed text-white/80">
+            
+            <p className="text-lg font-bold text-white leading-relaxed border-l-4 border-cyan-400 pl-4 py-1">
+              Lekhok Tripura Publishers was founded by <strong className="text-cyan-300 font-extrabold">Pritam Chakraborty</strong> with a single vision—to make book publishing transparent, affordable, and accessible for every aspiring author.
+            </p>
 
-            <article data-reveal className="flex flex-col justify-between rounded-3xl border border-white/10 bg-white/[0.03] p-8 shadow-card backdrop-blur-xl md:p-10">
-              <div>
-                <div className="grid h-12 w-12 place-items-center rounded-2xl border border-indigo-400/30 bg-indigo-400/10 text-indigo-300 mb-6">
-                  <HeartHandshake size={24} />
+            <p>
+              The journey began with a dream. Like countless first-time writers, Pritam wanted to self-publish his own book. However, the reality of the publishing industry proved to be deeply discouraging. At that time, there were no reliable self-publishing options available in Tripura. Most publishing houses demanded that authors print a minimum of 100 copies, requiring an upfront investment of nearly <strong className="text-amber-300 font-bold">₹30,000</strong> simply to publish a single title. For a new author, this was an unrealistic and unjustifiable financial burden.
+            </p>
+
+            <p className="font-semibold text-white/90">
+              The challenges did not end there.
+            </p>
+
+            <p>
+              Many publishing houses offered little transparency in their pricing and processes. Authors often faced indifference, poor communication, and unprofessional behaviour. Some were forced to look beyond Tripura for publishing opportunities, only to discover another troubling reality—numerous fraudulent publishing companies operating in the market.
+            </p>
+
+            <div className="my-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-5 text-xs sm:text-sm text-red-200 leading-relaxed">
+              <p className="font-bold text-red-300 mb-2">⚠️ The Unspoken Reality Facing Aspiring Authors:</p>
+              <p>
+                These companies collected large one-time payments from aspiring writers, published the book once, and then failed to provide any meaningful long-term support. Many never reprinted books when stock was exhausted, making titles unavailable despite continued demand. In several cases, authors also discovered that the ISBNs provided were not properly registered or genuine, creating serious credibility and distribution issues.
+              </p>
+            </div>
+
+            <p className="italic text-white/90 font-medium border-l-2 border-amber-400/60 pl-4">
+              Witnessing these experiences was deeply disheartening. It became evident that countless talented writers were abandoning their dreams—not because they lacked creativity or determination, but because the publishing system had become inaccessible, expensive, and often untrustworthy. Many aspiring authors simply gave up before their stories ever reached readers.
+            </p>
+
+            <div className="my-6 rounded-2xl border border-cyan-400/30 bg-cyan-400/10 p-6 text-center">
+              <p className="text-xs font-black uppercase tracking-widest text-cyan-300">The Foundational Realization</p>
+              <p className="mt-2 text-lg sm:text-xl font-extrabold text-white">
+                "This realization became the foundation of Lekhok Tripura Publishers."
+              </p>
+            </div>
+
+            <p>
+              The publishing house was established to create a different kind of publishing experience—one built on honesty, transparency, affordability, and respect for authors. Every service is explained clearly, every cost is disclosed upfront, and every publishing decision is made with the author's best interest in mind.
+            </p>
+
+            <p>
+              At Lekhok Tripura Publishers, we believe that publishing a book should never depend solely on financial capacity. Every writer deserves the opportunity to see their work published without hidden costs, unnecessary printing requirements, or misleading promises.
+            </p>
+
+            <p>
+              Whether an author wishes to publish a single copy through print-on-demand, distribute an eBook globally, or make their work available on major online platforms, our goal is to provide professional publishing services that are both accessible and dependable.
+            </p>
+
+            <p className="text-white font-medium">
+              Today, Lekhok Tripura Publishers is more than a publishing house—it is a movement to empower writers, encourage new voices, and rebuild a culture where stories are valued, authors are respected, and publishing is based on trust rather than exploitation.
+            </p>
+
+            <div className="mt-8 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-center">
+              <p className="text-base sm:text-lg font-black text-emerald-300 italic">
+                "Because every story deserves to be told, and every author deserves a fair chance to be heard."
+              </p>
+            </div>
+
+            {/* Founder Signature Block */}
+            <div className="mt-12 border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl border border-cyan-400/40 bg-gradient-to-br from-cyan-400 to-indigo-500 flex items-center justify-center text-black font-black text-xl shadow-lg">
+                  PC
                 </div>
-                <h3 className="text-xl font-bold text-white mb-4">Building Genuine Partnerships</h3>
-                <p className="text-sm sm:text-base leading-relaxed text-white/70">
-                  Our goal has always been to make professional publishing straightforward, transparent, and author-friendly. We wanted to create an environment where writers feel supported from the moment they complete their manuscript until the day their book reaches readers.
-                </p>
-                <p className="mt-4 text-sm sm:text-base leading-relaxed text-white/70">
-                  Instead of treating authors as customers, we believe in building long-term partnerships based on trust, professionalism, and mutual growth. Every manuscript represents years of imagination, dedication, research, and personal emotion.
-                </p>
+                <div className="text-left">
+                  <h4 className="text-xl font-black text-white">Pritam Chakraborty</h4>
+                  <p className="text-xs font-bold text-cyan-300 uppercase tracking-wider">Founder &amp; CEO</p>
+                  <p className="text-xs text-white/50">Lekhok Tripura Publishers</p>
+                </div>
               </div>
-              <div className="mt-8 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4 text-xs font-semibold text-indigo-200">
-                🤝 We approach every project with the same care and commitment as our own work.
+
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white/60 flex items-center gap-2">
+                <Sparkles size={14} className="text-cyan-400" />
+                <span>Empowering Authors Since 2024</span>
               </div>
-            </article>
+            </div>
+
           </div>
         </section>
 
