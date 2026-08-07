@@ -333,7 +333,7 @@ export default function NewsPage() {
                   </div>
                   
                   <p className="text-xs text-white/70 leading-relaxed font-light">
-                    Transform your manuscript into a professionally published book. Self-publishing packages starting at just <strong className="text-cyan-300 font-bold">₹999</strong> with full distribution &amp; ISBN support.
+                    Transform your manuscript into a professionally published book with full distribution, ISBN support, and expert publishing guidance.
                   </p>
 
                   <div className="pt-1 space-y-2">
@@ -341,7 +341,7 @@ export default function NewsPage() {
                       to="/reader"
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 py-3 text-xs font-black text-black hover:bg-cyan-300 transition shadow-glow"
                     >
-                      <span>Publish in Just ₹999</span>
+                      <span>Publish with us</span>
                       <ArrowRight size={14} />
                     </Link>
 

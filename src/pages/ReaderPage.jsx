@@ -1,36 +1,90 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, CheckCircle2, AlertCircle, Loader2, Megaphone, Paintbrush, PencilLine, ShieldCheck, Truck, UserRoundCheck, X, BadgeCheck, FileText, WalletCards, Globe2, Sparkles, UploadCloud } from "lucide-react";
+import { BookOpen, BookMarked, Star, Crown, BarChart3, PlusCircle, ScrollText, Globe, Palette, Pencil, Keyboard, FileEdit, Megaphone, CheckCircle2, AlertCircle, Loader2, Paintbrush, PencilLine, ShieldCheck, Truck, UserRoundCheck, X, BadgeCheck, FileText, WalletCards, Globe2, Sparkles, UploadCloud } from "lucide-react";
 
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import { API_BASE } from "../config.js";
 import { useGsapReveal } from "../hooks/useGsapReveal.js";
 
-const plans = [
+const publishingPlans = [
   {
-    name: "Publication Cost",
-    price: "₹999",
-    tag: "The Basic Publishing Suite",
-    description: "Perfect for authors looking to get their manuscript professionally formatted and distributed across major digital platforms.",
+    id: "basic",
+    name: "Basic Publishing Plan",
+    price: "₹4,999",
+    Icon: BookMarked,
+    iconBg: "bg-cyan-400/15",
+    iconColor: "text-cyan-300",
+    color: "from-cyan-400/20 to-blue-600/20",
+    border: "border-cyan-400/30",
+    badge: "Starter",
+    description: "An ideal publishing package for first-time authors looking for an affordable and professional publishing experience.",
     features: [
-      "Professional Interior Formatting: Standard layout styling for both print-ready PDF and reflowable ePub/Mobi formats.",
-      "Global E-Book Publishing: Distribution setup on major platforms (like Amazon Kindle, Kobo, and Google Books).",
-      "Official ISBN Assignment: Provision of a unique International Standard Book Number (ISBN) for legal identification and tracking.",
-      "Basic Cover Design: A clean, template-based digital cover design utilizing high-quality stock imagery and standard typography.",
-      "Official Website Listing: A dedicated author/book feature page on our publishing house website to drive traffic and credibility."
+      "ISBN Allocation",
+      "Basic Book Cover Design",
+      "Paperback Edition",
+      "E-book Edition",
+      "Amazon Listing",
+      "Flipkart Listing",
+      "Meesho Listing",
+      "Listing on the Lekhok Tripura Publishers Website (Paperback & E-book)",
+      "Certificate of Publishing",
+      "Free Lekhok Tripura Club Membership",
+      "2 Promotional Posters",
+      "2 Complimentary Author Copies",
+      "Total Print Run: 10 Copies",
     ],
-  }
+  },
+  {
+    id: "essential",
+    name: "Essential Publishing Plan",
+    price: "₹7,999",
+    Icon: Star,
+    iconBg: "bg-violet-400/15",
+    iconColor: "text-violet-300",
+    color: "from-violet-400/20 to-purple-600/20",
+    border: "border-violet-400/30",
+    badge: "Popular",
+    description: "A complete publishing solution with enhanced marketing support and greater author visibility.",
+    base: "Everything in the Basic Publishing Plan, plus:",
+    features: [
+      "6 Complimentary Author Copies",
+      "Total Print Run: 26 Copies",
+      "Meta (Facebook & Instagram) Advertising — Ad Budget up to ₹1,000",
+      "Dedicated Author Profile on the Lekhok Tripura Publishers Website",
+      "4 Professionally Designed Promotional Posters",
+    ],
+  },
+  {
+    id: "popular",
+    name: "Popular Publishing Plan",
+    price: "₹11,999",
+    Icon: Crown,
+    iconBg: "bg-amber-400/15",
+    iconColor: "text-amber-300",
+    color: "from-amber-400/20 to-orange-600/20",
+    border: "border-amber-400/30",
+    badge: "Best Value",
+    description: "Our most comprehensive publishing package for authors who want maximum exposure, branding, and professional promotion.",
+    base: "Everything in the Essential Publishing Plan, plus:",
+    features: [
+      "Dedicated Personal Author Website",
+      "Meta (Facebook & Instagram) Advertising — Ad Budget up to ₹2,000",
+      "10 Complimentary Author Copies",
+      "Total Print Run: 50 Copies",
+      "Enhanced Digital Branding & Online Presence",
+    ],
+  },
 ];
 
 const addonsList = [
-  { id: "cover", name: "Premium Cover Design", price: "₹1,500 – ₹4,000", desc: "Custom artist-designed cover with detailed illustrations and specialized typography." },
-  { id: "proofreading", name: "Proofreading & Editing", price: "₹0.50 / word", desc: "Thorough spell check, grammar correction, line edits, and consistency verification." },
-  { id: "typing", name: "Manuscript Digitization", price: "₹0.80 / word", desc: "Word-by-word typing into editable digital formats for handwritten manuscripts or diaries." },
-  { id: "website", name: "Author Portfolio Website", price: "₹5,000 – ₹7,000", desc: "Custom personal brand website to display author biography, portfolio, and direct buy links (domain extra)." },
-  { id: "posters", name: "Book Mockups & Posters", price: "₹50 – ₹100 / poster", desc: "High-resolution 3D book mockups and customized social media promotional graphics." },
-  { id: "marketing", name: "Social Media Marketing", price: "Custom / As per budget", desc: "Targeted ad setups and promotional campaigns across major social media channels." }
+  { id: "website", name: "Dedicated Author's Website", price: "₹5,000 – ₹7,000", desc: "Custom personal author website to showcase your biography, portfolio, and direct book links." },
+  { id: "cover", name: "Premium Book Cover Design (Professional Artist)", price: "₹2,000 – ₹4,000", desc: "High-quality artist-designed book cover with custom illustrations and professional typography." },
+  { id: "illustration", name: "Custom Illustration Artwork", price: "₹50 – ₹500 / Illustration/Sketch", desc: "Original hand-crafted or digital artwork for your book's interior or cover." },
+  { id: "typing", name: "Manuscript Typing", price: "₹0.70 per Word", desc: "Professional word-by-word manuscript typing from handwritten or physical copies." },
+  { id: "proofreading", name: "Professional Proofreading", price: "₹0.40 per Word", desc: "Thorough spell check, grammar correction, and consistency review by professional editors." },
+  { id: "marketing", name: "Additional Meta (Facebook & Instagram) Advertisement", price: "Author's Budget + 30% Marketing Management Fee", desc: "Extra promotional campaigns beyond your plan's ad budget with full campaign management." },
 ];
 
 const services = [
@@ -318,132 +372,111 @@ export default function ReaderPage() {
               {/* Header Banner */}
               <div className="text-center">
                 <span className="inline-block rounded-full border border-cyan-400/30 bg-cyan-400/10 px-5 py-2 text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">
-                  Self-Publishing Service Offerings & Scope of Work
+                  Book Publishing Plans – 2026 · Professional · Transparent · Author-Centric
                 </span>
                 <h2 data-reveal className="mt-4 text-4xl font-black text-white md:text-5xl">
                   Self Publishing at Lekhok Tripura
                 </h2>
                 <p data-reveal className="mx-auto mt-4 max-w-2xl text-white/60">
-                  Simple, transparent, and direct publishing cost with no hidden fees.
+                  Simple, transparent publishing plans with no hidden fees. Choose the package that fits your vision.
                 </p>
               </div>
 
-              {/* 1. EXECUTIVE OVERVIEW & VALUE PROPOSITION */}
-              <div data-reveal className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 md:p-10 backdrop-blur-xl shadow-card">
-                <div className="flex items-center gap-3 border-b border-white/10 pb-4 mb-6">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-300 font-bold text-sm">1</span>
-                  <h3 className="text-xl md:text-2xl font-black text-white">Executive Overview & Value Proposition</h3>
-                </div>
-                <p className="text-base text-white/75 leading-relaxed">
-                  At <strong className="text-cyan-300">Lekhok Tripura</strong>, we aim to redefine self-publishing by removing steep upfront financial barriers for authors. Traditional self-publishing platforms often require authors to purchase 100 to 200 copies upfront. We provide full publishing, printing, and distribution freedom starting with a minimum order of just <strong className="text-white">10 copies</strong>.
-                </p>
-                
-                <div className="mt-8 rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-6">
-                  <h4 className="text-sm font-extrabold uppercase tracking-wider text-amber-300 mb-4">Why Choose Lekhok Tripura?</h4>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="rounded-xl border border-white/8 bg-black/30 p-5">
-                      <strong className="block text-sm text-white mb-2 font-bold">Reduced Financial Burden</strong>
-                      <p className="text-xs text-white/60 leading-relaxed">Order as few as 10 paperback or hardcover copies based on your needs and budget.</p>
-                    </div>
-                    <div className="rounded-xl border border-white/8 bg-black/30 p-5">
-                      <strong className="block text-sm text-white mb-2 font-bold">All-In-One Platform</strong>
-                      <p className="text-xs text-white/60 leading-relaxed">End-to-end management including manuscript typing, proofreading, design, ISBN allocation, and global distribution.</p>
-                    </div>
-                    <div className="rounded-xl border border-white/8 bg-black/30 p-5">
-                      <strong className="block text-sm text-white mb-2 font-bold">Extensive Market Reach</strong>
-                      <p className="text-xs text-white/60 leading-relaxed">Distribution network spanning Tripura, Kolkata, and Bangladesh, alongside key global e-commerce channels.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 2. BASIC SELF-PUBLISHING PACKAGE */}
-              <div data-reveal className="rounded-3xl border border-cyan-400/20 bg-cyan-950/20 p-8 md:p-10 backdrop-blur-xl shadow-card">
-                <div className="flex items-center justify-between flex-wrap gap-4 border-b border-white/10 pb-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-300 font-bold text-sm">2</span>
-                    <div>
-                      <h3 className="text-xl md:text-2xl font-black text-white">Basic Self-Publishing Package</h3>
-                      <p className="text-xs text-white/55 mt-1">Essential setup and distribution to ensure your book meets professional standards.</p>
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-6 py-2 text-right">
-                    <span className="text-2xl font-black text-white">₹999</span>
-                    <span className="text-xs font-bold text-cyan-300 ml-1">+ GST</span>
-                  </div>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {[
-                    { no: "01", unit: "Basic Book Cover", scope: "Standard visual cover design tailored to the book theme." },
-                    { no: "02", unit: "ISBN Allocation", scope: "Official ISBN registration and barcoding for legal distribution." },
-                    { no: "03", unit: "Interior Formatting", scope: "Basic layout alignment and interior typesetting for standard reading formats." },
-                    { no: "04", unit: "E-Book Publishing", scope: "Digital publishing across Amazon Kindle, Google Play Books, and lekhoktripura.in." },
-                    { no: "05", unit: "Promotional Posters", scope: "Includes 2 complimentary promotional posters for online announcements." },
-                    { no: "06", unit: "Print Publishing", scope: "Paperback or Hardcover options available with flexible minimum orders (10 copies)." },
-                  ].map((item) => (
-                    <div key={item.no} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-                      <span className="text-xs font-black text-cyan-300">{item.no}</span>
-                      <h4 className="mt-1 text-base font-bold text-white">{item.unit}</h4>
-                      <p className="mt-2 text-xs text-white/60 leading-relaxed">{item.scope}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-8 pt-6 border-t border-white/10">
-                  <p className="text-xs font-bold uppercase tracking-wider text-white/50 mb-3">Associated Channels & Platforms:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {["Amazon", "Flipkart", "Amazon Kindle", "Google Play Books", "YouTube", "Lekhok Tripura Store"].map((ch) => (
-                      <span key={ch} className="rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs font-bold text-cyan-200">
-                        {ch}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-8 flex justify-center">
-                  <button 
-                    type="button" 
-                    onClick={() => openPlanModal("Publication Cost Self Publishing Plan")} 
-                    className="rounded-full bg-white px-8 py-3.5 font-bold text-black transition hover:scale-105 hover:bg-cyan-50 shadow-glow"
+              {/* THREE PLAN CARDS */}
+              <div className="grid gap-8 lg:grid-cols-3">
+                {publishingPlans.map((plan, idx) => (
+                  <motion.div
+                    key={plan.id}
+                    data-reveal
+                    whileHover={{ y: -6 }}
+                    className={`relative flex flex-col rounded-3xl border ${plan.border} bg-gradient-to-b ${plan.color} p-8 backdrop-blur-xl shadow-card`}
                   >
-                    Choose Basic Plan
-                  </button>
-                </div>
+                    {/* Badge */}
+                    <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-xl">
+                      {plan.badge}
+                    </span>
+
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${plan.iconBg} mb-4`}>
+                      <plan.Icon className={`h-5 w-5 ${plan.iconColor}`} />
+                    </div>
+                    <h3 className="text-xl font-black text-white leading-tight">{plan.name}</h3>
+                    <p className="mt-1 text-3xl font-black text-white">{plan.price}<span className="text-sm font-bold text-white/50">/–</span></p>
+                    <p className="mt-3 text-sm text-white/65 leading-relaxed">{plan.description}</p>
+
+                    {plan.base && (
+                      <p className="mt-5 text-xs font-black uppercase tracking-wider text-cyan-300">{plan.base}</p>
+                    )}
+
+                    <ul className="mt-4 space-y-2.5 flex-1">
+                      {plan.features.map((f) => (
+                        <li key={f} className="flex items-start gap-2.5 text-sm text-white/80">
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <button
+                      type="button"
+                      onClick={() => openPlanModal(`${plan.name}`)}
+                      className="mt-8 w-full rounded-full bg-white py-3.5 text-sm font-black text-black transition hover:scale-105 hover:bg-cyan-50 shadow-md"
+                    >
+                      Choose {plan.name.split(" ")[0]} Plan
+                    </button>
+                  </motion.div>
+                ))}
               </div>
 
-              {/* 3. PREMIUM ADD-ON SERVICES */}
+              {/* PLAN COMPARISON TABLE */}
               <div data-reveal className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 md:p-10 backdrop-blur-xl shadow-card">
                 <div className="flex items-center gap-3 border-b border-white/10 pb-4 mb-6">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-300 font-bold text-sm">3</span>
-                  <div>
-                    <h3 className="text-xl md:text-2xl font-black text-white">Premium Add-On Services</h3>
-                    <p className="text-xs text-white/55 mt-1">Authors looking to elevate their book's commercial appeal can select individual customized add-ons.</p>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
+                    <BarChart3 className="h-5 w-5 text-white/70" />
                   </div>
+                  <h3 className="text-xl md:text-2xl font-black text-white">Plan Comparison</h3>
                 </div>
-
                 <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/30">
-                  <table className="w-full text-left text-sm text-white/80">
-                    <thead className="bg-white/5 text-xs font-bold uppercase tracking-wider text-cyan-300 border-b border-white/10">
+                  <table className="w-full text-sm">
+                    <thead className="bg-white/5 border-b border-white/10">
                       <tr>
-                        <th className="p-4">Service</th>
-                        <th className="p-4">Description</th>
-                        <th className="p-4 whitespace-nowrap">Pricing Structure</th>
+                        <th className="p-4 text-left text-xs font-black uppercase tracking-wider text-white/60">Features</th>
+                        <th className="p-4 text-center text-xs font-black uppercase tracking-wider text-cyan-300">Basic</th>
+                        <th className="p-4 text-center text-xs font-black uppercase tracking-wider text-violet-300">Essential</th>
+                        <th className="p-4 text-center text-xs font-black uppercase tracking-wider text-amber-300">Popular</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
                       {[
-                        { name: "Premium Cover Design", desc: "Custom artist-designed cover with detailed illustrations and specialized typography.", price: "₹1,500 – ₹4,000" },
-                        { name: "Proofreading & Editing", desc: "Thorough spell check, grammar correction, line edits, and consistency verification.", price: "₹0.50 / word" },
-                        { name: "Manuscript Digitization", desc: "Word-by-word typing into editable digital formats for handwritten manuscripts or diaries.", price: "₹0.80 / word" },
-                        { name: "Author Portfolio Website", desc: "Custom personal brand website to display author biography, portfolio, and direct buy links.", price: "₹5,000 – ₹7,000 (Domain extra)" },
-                        { name: "Book Mockups & Posters", desc: "High-resolution 3D book mockups and customized social media promotional graphics.", price: "₹50 – ₹100 / poster" },
-                        { name: "Social Media Marketing", desc: "Targeted ad setups and promotional campaigns across major social media channels.", price: "Custom / As per budget" },
-                      ].map((s) => (
-                        <tr key={s.name} className="hover:bg-white/[0.02]">
-                          <td className="p-4 font-bold text-white whitespace-nowrap">{s.name}</td>
-                          <td className="p-4 text-xs text-white/60 leading-relaxed">{s.desc}</td>
-                          <td className="p-4 font-extrabold text-cyan-300 whitespace-nowrap text-xs">{s.price}</td>
+                        { feature: "ISBN Allocation", basic: true, essential: true, popular: true },
+                        { feature: "Basic Book Cover Design", basic: true, essential: true, popular: true },
+                        { feature: "Paperback Edition", basic: true, essential: true, popular: true },
+                        { feature: "E-book Edition", basic: true, essential: true, popular: true },
+                        { feature: "Amazon Listing", basic: true, essential: true, popular: true },
+                        { feature: "Flipkart Listing", basic: true, essential: true, popular: true },
+                        { feature: "Meesho Listing", basic: true, essential: true, popular: true },
+                        { feature: "Lekhok Tripura Website Listing", basic: true, essential: true, popular: true },
+                        { feature: "Certificate of Publishing", basic: true, essential: true, popular: true },
+                        { feature: "Free Club Membership", basic: true, essential: true, popular: true },
+                        { feature: "Promotional Posters", basic: "2", essential: "4", popular: "4" },
+                        { feature: "Author Profile on Publisher Website", basic: false, essential: true, popular: true },
+                        { feature: "Dedicated Author Website", basic: false, essential: false, popular: true },
+                        { feature: "Meta Advertisement Budget", basic: "—", essential: "₹1,000", popular: "₹2,000" },
+                        { feature: "Complimentary Author Copies", basic: "2", essential: "6", popular: "10" },
+                        { feature: "Total Printed Copies", basic: "10", essential: "26", popular: "50" },
+                      ].map((row) => (
+                        <tr key={row.feature} className="hover:bg-white/[0.02]">
+                          <td className="p-4 text-white/75 font-medium">{row.feature}</td>
+                          {[row.basic, row.essential, row.popular].map((val, i) => (
+                            <td key={i} className="p-4 text-center">
+                              {val === true ? (
+                                <CheckCircle2 className="h-4 w-4 text-emerald-400 mx-auto" />
+                              ) : val === false ? (
+                                <span className="text-white/25 text-lg">—</span>
+                              ) : (
+                                <span className="text-xs font-black text-white/80">{val}</span>
+                              )}
+                            </td>
+                          ))}
                         </tr>
                       ))}
                     </tbody>
@@ -451,44 +484,100 @@ export default function ReaderPage() {
                 </div>
               </div>
 
-              {/* 4. STEP-BY-STEP EXECUTION PROCESS */}
+              {/* ADD-ON SERVICES */}
               <div data-reveal className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 md:p-10 backdrop-blur-xl shadow-card">
-                <div className="flex items-center gap-3 border-b border-white/10 pb-4 mb-8">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-300 font-bold text-sm">4</span>
-                  <h3 className="text-xl md:text-2xl font-black text-white">Step-By-Step Execution Process</h3>
+                <div className="flex items-center gap-3 border-b border-white/10 pb-4 mb-6">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-400/15">
+                    <PlusCircle className="h-5 w-5 text-violet-300" />
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-black text-white">Add-on Services <span className="text-sm font-semibold text-white/50">(Optional)</span></h3>
                 </div>
-
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {[
-                    { step: "1", title: "Initial Discussion & Needs Analysis", desc: "Understanding author requirements, target readership, and service scope." },
-                    { step: "2", title: "Details & Manuscript Submission", desc: "Collecting author details, title, page counts, raw manuscript, and banking info." },
-                    { step: "3", title: "Agreement & Quotation", desc: "Issuing transparent cost estimations and formal publishing agreement." },
-                    { step: "4", title: "Execution & Formatting", desc: "Proofreading, cover design, typesetting, and final review before printing." },
-                    { step: "5", title: "Review, Payment & Printing", desc: "Final proof approval, payment completion, and printing execution." },
-                    { step: "6", title: "Distribution & Support", desc: "E-commerce listing, author certificate issuance, delivery, and post-launch support." },
-                  ].map((st) => (
-                    <div key={st.step} className="rounded-2xl border border-white/10 bg-white/5 p-6 flex flex-col justify-between">
-                      <div>
-                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-cyan-400 text-black font-black text-xs">
-                          {st.step}
-                        </span>
-                        <h4 className="mt-4 text-base font-bold text-white">{st.title}</h4>
-                        <p className="mt-2 text-xs text-white/55 leading-relaxed">{st.desc}</p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/30">
+                  <table className="w-full text-left text-sm text-white/80">
+                    <thead className="bg-white/5 text-xs font-bold uppercase tracking-wider text-cyan-300 border-b border-white/10">
+                      <tr>
+                        <th className="p-4">Service</th>
+                        <th className="p-4 text-right whitespace-nowrap">Charges</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {[
+                        { Icon: Globe, iconColor: "text-cyan-300", name: "Dedicated Author's Website", price: "₹5,000 – ₹7,000" },
+                        { Icon: Palette, iconColor: "text-pink-300", name: "Premium Book Cover Design (Professional Artist)", price: "₹2,000 – ₹4,000" },
+                        { Icon: Pencil, iconColor: "text-amber-300", name: "Custom Illustration Artwork", price: "₹50 – ₹500 per Illustration/Sketch" },
+                        { Icon: Keyboard, iconColor: "text-emerald-300", name: "Manuscript Typing", price: "₹0.70 per Word" },
+                        { Icon: FileEdit, iconColor: "text-violet-300", name: "Professional Proofreading", price: "₹0.40 per Word" },
+                        { Icon: Megaphone, iconColor: "text-orange-300", name: "Additional Meta (Facebook & Instagram) Advertisement", price: "Author's Budget + 30% Marketing Management Fee" },
+                      ].map((s) => (
+                        <tr key={s.name} className="hover:bg-white/[0.02]">
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/[0.06]`}>
+                                <s.Icon className={`h-3.5 w-3.5 ${s.iconColor}`} />
+                              </div>
+                              <span className="font-medium text-white/85">{s.name}</span>
+                            </div>
+                          </td>
+                          <td className="p-4 font-extrabold text-cyan-300 text-right whitespace-nowrap text-xs">{s.price}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
-              {/* 5. LEKHOK TRIPURA CLUB */}
-              <div data-reveal className="rounded-3xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/40 via-cyan-900/20 to-zinc-950 p-8 md:p-10 text-left shadow-card backdrop-blur-xl">
-                <div className="flex items-center gap-3 border-b border-cyan-400/20 pb-4 mb-4">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400/20 text-cyan-300 font-bold text-sm">5</span>
-                  <h3 className="text-xl md:text-2xl font-black text-white">Lekhok Tripura Club</h3>
+              {/* TERMS & CONDITIONS */}
+              <div data-reveal className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 md:p-10 backdrop-blur-xl shadow-card">
+                <div className="flex items-center gap-3 border-b border-white/10 pb-4 mb-6">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400/10">
+                    <ScrollText className="h-5 w-5 text-cyan-300" />
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-black text-white">Terms & Conditions</h3>
                 </div>
-                <p className="text-sm md:text-base text-white/75 leading-relaxed">
-                  <strong className="text-cyan-300">Lekhok Tripura Club</strong> is a vibrant literary community dedicated to writers, poets, bloggers, and literature enthusiasts across Tripura and beyond. Founded to revive the culture of reading and creative writing, the club provides a platform for literary minds to connect, share ideas, and grow together through workshops, events, book discussions, and collaborative projects.
-                </p>
+                <ol className="space-y-4 list-none">
+                  {[
+                    "The advertisement budget included in each publishing plan is part of the package. Authors may increase the advertising budget at any time by purchasing additional Meta (Facebook & Instagram) advertising services.",
+                    "Additional Meta advertising campaigns will be charged according to the author's preferred budget, along with a 30% Marketing Management Fee for campaign planning, audience targeting, optimization, monitoring, and performance reporting.",
+                    "Complimentary author copies are included only as specified under each publishing plan. Additional printed copies may be ordered at the prevailing printing charges.",
+                    "Prices for optional add-on services may vary depending on the complexity and specific requirements of the project.",
+                    "Royalty & Sales: For all Paperback and E-book sales through Amazon, Flipkart, Meesho, the Lekhok Tripura Publishers website, and other distribution platforms, the author will receive 100% of the net royalty/profit after deduction of all applicable platform fees, payment gateway charges, printing costs (where applicable), taxes (including GST/TDS, if applicable), shipping charges (where applicable), and any mandatory third-party service fees.",
+                    "Royalties are calculated based on the actual amount received by the publisher from the respective sales platform after all deductions made by the platform or service provider.",
+                    "The publisher reserves the right to modify platform listings, distribution channels, or promotional strategies whenever necessary to improve the book's reach and availability.",
+                    "Submission of a manuscript does not guarantee publication. All manuscripts are subject to editorial and quality review before acceptance.",
+                    "By enrolling in any publishing plan, the author acknowledges that they have read, understood, and agreed to all the terms and conditions of Lekhok Tripura Publishers.",
+                  ].map((term, i) => (
+                    <li key={i} className="flex gap-4">
+                      <span className="shrink-0 flex h-6 w-6 items-center justify-center rounded-full bg-cyan-400/10 text-cyan-300 text-xs font-black">{i + 1}</span>
+                      <p className="text-sm text-white/70 leading-relaxed">{term}</p>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {/* WHY PUBLISH WITH US */}
+              <div data-reveal className="rounded-3xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/40 via-cyan-900/20 to-zinc-950 p-8 md:p-10 text-left shadow-card backdrop-blur-xl">
+                <h3 className="text-xl md:text-2xl font-black text-cyan-300 mb-6">Why Publish with Lekhok Tripura Publishers?</h3>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {[
+                    "Transparent Pricing",
+                    "Professional Publishing Support",
+                    "National Online Distribution",
+                    "Amazon, Flipkart & Meesho Availability",
+                    "E-book Publishing",
+                    "Author-Centric Publishing Process",
+                    "Marketing & Promotional Assistance",
+                    "Dedicated Support from Manuscript to Publication",
+                  ].map((item) => (
+                    <div key={item} className="flex items-start gap-2.5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-cyan-400 mt-0.5" />
+                      <span className="text-sm text-white/80 font-medium">{item}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-8 pt-6 border-t border-white/10">
+                  <p className="text-base font-black text-white">Publish Your Story. Build Your Author Brand. Reach Readers Everywhere.</p>
+                  <p className="mt-2 text-sm text-white/60"><strong className="text-white">Lekhok Tripura Publishers</strong> — <em>"Where Every Story Finds Its Readers."</em></p>
+                </div>
               </div>
             </motion.section>
           )}
@@ -706,7 +795,7 @@ export default function ReaderPage() {
                             value={form.nominee}
                             onChange={setField("nominee")}
                             placeholder="Nominee Name, Relationship & Contact Details"
-                            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10"
+                            className="w-full mt-2 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10"
                           />
                         </div>
 
@@ -742,9 +831,9 @@ export default function ReaderPage() {
                                       : "border-white/10 bg-white/5 hover:border-white/20"
                                   }`}
                                 >
-                                  <div className="flex items-center justify-between gap-2">
-                                    <span className="font-bold text-sm text-white">{addon.name}</span>
-                                    <span className="text-xs font-black text-cyan-300 shrink-0">{addon.price}</span>
+                                  <div className="flex flex-col gap-1">
+                                    <span className="font-bold text-sm text-white leading-snug">{addon.name}</span>
+                                    <span className="text-xs font-black text-cyan-300">{addon.price}</span>
                                   </div>
                                   <p className="mt-1.5 text-xs text-white/50 leading-relaxed">{addon.desc}</p>
                                 </button>
