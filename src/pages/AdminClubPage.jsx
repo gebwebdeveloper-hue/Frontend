@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Loader2, Search, Trash2, Edit3, Plus, ArrowLeft,
   RefreshCw, CheckCircle2, Shield, Phone, Mail, MapPin, Calendar,
-  MessageSquare, UserCheck, Clock, X, AlertCircle
+  MessageSquare, UserCheck, Clock, X, AlertCircle, RotateCcw
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
@@ -20,6 +20,7 @@ const initialFormState = {
   dateOfBirth: "",
   actionText: "",
   reason: "",
+  portfolioUrl: "",
 };
 
 export default function AdminClubPage() {
@@ -38,17 +39,60 @@ export default function AdminClubPage() {
 
   // Modals & Active Edit State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState(null); // null = Add Mode, object = Edit Mode
+  const [editingMember, setEditingMember] = useState(null);
+  const [formData, setFormData] = useState(initialFormState);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingMember, setDeletingMember] = useState(null);
+  const [popupMessage, setPopupMessage] = useState(null);
+
+  // Refund Modal State
+  const [refundModalOpen, setRefundModalOpen] = useState(false);
+  const [selectedRefundMember, setSelectedRefundMember] = useState(null);
+  const [refundReason, setRefundReason] = useState("");
+  const [processingRefund, setProcessingRefund] = useState(false);
+
+  const handleOpenRefund = (member) => {
+    setSelectedRefundMember(member);
+    setRefundReason("");
+    setRefundModalOpen(true);
+  };
+
+  const handleExecuteRefund = async (e) => {
+    e.preventDefault();
+    if (!selectedRefundMember) return;
+    setProcessingRefund(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/club/admin/members/${selectedRefundMember._id}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ refundReason })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setMembers((prev) =>
+          prev.map((m) => (m._id === selectedRefundMember._id ? { ...m, paymentStatus: "refunded", status: "cancelled", actionText: `Refunded ₹${selectedRefundMember.amountPaid || 1178.82}` } : m))
+        );
+        setRefundModalOpen(false);
+        setPopupMessage({ type: "success", text: `Refund of ₹${selectedRefundMember.amountPaid || 1178.82} for ${selectedRefundMember.fullName} processed successfully!` });
+      } else {
+        alert(data.message || "Failed to process refund.");
+      }
+    } catch {
+      alert("Error processing club membership refund.");
+    } finally {
+      setProcessingRefund(false);
+    }
+  };
+
   const [form, setForm] = useState(initialFormState);
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
   // Delete Confirm Modal
-  const [deletingMember, setDeletingMember] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-
-  // Feedback Popup
-  const [popupMessage, setPopupMessage] = useState(null);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -124,6 +168,7 @@ export default function AdminClubPage() {
       dateOfBirth: member.dateOfBirth || "",
       actionText: member.actionText || "",
       reason: member.reason || "",
+      portfolioUrl: member.portfolioUrl || "",
     });
     setFormError("");
     setIsModalOpen(true);
@@ -437,6 +482,18 @@ export default function AdminClubPage() {
 
                     <div className="flex items-center gap-2">
                       <button
+                        onClick={() => handleOpenRefund(member)}
+                        disabled={member.paymentStatus === "refunded"}
+                        className={`px-2.5 py-1 rounded-xl text-xs font-semibold border flex items-center gap-1 transition ${
+                          member.paymentStatus === "refunded"
+                            ? "border-zinc-800 bg-zinc-900/50 text-zinc-600 cursor-not-allowed"
+                            : "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
+                        }`}
+                        title="Issue Refund (₹1,178.82)"
+                      >
+                        <RotateCcw size={13} /> {member.paymentStatus === "refunded" ? "Refunded" : "Refund"}
+                      </button>
+                      <button
                         onClick={() => handleOpenEdit(member)}
                         className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-cyan-300 transition hover:border-cyan-400/40 hover:bg-cyan-400/10"
                         title="Edit Member"
@@ -605,6 +662,20 @@ export default function AdminClubPage() {
                     />
                   </div>
 
+                  {/* Portfolio Link / Website */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-white/70 mb-1">
+                      Portfolio Link / Website (Optional)
+                    </label>
+                    <input
+                      type="url"
+                      value={form.portfolioUrl || ""}
+                      onChange={(e) => setForm({ ...form, portfolioUrl: e.target.value })}
+                      placeholder="https://yourportfolio.com or social link"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/25 outline-none transition focus:border-cyan-400/50 focus:bg-white/10"
+                    />
+                  </div>
+
                   {/* Submit Button */}
                   <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-white/10">
                     <button
@@ -667,6 +738,86 @@ export default function AdminClubPage() {
                     {deleteLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Delete Member
                   </button>
                 </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ══════════════ REFUND CONFIRMATION MODAL ══════════════ */}
+        <AnimatePresence>
+          {refundModalOpen && selectedRefundMember && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+              onClick={() => setRefundModalOpen(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative w-full max-w-md rounded-3xl border border-amber-500/30 bg-zinc-950 p-6 shadow-2xl"
+              >
+                <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+                  <div className="flex items-center gap-2 text-amber-400">
+                    <RotateCcw size={18} />
+                    <h3 className="text-lg font-black text-white">Refund Club Membership</h3>
+                  </div>
+                  <button onClick={() => setRefundModalOpen(false)} className="text-white/40 hover:text-white">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 mb-4 space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-white/50">Member Name:</span>
+                    <span className="font-bold text-white">{selectedRefundMember.fullName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/50">Email:</span>
+                    <span className="font-bold text-white">{selectedRefundMember.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/50">Payment ID:</span>
+                    <span className="font-mono text-cyan-300">{selectedRefundMember.paymentId || "N/A"}</span>
+                  </div>
+                  <div className="flex justify-between text-sm border-t border-amber-500/20 pt-2 font-bold">
+                    <span className="text-white">Refund Amount:</span>
+                    <span className="text-emerald-400">₹{selectedRefundMember.amountPaid || 1178.82}</span>
+                  </div>
+                </div>
+
+                <form onSubmit={handleExecuteRefund} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-white/70 mb-1.5">Reason for Refund / Note (Optional)</label>
+                    <textarea
+                      rows={3}
+                      value={refundReason}
+                      onChange={(e) => setRefundReason(e.target.value)}
+                      placeholder="e.g. Member requested cancellation / Duplicate payment..."
+                      className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setRefundModalOpen(false)}
+                      className="w-1/3 rounded-xl border border-white/10 bg-white/5 py-3 text-xs font-bold text-white/60 hover:bg-white/10"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={processingRefund}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-xs font-black text-black hover:bg-amber-400 transition disabled:opacity-50"
+                    >
+                      {processingRefund ? <Loader2 className="h-4 w-4 animate-spin text-black" /> : `Confirm Refund (₹${selectedRefundMember.amountPaid || 1178.82})`}
+                    </button>
+                  </div>
+                </form>
               </motion.div>
             </motion.div>
           )}

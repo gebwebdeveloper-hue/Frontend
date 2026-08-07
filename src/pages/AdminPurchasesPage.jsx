@@ -25,7 +25,8 @@ import {
   KeyRound,
   ArrowRight,
   Pencil,
-  Trash2
+  Trash2,
+  RotateCcw
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
@@ -72,6 +73,57 @@ export default function AdminPurchasesPage() {
     adminNote: ""
   });
   const [updatingEdit, setUpdatingEdit] = useState(false);
+
+  // Refund modal state
+  const [refundModalOpen, setRefundModalOpen] = useState(false);
+  const [selectedRefundPurchase, setSelectedRefundPurchase] = useState(null);
+  const [refundReason, setRefundReason] = useState("");
+  const [processingRefund, setProcessingRefund] = useState(false);
+
+  const handleOpenRefundModal = (purchase) => {
+    setSelectedRefundPurchase(purchase);
+    setRefundReason("");
+    setRefundModalOpen(true);
+  };
+
+  const handleExecuteRefund = async (e) => {
+    e.preventDefault();
+    if (!selectedRefundPurchase) return;
+    setProcessingRefund(true);
+
+    const isStory = selectedRefundPurchase.itemType === "story" || selectedRefundPurchase.format === "story";
+    const endpoint = isStory
+      ? `${API_BASE}/newsletter/admin/access-requests/${selectedRefundPurchase._id}/refund`
+      : `${API_BASE}/purchase/${selectedRefundPurchase._id}/refund`;
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ refundReason })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setPurchasesList((prev) =>
+          prev.map((p) => (p._id === selectedRefundPurchase._id ? { ...p, status: "cancelled", adminNote: `[REFUNDED] ${refundReason}` } : p))
+        );
+        setRefundModalOpen(false);
+        setPopupMessage({
+          title: "💸 Refund Processed!",
+          description: data.message || `Refund of ₹${selectedRefundPurchase.amount} issued successfully!`
+        });
+        setShowSuccessPopup(true);
+      } else {
+        alert(data.message || "Failed to process refund.");
+      }
+    } catch {
+      alert("Error initiating refund request.");
+    } finally {
+      setProcessingRefund(false);
+    }
+  };
 
   // Success popup message state
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -810,6 +862,20 @@ export default function AdminPurchasesPage() {
 
                               <button
                                 type="button"
+                                onClick={() => handleOpenRefundModal(purchase)}
+                                disabled={purchase.status === "cancelled"}
+                                className={`flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition ${
+                                  purchase.status === "cancelled"
+                                    ? "border-zinc-800 bg-zinc-900/50 text-zinc-600 cursor-not-allowed"
+                                    : "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
+                                }`}
+                                title="Issue Razorpay Refund"
+                              >
+                                <RotateCcw size={13} /> {purchase.status === "cancelled" ? "Refunded" : "Refund"}
+                              </button>
+
+                              <button
+                                type="button"
                                 onClick={() => handleDeleteTransaction(purchase)}
                                 className="flex items-center gap-1 rounded-xl border border-red-500/20 bg-red-500/10 px-2.5 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-500/20 transition"
                                 title="Delete Transaction Record"
@@ -1088,6 +1154,89 @@ export default function AdminPurchasesPage() {
                       className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-fuchsia-500 py-3 text-xs font-bold text-black hover:bg-fuchsia-400 transition disabled:opacity-50"
                     >
                       {updatingShipment ? <Loader2 className="h-4 w-4 animate-spin text-black" /> : "Save Tracking Details"}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* REFUND CONFIRMATION MODAL */}
+      {createPortal(
+        <AnimatePresence>
+          {refundModalOpen && selectedRefundPurchase && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
+              onClick={() => setRefundModalOpen(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative w-full max-w-md rounded-3xl border border-amber-500/30 bg-zinc-950 p-6 shadow-2xl"
+              >
+                <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+                  <div className="flex items-center gap-2 text-amber-400">
+                    <RotateCcw size={18} />
+                    <h3 className="text-lg font-black text-white">Process Refund</h3>
+                  </div>
+                  <button onClick={() => setRefundModalOpen(false)} className="text-white/40 hover:text-white">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 mb-4 space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-white/50">Item:</span>
+                    <span className="font-bold text-white">{selectedRefundPurchase.bookId?.title || "Book Purchase"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/50">Customer:</span>
+                    <span className="font-bold text-white">{selectedRefundPurchase.userId?.name || selectedRefundPurchase.userId?.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/50">Payment Ref:</span>
+                    <span className="font-mono text-cyan-300">{selectedRefundPurchase.razorpayPaymentId || selectedRefundPurchase.transactionNumber || "N/A"}</span>
+                  </div>
+                  <div className="flex justify-between text-sm border-t border-amber-500/20 pt-2 font-bold">
+                    <span className="text-white">Refund Amount:</span>
+                    <span className="text-emerald-400">₹{selectedRefundPurchase.amount}</span>
+                  </div>
+                </div>
+
+                <form onSubmit={handleExecuteRefund} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-white/70 mb-1.5">Refund Reason / Admin Note (Optional)</label>
+                    <textarea
+                      rows={3}
+                      value={refundReason}
+                      onChange={(e) => setRefundReason(e.target.value)}
+                      placeholder="e.g. Customer requested cancellation / Wrong payment..."
+                      className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setRefundModalOpen(false)}
+                      className="w-1/3 rounded-xl border border-white/10 bg-white/5 py-3 text-xs font-bold text-white/60 hover:bg-white/10"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={processingRefund}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-xs font-black text-black hover:bg-amber-400 transition disabled:opacity-50"
+                    >
+                      {processingRefund ? <Loader2 className="h-4 w-4 animate-spin text-black" /> : `Confirm Refund (₹${selectedRefundPurchase.amount})`}
                     </button>
                   </div>
                 </form>

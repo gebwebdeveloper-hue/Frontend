@@ -121,9 +121,9 @@ export default function ClubPage() {
           const mapped = data.members.map((m) => ({
             name: m.fullName,
             role: m.role || "Member",
-            action: m.actionText || (m.role === "Founder" ? "Know More" : ""),
             email: m.email,
             phone: m.phone,
+            portfolioUrl: (m.portfolioUrl || "").trim(),
           }));
           setMembersList(mapped);
         }
@@ -480,15 +480,16 @@ export default function ClubPage() {
                         <h3 className="text-xl font-black text-white">{member.name}</h3>
                         <p className="mt-1 text-sm text-white/55">{member.role}</p>
                       </div>
-                      {member.action && (
-                        <button
-                          type="button"
-                          onClick={() => document.getElementById("about-us")?.scrollIntoView({ behavior: "smooth" })}
+                      {member.portfolioUrl ? (
+                        <a
+                          href={member.portfolioUrl.startsWith("http") ? member.portfolioUrl : `https://${member.portfolioUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-sm font-bold text-cyan-200 underline decoration-cyan-300/30 underline-offset-4 transition group-hover:text-white cursor-pointer"
                         >
-                          {member.action} →
-                        </button>
-                      )}
+                          Know More →
+                        </a>
+                      ) : null}
                     </div>
                   ))}
                 </div>
