@@ -100,7 +100,7 @@ const ADDONS_MASTER_LIST = [
   { name: "Roll-up Standee", price: "₹1,500", numericPrice: 1500, desc: "Promotional roll-up display standee." },
 ];
 
-function calculateTotalPricing(planName, selectedAddonsList = []) {
+function calculateTotalPricing(planName, selectedAddonsList = [], posterCount = 1) {
   const planPrices = {
     basic: { base: 4999, name: "Basic Publishing Plan" },
     essential: { base: 9999, name: "Essential Publishing Plan" },
@@ -118,12 +118,21 @@ function calculateTotalPricing(planName, selectedAddonsList = []) {
   const addonsBreakdown = [];
 
   (selectedAddonsList || []).forEach((addonName) => {
-    const item = ADDONS_MASTER_LIST.find(
-      (a) => a.name === addonName || addonName.startsWith(a.name) || a.name.startsWith(addonName)
-    );
-    if (item) {
-      addonsTotal += item.numericPrice;
-      addonsBreakdown.push(item);
+    if (addonName === "Posters" || addonName.startsWith("Posters")) {
+      const cost = 50 * (posterCount || 1);
+      addonsTotal += cost;
+      addonsBreakdown.push({
+        name: `Posters (${posterCount} ${posterCount === 1 ? "Poster" : "Posters"})`,
+        numericPrice: cost,
+      });
+    } else {
+      const item = ADDONS_MASTER_LIST.find(
+        (a) => a.name === addonName || addonName.startsWith(a.name) || a.name.startsWith(addonName)
+      );
+      if (item) {
+        addonsTotal += item.numericPrice;
+        addonsBreakdown.push(item);
+      }
     }
   });
 
@@ -211,6 +220,7 @@ export default function ReaderPage() {
   const [showPlans, setShowPlans] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("");
   const [selectedAddons, setSelectedAddons] = useState([]);
+  const [posterCount, setPosterCount] = useState(1);
   const [form, setForm] = useState(initialForm);
   const [manuscript, setManuscript] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -260,6 +270,7 @@ export default function ReaderPage() {
     setSelectedPlan(planName);
     setManuscript(null);
     setSelectedAddons([]);
+    setPosterCount(1);
     setMessage({ type: "", text: "" });
     setForm((current) => ({ ...current, note: `I am interested in the ${planName} self-publishing plan. Please call me back with more details.` }));
     setModalOpen(true);
@@ -352,6 +363,13 @@ export default function ReaderPage() {
         return;
       }
 
+      const preparedAddons = selectedAddons.map((addon) => {
+        if (addon === "Posters" || addon.startsWith("Posters")) {
+          return `Posters (${posterCount} ${posterCount === 1 ? "Poster" : "Posters"})`;
+        }
+        return addon;
+      });
+
       // 1. Create order on server
       const orderRes = await fetch(`${API_BASE}/publishing/create-order`, {
         method: "POST",
@@ -361,7 +379,7 @@ export default function ReaderPage() {
           name: form.name,
           email: form.email,
           phone: form.phone,
-          addons: selectedAddons,
+          addons: preparedAddons,
         })
       });
 
@@ -426,8 +444,8 @@ export default function ReaderPage() {
             payload.append("address", form.address || "");
             payload.append("note", form.note || "");
             payload.append("paymentId", response.razorpay_payment_id);
-            if (selectedAddons?.length) {
-              selectedAddons.forEach((addon) => payload.append("addons", addon));
+            if (preparedAddons?.length) {
+              preparedAddons.forEach((addon) => payload.append("addons", addon));
             }
             if (form.customAddon) {
               payload.append("customAddon", form.customAddon);
@@ -986,6 +1004,77 @@ export default function ReaderPage() {
                             {ADDONS_MASTER_LIST.map((addonObj) => {
                               const addon = addonObj.name;
                               const isSelected = selectedAddons.includes(addon);
+
+                              if (addon === "Posters") {
+                                return (
+                                  <div
+                                    key={addon}
+                                    className={`flex items-center justify-between gap-2 p-3 rounded-xl border transition ${
+                                      isSelected
+                                        ? "border-cyan-300 bg-cyan-300/15 text-cyan-100 font-bold shadow-md shadow-cyan-500/10"
+                                        : "border-white/10 bg-white/5 text-white/65 hover:border-white/20 hover:text-white"
+                                    }`}
+                                  >
+                                    <div
+                                      className="flex items-center gap-2 overflow-hidden cursor-pointer flex-1"
+                                      onClick={() => {
+                                        if (!isSelected) {
+                                          setSelectedAddons((prev) => [...prev, "Posters"]);
+                                        }
+                                      }}
+                                    >
+                                      <div className={`h-4 w-4 shrink-0 rounded border flex items-center justify-center ${isSelected ? "border-cyan-300 bg-cyan-300 text-black font-black" : "border-white/30"}`}>
+                                        {isSelected && "✓"}
+                                      </div>
+                                      <span className="truncate">Posters</span>
+                                    </div>
+
+                                    {isSelected ? (
+                                      <div className="flex items-center gap-2 shrink-0">
+                                        <div className="flex items-center rounded-lg border border-cyan-400/40 bg-black/40 p-0.5">
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (posterCount > 1) {
+                                                setPosterCount((prev) => prev - 1);
+                                              } else {
+                                                setSelectedAddons((prev) => prev.filter((item) => !item.startsWith("Posters")));
+                                              }
+                                            }}
+                                            className="grid h-6 w-6 place-items-center rounded-md bg-white/10 text-xs font-bold text-white transition hover:bg-cyan-400 hover:text-black"
+                                            title="Decrease poster count"
+                                          >
+                                            -
+                                          </button>
+                                          <span className="px-2 text-xs font-black text-cyan-300 min-w-[1.4rem] text-center">
+                                            {posterCount}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setPosterCount((prev) => prev + 1);
+                                            }}
+                                            className="grid h-6 w-6 place-items-center rounded-md bg-cyan-400 text-xs font-bold text-black transition hover:bg-cyan-300"
+                                            title="Add another poster"
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                        <span className="rounded-md bg-cyan-300 px-2 py-0.5 text-[10px] font-black text-black">
+                                          ₹{posterCount * 50}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <span className="shrink-0 rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-extrabold text-cyan-300">
+                                        +₹50 / per poster
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              }
+
                               return (
                                 <button
                                   type="button"
@@ -1035,7 +1124,7 @@ export default function ReaderPage() {
 
                         {/* Price Summary Breakdown Box */}
                         {(() => {
-                          const pricing = calculateTotalPricing(selectedPlan, selectedAddons);
+                          const pricing = calculateTotalPricing(selectedPlan, selectedAddons, posterCount);
 
                           return (
                             <div className="md:col-span-2 mt-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-zinc-950 to-indigo-950/60 p-4 space-y-3 shadow-xl">
