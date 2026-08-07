@@ -9,30 +9,49 @@ export function useGsapReveal(options = {}) {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.utils.toArray("[data-reveal]").forEach((item, index) => {
+      const items = gsap.utils.toArray("[data-reveal]");
+
+      items.forEach((item) => {
+        // Immediate check: if element is near or within viewport on load, show immediately without gap
+        const rect = item.getBoundingClientRect();
+        if (rect.top < window.innerHeight + 100) {
+          gsap.set(item, { autoAlpha: 1, y: 0, filter: "none" });
+          return;
+        }
+
         gsap.fromTo(
           item,
           {
             autoAlpha: 0,
-            y: options.y ?? 36,
-            filter: "blur(18px)",
-            scale: options.scale ?? 1
+            y: options.y ?? 16
           },
           {
             autoAlpha: 1,
             y: 0,
-            filter: "blur(0px)",
-            scale: 1,
-            duration: options.duration ?? 0.9,
-            delay: index * (options.stagger ?? 0.05),
-            ease: "power3.out",
+            duration: options.duration ?? 0.4,
+            ease: "power2.out",
             scrollTrigger: {
               trigger: item,
-              start: "top 82%"
+              start: "top 98%",
+              toggleActions: "play none none none",
+              once: true,
+              onEnter: () => {
+                gsap.set(item, { autoAlpha: 1, y: 0 });
+              }
             }
           }
         );
       });
+
+      // Multiple refresh triggers to catch layout shifts & image loads
+      ScrollTrigger.refresh();
+      const t1 = setTimeout(() => ScrollTrigger.refresh(), 100);
+      const t2 = setTimeout(() => ScrollTrigger.refresh(), 350);
+
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
     }, scope);
 
     return () => ctx.revert();

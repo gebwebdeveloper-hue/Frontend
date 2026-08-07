@@ -24,6 +24,8 @@ import NewsPage from "./pages/NewsPage.jsx";
 import AdminNewsPage from "./pages/AdminNewsPage.jsx";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage.jsx";
 import TermsPage from "./pages/TermsPage.jsx";
+import AboutPage from "./pages/AboutPage.jsx";
+import AdminClubPage from "./pages/AdminClubPage.jsx";
 
 // Helper component to normalize URLs (strip trailing slashes, decode spaces/encoded URIs)
 function RouteNormalizer() {
@@ -80,6 +82,7 @@ export default function App() {
           <Route path="/admin/users" element={<AdminUsersPage />} />
           <Route path="/admin/purchases" element={<AdminPurchasesPage />} />
           <Route path="/admin/news" element={<AdminNewsPage />} />
+          <Route path="/admin/club" element={<AdminClubPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/club" element={<ClubPage />} />
           <Route path="/short-stories" element={<NewsletterListingPage />} />
@@ -97,8 +100,8 @@ export default function App() {
           <Route path="/books" element={<Navigate to="/library" replace />} />
           <Route path="/my-books" element={<Navigate to="/library" replace />} />
           <Route path="/mybooks" element={<Navigate to="/library" replace />} />
-          <Route path="/about-us" element={<Navigate to="/" replace />} />
-          <Route path="/about" element={<Navigate to="/" replace />} />
+          <Route path="/about-us" element={<AboutPage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/the-story-of-success" element={<Navigate to="/news" replace />} />
           <Route path="/story-of-success" element={<Navigate to="/news" replace />} />
           <Route path="/april-2022" element={<Navigate to="/news" replace />} />

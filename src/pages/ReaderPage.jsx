@@ -7,6 +7,7 @@ import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import { API_BASE } from "../config.js";
 import { useGsapReveal } from "../hooks/useGsapReveal.js";
+import { loadRazorpayScript } from "../utils/razorpay.js";
 
 const publishingPlans = [
   {
@@ -110,15 +111,25 @@ const initialForm = {
   name: "",
   phone: "",
   email: "",
-  address: "",
   bookTitle: "",
-  genre: "রহস্য",
-  pageCount: "20-50",
-  publishingType: "Paperback (পেপারব্যাক)",
-  nominee: "",
+  subtitle: "",
+  authorName: "",
+  language: "Bengali",
+  customLanguage: "",
+  genre: "",
+  totalPages: "",
+  bookSize: 'A5 (5.83" × 8.27")',
+  customBookSize: "",
+  paperType: "Cream / Off-White",
+  customPaperType: "",
+  printType: "Black & White",
+  bookType: "Paperback",
+  copies: "10",
+  address: "",
+  note: "",
+  customAddon: "",
   bookAbout: "",
   manuscriptReady: "Yes",
-  note: "",
 };
 
 function Input({ label, className = "", ...props }) {
@@ -273,50 +284,140 @@ export default function ReaderPage() {
     setMessage({ type: "", text: "" });
 
     try {
-      const payload = new FormData();
-      payload.append("planName", selectedPlan);
-      payload.append("name", form.name);
-      payload.append("phone", form.phone);
-      payload.append("email", form.email);
-      payload.append("address", form.address);
-      payload.append("bookTitle", form.bookTitle);
-      payload.append("genre", form.genre);
-      payload.append("pageCount", form.pageCount);
-      payload.append("publishingType", form.publishingType);
-      payload.append("nominee", form.nominee);
-      payload.append("bookAbout", form.bookAbout);
-      payload.append("note", form.note);
-      if (selectedAddons?.length) {
-        selectedAddons.forEach((addon) => payload.append("addons", addon));
-      }
-      if (manuscript) {
-        payload.append("manuscript", manuscript);
+      if (!form.name || !form.phone || !form.email || !form.bookTitle) {
+        setMessage({ type: "error", text: "Please fill in all required fields." });
+        setLoading(false);
+        return;
       }
 
-      const res = await fetch(`${API_BASE}/publishing/plan`, {
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        setMessage({ type: "error", text: "Failed to load Razorpay Payment Gateway. Please check your connection." });
+        setLoading(false);
+        return;
+      }
+
+      // 1. Create order on server
+      const orderRes = await fetch(`${API_BASE}/publishing/create-order`, {
         method: "POST",
-        body: payload,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planName: selectedPlan || "Basic Publishing Plan",
+          name: form.name,
+          email: form.email,
+          phone: form.phone
+        })
       });
-      const data = await res.json();
 
-      if (data.success) {
-        setMessage({
-          type: "success",
-          text: data.adminEmailSent
-            ? `${selectedPlan} plan request submitted and mailed to admin.`
-            : "Plan request submitted. Admin email could not be confirmed.",
-        });
-        setManuscript(null);
-        setForm((current) => ({ ...initialForm, name: current.name, phone: current.phone, email: current.email }));
-      } else {
-        const errorText = data.errors?.length
-          ? data.errors.map((e) => e.message).join(", ")
-          : data.message || "Could not submit plan request.";
-        setMessage({ type: "error", text: errorText });
+      const orderData = await orderRes.json();
+      if (!orderData.success) {
+        setMessage({ type: "error", text: orderData.message || "Failed to initiate payment." });
+        setLoading(false);
+        return;
       }
+
+      // 2. Open Razorpay Modal
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency || "INR",
+        name: "Lekhok Tripura Publishers",
+        description: `Self Publishing: ${selectedPlan || "Plan Registration"}`,
+        order_id: orderData.orderId,
+        prefill: {
+          name: form.name,
+          email: form.email,
+          contact: form.phone
+        },
+        theme: { color: "#06b6d4" },
+        handler: async function (response) {
+          try {
+            // 3. Verify Payment
+            const verifyRes = await fetch(`${API_BASE}/publishing/verify-payment`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+
+            const verifyData = await verifyRes.json();
+            if (!verifyData.success) {
+              setMessage({ type: "error", text: verifyData.message || "Payment verification failed." });
+              setLoading(false);
+              return;
+            }
+
+            // 4. Submit Registration Details with Payment ID
+            const payload = new FormData();
+            payload.append("planName", selectedPlan || "Self Publishing");
+            payload.append("name", form.name);
+            payload.append("phone", form.phone);
+            payload.append("email", form.email);
+            payload.append("bookTitle", form.bookTitle);
+            payload.append("subtitle", form.subtitle || "");
+            payload.append("authorName", form.authorName || form.name);
+            payload.append("language", form.language === "Other" ? (form.customLanguage || "Other") : form.language);
+            payload.append("genre", form.genre);
+            payload.append("totalPages", form.totalPages);
+            payload.append("bookSize", form.bookSize === "Custom Size" ? (form.customBookSize || "Custom Size") : form.bookSize);
+            payload.append("paperType", form.paperType === "Others" ? (form.customPaperType || "Others") : form.paperType);
+            payload.append("printType", form.printType);
+            payload.append("bookType", form.bookType);
+            payload.append("copies", form.copies);
+            payload.append("address", form.address || "");
+            payload.append("note", form.note || "");
+            payload.append("paymentId", response.razorpay_payment_id);
+            if (selectedAddons?.length) {
+              selectedAddons.forEach((addon) => payload.append("addons", addon));
+            }
+            if (form.customAddon) {
+              payload.append("customAddon", form.customAddon);
+            }
+            if (manuscript) {
+              payload.append("manuscript", manuscript);
+            }
+
+            const res = await fetch(`${API_BASE}/publishing/plan`, {
+              method: "POST",
+              body: payload,
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              setMessage({
+                type: "success",
+                text: `🎉 Payment Verified & Registration Submitted! A confirmation receipt has been emailed to ${form.email}`,
+              });
+              setManuscript(null);
+              setSelectedAddons([]);
+              setForm((current) => ({ ...initialForm, name: current.name, phone: current.phone, email: current.email }));
+            } else {
+              setMessage({ type: "error", text: data.message || "Payment received, but registration submission failed. Our team will contact you." });
+            }
+          } catch {
+            setMessage({ type: "error", text: "Error verifying payment signature." });
+          } finally {
+            setLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", function (resp) {
+        setMessage({ type: "error", text: resp.error?.description || "Payment was cancelled or failed." });
+        setLoading(false);
+      });
+      rzp.open();
     } catch {
-      setMessage({ type: "error", text: "Could not submit plan request." });
-    } finally {
+      setMessage({ type: "error", text: "Could not initiate payment. Please try again." });
       setLoading(false);
     }
   };
@@ -705,142 +806,235 @@ export default function ReaderPage() {
 
                     {selectedPlan ? (
                       <div className="grid gap-4 md:grid-cols-2">
-                        <div className="md:col-span-2 rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] p-5 text-sm leading-7 text-white/80">
-                          <h4 className="text-xl font-black text-white">{selectedPlan} Self Publishing Plan</h4>
-                          <p className="mt-1 text-cyan-300 font-bold">গল্প জমা ফর্ম (Manuscript / Story Submission)</p>
-                          <p className="mt-2 text-white/70">
-                            আপনি কি আপনার নিজের লেখা গল্প, কবিতা বা কোনো সাহিত্যকর্ম আমাদের পেজ/ ওয়েবসাইটে প্রকাশ করতে চান? তাহলে নিচের তথ্যগুলি সঠিকভাবে পূরণ করুন। আমরা আপনার লেখা যাচাইয়ের পর আপনাকে প্রকাশ করার বিষয়ে জানাব।
-                          </p>
+                        {/* Banner & SKU Box */}
+                        <div className="md:col-span-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-zinc-950 to-indigo-950/60 p-5 shadow-xl">
+                          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3 mb-3">
+                            <h4 className="text-2xl font-black text-white">Self Publishing</h4>
+                            <span className="rounded-full bg-cyan-400/10 border border-cyan-400/30 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-cyan-300">
+                              {selectedPlan} Plan
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center justify-between rounded-xl border border-amber-400/30 bg-amber-400/10 p-3.5 text-xs text-amber-300 font-bold">
+                            <span>BOOK SKU No.</span>
+                            <span className="text-white/70 font-normal italic">(Will be shared after successful registration)</span>
+                          </div>
                         </div>
 
-                        <Input label="আপনার পূর্ণ নাম (Your Full Name) *" required value={form.name} onChange={setField("name")} placeholder="Author full name" />
-                        <Input label="Mobile No *" required value={form.phone} onChange={setField("phone")} placeholder="10-digit mobile number" inputMode="numeric" />
-                        <Input label="Mail ID *" required type="email" value={form.email} onChange={setField("email")} placeholder="you@example.com" className="md:col-span-2" />
-                        
-                        <Input label="বই শিরোনাম (Book Name) *" required value={form.bookTitle} onChange={setField("bookTitle")} placeholder="e.g. আপনার বইয়ের নাম" className="md:col-span-2" />
+                        {/* Pre-filled Author Contact Details */}
+                        <Input label="Author Full Name *" required value={form.name} onChange={setField("name")} placeholder="Full Name" />
+                        <Input label="Phone Number *" required value={form.phone} onChange={setField("phone")} placeholder="10-digit mobile number" inputMode="numeric" />
+                        <Input label="Mail ID *" required type="email" value={form.email} onChange={setField("email")} placeholder="example@mail.com" className="md:col-span-2" />
 
-                        {/* Genre & Page Count */}
-                        <div className="md:col-span-1">
-                          <label className="block text-sm font-bold text-white/70 mb-2">
-                            আপনার কবিতা / গল্পের ধরন কি (Genre) *
-                          </label>
-                          <select
-                            required
-                            value={form.genre}
-                            onChange={setField("genre")}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
-                            style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
-                          >
-                            <option value="রহস্য" style={{ background: "#0a0a0a" }}>রহস্য (Mystery)</option>
-                            <option value="প্রেম" style={{ background: "#0a0a0a" }}>প্রেম (Romance)</option>
-                            <option value="বিরহ" style={{ background: "#0a0a0a" }}>বিরহ (Heartbreak)</option>
-                            <option value="গোয়েন্দা" style={{ background: "#0a0a0a" }}>গোয়েন্দা (Detective)</option>
-                            <option value="ভৌতিক" style={{ background: "#0a0a0a" }}>ভৌতিক (Horror)</option>
-                            <option value="অলৌকিক" style={{ background: "#0a0a0a" }}>অলৌকিক (Supernatural)</option>
-                            <option value="ঐতিহাসিক" style={{ background: "#0a0a0a" }}>ঐতিহাসিক (Historical)</option>
-                            <option value="এডভেঞ্চার" style={{ background: "#0a0a0a" }}>এডভেঞ্চার (Adventure)</option>
-                            <option value="ট্র্যাজেডি" style={{ background: "#0a0a0a" }}>ট্র্যাজেডি (Tragedy)</option>
-                            <option value="Other" style={{ background: "#0a0a0a" }}>Other</option>
-                          </select>
-                        </div>
+                        {/* Book Title & Subtitle */}
+                        <Input label="* Book Title :" required value={form.bookTitle} onChange={setField("bookTitle")} placeholder="Enter your book title" className="md:col-span-2" />
+                        <Input label="Subtitle (If Any) :" value={form.subtitle} onChange={setField("subtitle")} placeholder="Enter subtitle (optional)" className="md:col-span-2" />
 
-                        <div className="md:col-span-1">
-                          <label className="block text-sm font-bold text-white/70 mb-2">
-                            Book Page Count A5 *
-                          </label>
-                          <select
-                            required
-                            value={form.pageCount}
-                            onChange={setField("pageCount")}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none appearance-none"
-                            style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
-                          >
-                            <option value="20-50" style={{ background: "#0a0a0a" }}>20–50</option>
-                            <option value="50-100" style={{ background: "#0a0a0a" }}>50–100</option>
-                            <option value="100-200" style={{ background: "#0a0a0a" }}>100–200</option>
-                            <option value="200-300" style={{ background: "#0a0a0a" }}>200–300</option>
-                            <option value="300-400" style={{ background: "#0a0a0a" }}>300–400</option>
-                            <option value="400-500" style={{ background: "#0a0a0a" }}>400–500</option>
-                          </select>
-                        </div>
+                        {/* Author Name on Cover */}
+                        <Input label="* Author Name (As it should appear on the cover) :" required value={form.authorName} onChange={setField("authorName")} placeholder="Author Name for book cover" className="md:col-span-2" />
 
-                        {/* Publishing Format Preference */}
-                        <fieldset className="md:col-span-2 rounded-xl border border-white/10 bg-white/5 p-4">
-                          <legend className="px-2 text-sm font-bold text-white/70">আপনি কি চাইছেন? (Format Preference) *</legend>
+                        {/* Language Selection */}
+                        <fieldset className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+                          <legend className="px-2 text-xs font-bold uppercase tracking-wider text-white/70">* Language :</legend>
                           <div className="mt-3 flex flex-wrap gap-3">
+                            {["Bengali", "English", "Hindi", "Other"].map((lang) => (
+                              <label key={lang} className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition ${form.language === lang ? "border-cyan-300/45 bg-cyan-300/15 text-cyan-100 shadow-glow shadow-cyan-300/5" : "border-white/10 bg-black/20 text-white/55 hover:text-white"}`}>
+                                <input type="radio" name="language" value={lang} checked={form.language === lang} onChange={setField("language")} className="sr-only" />
+                                {lang}
+                              </label>
+                            ))}
+                          </div>
+                          {form.language === "Other" && (
+                            <input type="text" value={form.customLanguage} onChange={setField("customLanguage")} placeholder="Specify Other Language..." className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/30 outline-none focus:border-cyan-400/50" />
+                          )}
+                        </fieldset>
+
+                        {/* Book Genre & Page Count */}
+                        <Input label="* Book Genre :" required value={form.genre} onChange={setField("genre")} placeholder="e.g. Novel, Poetry, Story Collection, Drama" />
+                        <Input label="* Total Number of Pages :" required value={form.totalPages} onChange={setField("totalPages")} placeholder="e.g. 120" inputMode="numeric" />
+
+                        {/* Book Size */}
+                        <fieldset className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+                          <legend className="px-2 text-xs font-bold uppercase tracking-wider text-white/70">* Book Size :</legend>
+                          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
                             {[
-                              { id: "paperback", label: "Paperback (পেপারব্যাক)", val: "Paperback (পেপারব্যাক)" },
-                              { id: "hardcover", label: "Hardcover (হার্ডকভার)", val: "Hardcover (হার্ডকভার)" },
-                              { id: "ebook", label: "Publish E-Book (ই-বুক)", val: "Publish E-Book (ই-বুক)" }
-                            ].map((opt) => (
-                              <label key={opt.id} className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-bold transition ${form.publishingType === opt.val ? "border-cyan-300/45 bg-cyan-300/15 text-cyan-100 shadow-glow shadow-cyan-300/5" : "border-white/10 bg-black/20 text-white/55 hover:text-white"}`}>
-                                <input type="radio" name="publishingType" value={opt.val} checked={form.publishingType === opt.val} onChange={setField("publishingType")} className="sr-only" />
-                                {opt.label}
+                              'A5 (5.83" × 8.27")',
+                              '5.5" × 8.5"',
+                              '6" × 9"',
+                              'Custom Size'
+                            ].map((size) => (
+                              <label key={size} className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition ${form.bookSize === size ? "border-cyan-300/45 bg-cyan-300/15 text-cyan-100" : "border-white/10 bg-black/20 text-white/55 hover:text-white"}`}>
+                                <input type="radio" name="bookSize" value={size} checked={form.bookSize === size} onChange={setField("bookSize")} className="sr-only" />
+                                {size}
+                              </label>
+                            ))}
+                          </div>
+                          {form.bookSize === "Custom Size" && (
+                            <input type="text" value={form.customBookSize} onChange={setField("customBookSize")} placeholder="Specify Custom Size..." className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/30 outline-none focus:border-cyan-400/50" />
+                          )}
+                        </fieldset>
+
+                        {/* Paper Type */}
+                        <fieldset className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+                          <legend className="px-2 text-xs font-bold uppercase tracking-wider text-white/70">* Paper Type :</legend>
+                          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                            {["Cream / Off-White", "White", "Premium Paper", "Others"].map((paper) => (
+                              <label key={paper} className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition ${form.paperType === paper ? "border-cyan-300/45 bg-cyan-300/15 text-cyan-100" : "border-white/10 bg-black/20 text-white/55 hover:text-white"}`}>
+                                <input type="radio" name="paperType" value={paper} checked={form.paperType === paper} onChange={setField("paperType")} className="sr-only" />
+                                {paper}
+                              </label>
+                            ))}
+                          </div>
+                          {form.paperType === "Others" && (
+                            <input type="text" value={form.customPaperType} onChange={setField("customPaperType")} placeholder="Specify Other Paper Type..." className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/30 outline-none focus:border-cyan-400/50" />
+                          )}
+                        </fieldset>
+
+                        {/* Print Type */}
+                        <fieldset className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+                          <legend className="px-2 text-xs font-bold uppercase tracking-wider text-white/70">* Print Type :</legend>
+                          <div className="mt-3 flex flex-wrap gap-3">
+                            {["Black & White", "Full Color", "Color + Black & White"].map((print) => (
+                              <label key={print} className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition ${form.printType === print ? "border-cyan-300/45 bg-cyan-300/15 text-cyan-100" : "border-white/10 bg-black/20 text-white/55 hover:text-white"}`}>
+                                <input type="radio" name="printType" value={print} checked={form.printType === print} onChange={setField("printType")} className="sr-only" />
+                                {print}
                               </label>
                             ))}
                           </div>
                         </fieldset>
 
-                        {/* Nominee Name & Relationship */}
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-bold text-white/70">
-                            আপনার পর আপনার বইএর লভ্যাংশ কাকে দিতে চান ? *
-                          </label>
-                          <span className="block text-xs text-white/45 italic mb-2">
-                            Nominee Name , Relationship with author & contact details
-                          </span>
-                          <input
-                            required
-                            type="text"
-                            value={form.nominee}
-                            onChange={setField("nominee")}
-                            placeholder="Nominee Name, Relationship & Contact Details"
-                            className="w-full mt-2 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10"
-                          />
-                        </div>
+                        {/* Book Type */}
+                        <fieldset className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+                          <legend className="px-2 text-xs font-bold uppercase tracking-wider text-white/70">* Book Type :</legend>
+                          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                            {[
+                              "Paperback",
+                              "Hardcover",
+                              "Paperback + eBook",
+                              "Hardcover + eBook",
+                              "eBook Only"
+                            ].map((type) => (
+                              <label key={type} className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition ${form.bookType === type ? "border-cyan-300/45 bg-cyan-300/15 text-cyan-100" : "border-white/10 bg-black/20 text-white/55 hover:text-white"}`}>
+                                <input type="radio" name="bookType" value={type} checked={form.bookType === type} onChange={setField("bookType")} className="sr-only" />
+                                {type}
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
 
-                        <Textarea label="আপনার ঠিকানা সম্পূর্ণ ভাবে ( যাতে আমরা বই পাঠাতে কোনও সমস্যা না হয় ) *" required rows={3} value={form.address} onChange={setField("address")} placeholder="Village/City, Post Office, District, State, PIN Code" className="md:col-span-2" />
+                        {/* Initial Print Quantity */}
+                        <Input label="* Number of Copies Required (Initial Print Quantity) :" required value={form.copies} onChange={setField("copies")} placeholder="e.g. 10 Copies" className="md:col-span-2" />
 
-                        <Textarea label="আপনি কি নিজের লেখা সম্পর্কে সংক্ষিপ্ত বর্ণনা দিতে চান? (ঐচ্ছিক)" rows={3} value={form.bookAbout} onChange={setField("bookAbout")} placeholder="Brief description of your writing" className="md:col-span-2" />
-                        <Textarea label="Notes / Special Instructions" rows={2} value={form.note} onChange={setField("note")} placeholder="Any preferred time to call or additional requirements?" className="md:col-span-2" />
-                        
-                        {/* Add-Ons Selection */}
+                        {/* Add-on Services (Optional) */}
                         <div className="md:col-span-2 mt-4">
-                          <h4 className="text-sm font-bold text-white/75 mb-1 flex items-center gap-2">
-                            <Sparkles size={16} className="text-cyan-300" />
-                            Choose add on with your basic publication plan (999/-) *
+                          <h4 className="text-xs font-black uppercase tracking-wider text-cyan-300 mb-1 flex items-center gap-2">
+                            <Sparkles size={14} /> Add-on Services (Optional)
                           </h4>
-                          <p className="text-xs text-white/45 mb-4">Select any additional features you would like to include in your publishing package.</p>
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            {addonsList.map((addon) => {
-                              const isSelected = selectedAddons.includes(addon.name);
+                          <p className="text-xs text-white/45 mb-4">Select any optional services to enhance your book publishing package.</p>
+                          <div className="grid gap-2.5 sm:grid-cols-2 text-xs">
+                            {[
+                              "Professional Cover Design",
+                              "Premium Cover Finish (Matte / Gloss / Spot UV)",
+                              "Book Trailer / Promotional Video",
+                              "Social Media Marketing",
+                              "Author Website",
+                              "Amazon A+ Content",
+                              "Book Launch Event",
+                              "Press Release",
+                              "Author Interview",
+                              "Book Review Campaign",
+                              "Printed Bookmarks",
+                              "Posters",
+                              "Roll-up Standee",
+                              "Author Visiting Card",
+                              "QR Code for Book",
+                              "Additional Author Copies",
+                              "Book Fair Display",
+                              "National & International Distribution",
+                              "Copyright Registration Assistance",
+                              "Translation Service",
+                              "Audiobook Publishing",
+                            ].map((addon) => {
+                              const isSelected = selectedAddons.includes(addon);
                               return (
                                 <button
                                   type="button"
-                                  key={addon.id}
+                                  key={addon}
                                   onClick={() => {
                                     setSelectedAddons((prev) =>
-                                      prev.includes(addon.name)
-                                        ? prev.filter((name) => name !== addon.name)
-                                        : [...prev, addon.name]
+                                      prev.includes(addon)
+                                        ? prev.filter((item) => item !== addon)
+                                        : [...prev, addon]
                                     );
                                   }}
-                                  className={`text-left p-4 rounded-xl border transition-all duration-200 select-none ${
+                                  className={`flex items-center gap-2.5 p-3 rounded-xl border text-left transition ${
                                     isSelected
-                                      ? "border-cyan-300 bg-cyan-300/[0.08] shadow-glow shadow-cyan-300/5"
-                                      : "border-white/10 bg-white/5 hover:border-white/20"
+                                      ? "border-cyan-300 bg-cyan-300/15 text-cyan-100 font-bold"
+                                      : "border-white/10 bg-white/5 text-white/65 hover:border-white/20 hover:text-white"
                                   }`}
                                 >
-                                  <div className="flex flex-col gap-1">
-                                    <span className="font-bold text-sm text-white leading-snug">{addon.name}</span>
-                                    <span className="text-xs font-black text-cyan-300">{addon.price}</span>
+                                  <div className={`h-4 w-4 shrink-0 rounded border flex items-center justify-center ${isSelected ? "border-cyan-300 bg-cyan-300 text-black font-black" : "border-white/30"}`}>
+                                    {isSelected && "✓"}
                                   </div>
-                                  <p className="mt-1.5 text-xs text-white/50 leading-relaxed">{addon.desc}</p>
+                                  <span>{addon}</span>
                                 </button>
                               );
                             })}
                           </div>
+                          <div className="mt-3">
+                            <input
+                              type="text"
+                              value={form.customAddon}
+                              onChange={setField("customAddon")}
+                              placeholder="Other Add-on Service (specify here)..."
+                              className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/30 outline-none focus:border-cyan-400/50"
+                            />
+                          </div>
                         </div>
+
+                        {/* Full Address */}
+                        <Textarea label="Full Address *" required rows={3} value={form.address} onChange={setField("address")} placeholder="Village/City, Post Office, District, State, PIN Code" className="md:col-span-2" />
+
+                        {/* Notes */}
+                        <Textarea label="Special Notes / Instructions (Optional)" rows={2} value={form.note} onChange={setField("note")} placeholder="Any preferred time to call or special instructions?" className="md:col-span-2" />
+
+                        {/* Price Summary Breakdown Box */}
+                        {(() => {
+                          const planPrices = {
+                            basic: { base: 4999, gst: 899.82, total: 5898.82, name: "Basic Publishing Plan" },
+                            essential: { base: 7999, gst: 1439.82, total: 9438.82, name: "Essential Publishing Plan" },
+                            popular: { base: 11999, gst: 2159.82, total: 14158.82, name: "Popular Publishing Plan" },
+                          };
+                          const norm = String(selectedPlan || "").toLowerCase();
+                          const pricing = norm.includes("essential") ? planPrices.essential : (norm.includes("popular") ? planPrices.popular : planPrices.basic);
+
+                          return (
+                            <div className="md:col-span-2 mt-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-zinc-950 to-indigo-950/60 p-4 space-y-2">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                  <p className="text-xs text-white/60">Selected Plan Package</p>
+                                  <p className="text-lg font-black text-white">{selectedPlan || pricing.name}</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-white/60">Total Payable Fee (Incl. 18% GST)</p>
+                                  <p className="text-2xl font-black text-cyan-300">₹{pricing.total.toFixed(2)}</p>
+                                </div>
+                              </div>
+                              <div className="flex flex-wrap items-center justify-between text-xs text-white/60 border-t border-white/10 pt-2 gap-2">
+                                <span>Base Plan Price: <strong>₹{pricing.base.toFixed(2)}</strong></span>
+                                <span>GST (18%): <strong>₹{pricing.gst.toFixed(2)}</strong></span>
+                                <span className="text-emerald-300 font-bold">Total Amount: <strong>₹{pricing.total.toFixed(2)}</strong></span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Manuscript File Upload */}
+                        <label className="md:col-span-2 block rounded-2xl border border-dashed border-white/15 bg-white/5 p-5 text-sm font-bold text-white/70 transition hover:border-cyan-300/35 hover:bg-cyan-300/10">
+                          <span className="flex items-center gap-3"><UploadCloud className="h-5 w-5 text-cyan-300" /> Upload Manuscript (PDF / Word)</span>
+                          <span className="mt-1 block text-xs font-medium text-white/45">PDF or Word document (.pdf, .doc, .docx). Max 10MB.</span>
+                          <input type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleFileChange} className="mt-3 block w-full text-xs text-white/60 file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-xs file:font-bold file:text-black" />
+                          {manuscript ? <span className="mt-2 block text-xs text-cyan-200">Selected: {manuscript.name}</span> : null}
+                        </label>
                       </div>
                     ) : (
                       <div className="grid gap-4 md:grid-cols-2">
@@ -879,10 +1073,16 @@ export default function ReaderPage() {
                     <button 
                       type="submit" 
                       disabled={loading} 
-                      className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-xs font-bold text-black transition hover:scale-[1.01] hover:bg-cyan-50 disabled:opacity-60"
+                      className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-400 px-5 py-3.5 text-sm font-black text-black transition hover:opacity-90 disabled:opacity-60 shadow-lg shadow-cyan-400/20"
                     >
-                      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                      {selectedPlan ? "Submit Plan Request" : "Submit Free Sponsored Publishing Request"}
+                      {loading && <Loader2 className="h-4 w-4 animate-spin text-black" />}
+                      {selectedPlan ? (
+                        (() => {
+                          const norm = String(selectedPlan || "").toLowerCase();
+                          const total = norm.includes("essential") ? "9,438.82" : (norm.includes("popular") ? "14,158.82" : "5,898.82");
+                          return `Pay ₹${total} via Razorpay & Submit Registration`;
+                        })()
+                      ) : "Submit Free Sponsored Publishing Request"}
                     </button>
                   </form>
                 </motion.div>

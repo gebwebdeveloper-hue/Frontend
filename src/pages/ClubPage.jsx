@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Loader2, CheckCircle2, AlertCircle,
   Users, PenLine, CalendarDays, BookOpen,
   Sparkles, IdCard, BookMarked, Network,
   Mic2, FileText, Eye, Trophy, MessageCircle,
+  ShieldCheck, CreditCard, Award, ArrowRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -43,41 +44,47 @@ const memberBenefits = [
 
 const activities = [
   { icon: BookMarked,     label: "Club Diary"                  },
-  { icon: MessageCircle,  label: "Story Discussion"            },
-  { icon: PenLine,        label: "Poetry & Writing Sessions"   },
-  { icon: Users,          label: "Workshops & Author Interaction" },
-  { icon: Trophy,         label: "Events & Competitions"       },
-  { icon: BookOpen,       label: "Book Launch Events"          },
+  { icon: Network,        label: "Book Promotion Strategy"     },
+  { icon: Mic2,           label: "Discussion Forum"            },
+  { icon: FileText,       label: "Literary Review & Critiques" },
+  { icon: Eye,            label: "Reading Sessions"            },
 ];
 
 const benefits = [
-  { icon: IdCard,       label: "Membership ID Card"                    },
-  { icon: BookMarked,   label: "Club Diary"                            },
-  { icon: CalendarDays, label: "Literary Events"                       },
-  { icon: Network,      label: "Networking"                            },
-  { icon: Mic2,         label: "Workshops"                             },
-  { icon: FileText,     label: "Publication Opportunities"             },
-  { icon: Sparkles,     label: "Awareness Activity"                    },
-  { icon: BookOpen,     label: "Story Discussion"                      },
-  { icon: PenLine,      label: "Motivate New Gen to Read & Write"      },
-  { icon: Users,        label: "Cultural Program Activity"             },
-  { icon: Eye,          label: "Book Review"                           },
-  { icon: CheckCircle2, label: "Proof Reading Before Publication"      },
+  { icon: BookOpen,     label: "Full access to our hardcopy and paperback library" },
+  { icon: Trophy,       label: "Exclusive official club badge & custom membership card" },
+  { icon: IdCard,       label: "20 personalized author visiting cards upon joining" },
+  { icon: CheckCircle2, label: "Lifetime 10% discount on all book publishing packages" },
+  { icon: Network,      label: "Priority author branding & social media promotions" },
+  { icon: Mic2,         label: "Invitation to monthly literary discussions & workshops" },
+  { icon: MessageCircle,label: "Collaborative writer network across Tripura and India" },
+  { icon: Sparkles,     label: "Direct publishing guidance from experienced editors" },
 ];
 
 const initialForm = {
-  fullName: "", email: "", phone: "", whatsapp: "",
-  dateOfBirth: "", address: "", reason: "",
+  fullName: "",
+  email: "",
+  phone: "",
+  whatsapp: "",
+  dateOfBirth: "",
+  address: "",
+  reason: "",
 };
 
-function Field({ label, children }) {
-  return (
-    <label className="block text-sm font-bold text-white/75">
-      {label}
-      {children}
-    </label>
-  );
-}
+// Helper function to dynamically load Razorpay Checkout Script
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 export default function ClubPage() {
   const scope = useGsapReveal({ stagger: 0.06, y: 24 });
@@ -85,38 +92,155 @@ export default function ClubPage() {
   const [form, setForm]               = useState(initialForm);
   const [loading, setLoading]         = useState(false);
   const [message, setMessage]         = useState({ type: "", text: "" });
+  const [membersList, setMembersList] = useState(members);
+
+  // Active membership state (if user already paid)
+  const [activeMembership, setActiveMembership] = useState(null);
+
+  // Load active membership from localStorage or backend query
+  useEffect(() => {
+    const saved = localStorage.getItem("lekhok_club_member");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.email) {
+          setActiveMembership(parsed);
+        }
+      } catch {
+        // ignore parse error
+      }
+    }
+  }, []);
+
+  // Fetch active members list
+  useEffect(() => {
+    fetch(`${API_BASE}/club/members`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.members && data.members.length > 0) {
+          const mapped = data.members.map((m) => ({
+            name: m.fullName,
+            role: m.role || "Member",
+            action: m.actionText || (m.role === "Founder" ? "Know More" : ""),
+            email: m.email,
+            phone: m.phone,
+          }));
+          setMembersList(mapped);
+        }
+      })
+      .catch((err) => console.error("Error loading club members:", err));
+  }, []);
 
   const setField = (key) => (e) => {
     const value = ["phone", "whatsapp"].includes(key)
       ? e.target.value.replace(/[^0-9]/g, "").slice(0, 10)
       : e.target.value;
-    setForm((cur) => ({ ...cur, [key]: value }));
+    setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Submit Join Application with Razorpay Payment (₹999 + 18% GST = ₹1178.82)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: "", text: "" });
+
     try {
-      const res  = await fetch(`${API_BASE}/club/join`, {
+      // 1. Check if Razorpay script is ready
+      const resendScriptLoaded = await loadRazorpayScript();
+
+      // 2. Create Razorpay order on backend
+      const orderRes = await fetch(`${API_BASE}/club/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
-      if (data.success) {
+
+      const orderData = await orderRes.json();
+
+      if (!orderData.success) {
+        if (orderData.alreadyMember) {
+          setMessage({ type: "error", text: orderData.message });
+          return;
+        }
+        throw new Error(orderData.message || "Could not create payment order.");
+      }
+
+      // 3. Fallback direct submission mode if keys not set on server
+      if (orderData.directSubmission) {
+        await completeVerification(form, {});
+        return;
+      }
+
+      // 4. Open Razorpay Checkout Popup
+      if (resendScriptLoaded && window.Razorpay && orderData.orderId && orderData.keyId) {
+        const options = {
+          key: orderData.keyId,
+          amount: Math.round(1178.82 * 100),
+          currency: "INR",
+          name: "Lekhok Tripura Publishers",
+          description: "Club Membership Fee (₹999 + 18% GST)",
+          order_id: orderData.orderId,
+          prefill: {
+            name: form.fullName,
+            email: form.email,
+            contact: form.phone,
+          },
+          theme: {
+            color: "#06b6d4",
+          },
+          handler: async function (response) {
+            await completeVerification(form, response);
+          },
+          modal: {
+            onDismiss: function () {
+              setLoading(false);
+              setMessage({ type: "error", text: "Payment was cancelled. Please complete payment to submit your membership application." });
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } else {
+        // Direct verification fallback
+        await completeVerification(form, {});
+      }
+    } catch (err) {
+      setMessage({ type: "error", text: err.message || "An error occurred during payment processing." });
+      setLoading(false);
+    }
+  };
+
+  // Complete Payment Verification on Backend
+  const completeVerification = async (formData, paymentResponse) => {
+    try {
+      const verifyRes = await fetch(`${API_BASE}/club/verify-payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          razorpay_payment_id: paymentResponse.razorpay_payment_id,
+          razorpay_order_id: paymentResponse.razorpay_order_id,
+          razorpay_signature: paymentResponse.razorpay_signature,
+        }),
+      });
+
+      const verifyData = await verifyRes.json();
+
+      if (verifyData.success) {
+        const memberInfo = verifyData.member;
+        localStorage.setItem("lekhok_club_member", JSON.stringify(memberInfo));
+        setActiveMembership(memberInfo);
         setForm(initialForm);
         setMessage({
           type: "success",
-          text: data.adminEmailSent
-            ? "Application submitted and mailed to admin."
-            : "Application submitted. Admin email could not be confirmed.",
+          text: "Welcome to Lekhok Tripura Club! Your membership is active. A confirmation email with your payment receipt has been sent to your inbox.",
         });
       } else {
-        setMessage({ type: "error", text: data.message || "Could not submit application." });
+        setMessage({ type: "error", text: verifyData.message || "Payment verification failed." });
       }
     } catch {
-      setMessage({ type: "error", text: "Could not submit application." });
+      setMessage({ type: "error", text: "Server error during payment verification." });
     } finally {
       setLoading(false);
     }
@@ -134,39 +258,30 @@ export default function ClubPage() {
     }
   };
 
-  const scrollToMembers = () => {
+  const scrollToMembers = (e) => {
+    if (e) e.preventDefault();
     setShowMembers(true);
-    setTimeout(() => {
-      const el = document.getElementById("our-members");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 100);
+    const el = document.getElementById("our-members");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <main ref={scope} className="relative overflow-hidden pt-28">
-      {/* Ambient blobs */}
-      <div className="pointer-events-none absolute left-[-10%] top-20 h-[32rem] w-[32rem] rounded-full bg-cyan-500/10 blur-[170px]" />
-      <div className="pointer-events-none absolute right-[-10%] top-[28rem] h-[34rem] w-[34rem] rounded-full bg-fuchsia-500/10 blur-[190px]" />
-
-      {/* ══════════════ HERO (FULL-WIDTH EDGE-TO-EDGE) ══════════════ */}
-      <section className="relative z-10 w-full overflow-hidden pb-12 sm:pb-16 pt-4 md:pt-6">
-        {/* Full-width edge-to-edge Background Image & Overlay Container */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="/club-hero-bg.png"
-            alt="Lekhok Tripura Club Hero Background"
-            className="h-full w-full object-cover object-[78%_center] sm:object-center lg:object-right opacity-90 sm:opacity-95 transition-transform duration-1000 scale-105"
-          />
-          {/* Responsive dark overlay gradients: vertical on mobile portrait, horizontal on tablet/desktop */}
-          <div className="absolute inset-0 bg-gradient-to-b sm:bg-gradient-to-r from-zinc-950/90 via-zinc-950/75 sm:via-zinc-950/65 to-zinc-950/40 sm:to-zinc-950/20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/30 sm:via-transparent to-zinc-950/50 sm:to-zinc-950/30" />
-        </div>
+      {/* ══════════════ HERO SECTION ══════════════ */}
+      <section className="relative z-10 min-h-[85vh] w-full overflow-hidden flex flex-col justify-between py-12 md:py-20 text-left">
+        {/* Full-width responsive background image */}
+        <div
+          className="absolute inset-0 bg-cover bg-no-repeat bg-[center_top] md:bg-[82%_center]"
+          style={{ backgroundImage: "url('/club-hero-bg.png')" }}
+        />
+        
+        {/* Responsive Overlay Gradients */}
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-zinc-950/80 md:bg-gradient-to-r md:from-zinc-950/95 md:via-zinc-950/70 md:to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/80 via-transparent to-zinc-950" />
 
         {/* Hero Content Container */}
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-24">
-          <div className="max-w-2xl text-left">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
             <motion.div data-reveal>
               {/* Eyebrow badge */}
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-zinc-950/80 px-4 py-1.5 backdrop-blur-md shadow-lg">
@@ -185,11 +300,6 @@ export default function ClubPage() {
                 Tripura Club
               </h1>
 
-              {/* Bengali tagline */}
-              <p className="mt-4 text-lg font-bold tracking-wide text-cyan-300 drop-shadow md:text-xl">
-                কলমে ত্রিপুরা, কথায় পরিবর্তন
-              </p>
-
               {/* Subtitle */}
               <p className="mt-3.5 max-w-xl text-sm leading-relaxed text-white/85 drop-shadow sm:text-base md:text-lg">
                 A community of writers, by writers, for literature.
@@ -202,10 +312,11 @@ export default function ClubPage() {
                   <span className="text-[11px] font-black uppercase tracking-widest text-amber-300">
                     Lifetime Membership
                   </span>
-                  <span className="text-2xl sm:text-3xl font-black text-white">₹999</span>
-                  <span className="rounded-lg bg-amber-400 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-black">
-                    ONLY
-                  </span>
+                  <div className="h-4 w-px bg-white/20" />
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl sm:text-3xl font-black text-white">₹999</span>
+                    <span className="text-[10px] font-bold text-amber-300">+ 18% GST</span>
+                  </div>
                 </div>
               </div>
 
@@ -293,19 +404,48 @@ export default function ClubPage() {
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           <article data-reveal className="rounded-lg border border-white/10 bg-white/[0.055] p-7 text-left text-base leading-8 text-white/70 shadow-card backdrop-blur-xl md:p-9 md:text-lg">
             <p>Lekhok Tripura Club is a community dedicated to writers, readers, and literature enthusiasts across Tripura. Founded with a vision to promote reading and creative writing, the club serves as a platform where literary minds can connect, share ideas, and grow together.</p>
-            <p className="mt-5">In an age where reading habits are gradually declining and aspiring writers often struggle to find opportunities, Lekhok Tripura Club was created to revive the culture of books and storytelling.</p>
-            <p className="mt-5">Our mission is to encourage reading, support emerging writers, and build a vibrant literary community through discussions, events, workshops, book promotions, and collaborative activities.</p>
-            <p className="mt-5">Lekhok Tripura Club welcomes readers, writers, poets, bloggers, experienced authors, and anyone who simply loves books.</p>
-            <p className="mt-5 text-right font-bold text-cyan-300">- Writers &amp; Readers Club</p>
+            <p className="mt-4">Our objective is to support emerging writers, preserve local culture, and encourage critical thinking through books, workshops, and literary discussions. Whether you are an aspiring author or an avid reader, Lekhok Tripura Club welcomes you to be part of this literary journey.</p>
           </article>
 
-          <article data-reveal className="rounded-lg border border-white/10 bg-white/[0.055] p-7 text-left text-base leading-8 text-white/70 shadow-card backdrop-blur-xl md:p-9 md:text-lg">
-            <p>Lekhok Tripura Club হলো Tripura-এর লেখক, পাঠক এবং সাহিত্যপ্রেমীদের জন্য একটি উন্মুক্ত সাহিত্যিক সম্প্রদায়। আমাদের বিশ্বাস, একটি সমাজের চিন্তা, সংস্কৃতি ও সৃজনশীলতার বিকাশের অন্যতম ভিত্তি হলো বই পড়া এবং লেখালেখির চর্চা।</p>
-            <p className="mt-5">বর্তমান সময়ে বই পড়ার অভ্যাস ধীরে ধীরে কমে যাচ্ছে এবং নতুন লেখকদের জন্য নিজেদের প্রকাশ করার সুযোগও সীমিত হয়ে উঠছে। এই বাস্তবতা থেকেই Lekhok Tripura Club-এর যাত্রা শুরু।</p>
-            <p className="mt-5">আমাদের লক্ষ্য হলো Tripura-এর পাঠক ও লেখকদের একত্রিত করা, বইপড়ার সংস্কৃতিকে পুনরুজ্জীবিত করা এবং নতুন লেখকদের জন্য একটি সহায়ক সাহিত্যিক পরিবেশ তৈরি করা।</p>
-            <p className="mt-5">Lekhok Tripura Club শুধুমাত্র একটি ক্লাব নয়, এটি বইপ্রেমীদের একটি পরিবার।</p>
-            <p className="mt-5 text-right font-bold text-cyan-300">- Writers &amp; Readers Club</p>
+          <article data-reveal className="rounded-lg border border-white/10 bg-white/[0.055] p-7 text-left shadow-card backdrop-blur-xl md:p-9">
+            <h3 className="text-2xl font-black text-cyan-300">Key Focus Areas</h3>
+            <ul className="mt-6 space-y-4 text-base text-white/75 md:text-lg">
+              <li className="flex items-center gap-3">
+                <span className="h-2 w-2 rounded-full bg-cyan-300" />
+                Encouraging young &amp; emerging writers
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="h-2 w-2 rounded-full bg-cyan-300" />
+                Organizing book readings &amp; discussions
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="h-2 w-2 rounded-full bg-cyan-300" />
+                Publishing guidance &amp; editorial support
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="h-2 w-2 rounded-full bg-cyan-300" />
+                Building a vibrant reader network in Tripura
+              </li>
+            </ul>
           </article>
+        </div>
+      </section>
+
+      {/* ══════════════ EVENTS ══════════════ */}
+      <section className="section-shell relative z-10 py-16">
+        <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Events</h2>
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {events.map((event) => (
+            <motion.div
+              key={event}
+              data-reveal
+              whileHover={{ y: -5 }}
+              className="rounded-lg border border-white/10 bg-white/[0.055] p-8 text-center shadow-card backdrop-blur-xl"
+            >
+              <CalendarDays className="mx-auto mb-4 h-8 w-8 text-cyan-300" />
+              <h3 className="text-xl font-bold text-white">{event}</h3>
+            </motion.div>
+          ))}
         </div>
       </section>
 
@@ -315,7 +455,7 @@ export default function ClubPage() {
         <button
           data-reveal
           onClick={() => setShowMembers((v) => !v)}
-          className="mt-10 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-8 py-4 text-base font-bold text-cyan-100 transition hover:border-cyan-300/45 hover:bg-cyan-300/15"
+          className="mt-10 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-8 py-4 text-base font-bold text-cyan-100 transition hover:border-cyan-300/45 hover:bg-cyan-300/15 cursor-pointer"
         >
           {showMembers ? "Hide Members" : "Check Our Members"}
         </button>
@@ -330,9 +470,9 @@ export default function ClubPage() {
             >
               <div className="mx-auto mt-10 max-w-5xl rounded-lg border border-white/10 bg-white/[0.055] p-5 text-left shadow-card backdrop-blur-xl md:p-8">
                 <div className="space-y-4">
-                  {members.map((member, i) => (
+                  {membersList.map((member, i) => (
                     <div
-                      key={`${member.name}-${member.role}`}
+                      key={`${member.name}-${member.role}-${i}`}
                       className="group grid gap-4 rounded-lg border border-white/10 bg-black/25 p-5 transition hover:border-cyan-300/25 hover:bg-cyan-300/10 sm:grid-cols-[4rem_1fr_auto] sm:items-center"
                     >
                       <div className="text-lg font-black text-cyan-300/85">{String(i + 1).padStart(2, "0")}.</div>
@@ -358,23 +498,6 @@ export default function ClubPage() {
         </AnimatePresence>
       </section>
 
-      {/* ══════════════ EVENTS ══════════════ */}
-      <section className="section-shell relative z-10 py-16">
-        <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Upcoming Events</h2>
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {events.map((event) => (
-            <motion.div
-              key={event}
-              data-reveal
-              whileHover={{ y: -5 }}
-              className="rounded-lg border border-white/10 bg-white/[0.055] p-7 text-lg font-semibold text-white/80 shadow-card backdrop-blur-xl"
-            >
-              {event}
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
       {/* ══════════════ FULL BENEFITS ══════════════ */}
       <section className="section-shell relative z-10 py-16">
         <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Club Activities &amp; Benefits</h2>
@@ -393,76 +516,208 @@ export default function ClubPage() {
         </div>
       </section>
 
-      {/* ══════════════ JOIN FORM ══════════════ */}
+      {/* ══════════════ JOIN FORM OR ACTIVE MEMBERSHIP CARD ══════════════ */}
       <section id="join-club" className="section-shell relative z-10 py-16">
         <div className="mx-auto max-w-5xl">
-          <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Join Our Club</h2>
-          <form
-            onSubmit={handleSubmit}
-            data-reveal
-            className="mt-10 rounded-lg border border-white/10 bg-white/[0.055] p-6 shadow-card backdrop-blur-xl md:p-8"
-          >
-            {message.text && (
-              <div
-                className={`mb-5 flex items-start gap-3 rounded-lg border p-4 text-sm ${
-                  message.type === "success"
-                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
-                    : "border-red-500/20 bg-red-500/10 text-red-300"
-                }`}
-              >
-                {message.type === "success"
-                  ? <CheckCircle2 className="h-5 w-5 shrink-0" />
-                  : <AlertCircle className="h-5 w-5 shrink-0" />}
-                <span>{message.text}</span>
-              </div>
-            )}
 
-            <div className="grid gap-4 text-left md:grid-cols-2">
-              <Field label="Full Name">
-                <input required value={form.fullName} onChange={setField("fullName")} placeholder="Enter your full name" className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
-              </Field>
-              <Field label="Mail ID">
-                <input required type="email" value={form.email} onChange={setField("email")} placeholder="example@mail.com" className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
-              </Field>
-              <Field label="Phone Number">
-                <input required value={form.phone} onChange={setField("phone")} placeholder="10-digit mobile number" className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
-              </Field>
-              <Field label="WhatsApp Number">
-                <input required value={form.whatsapp} onChange={setField("whatsapp")} placeholder="10-digit WhatsApp number" className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
-              </Field>
-              <Field label="Date of Birth">
-                <input required type="date" value={form.dateOfBirth} onChange={setField("dateOfBirth")} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
-              </Field>
-              <div />
-              <label className="block text-sm font-bold text-white/75 md:col-span-2">
-                Address
-                <textarea required value={form.address} onChange={setField("address")} placeholder="Enter your complete address" rows={3} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
-              </label>
-              <label className="block text-sm font-bold text-white/75 md:col-span-2">
-                Why you want to join our team?
-                <textarea required value={form.reason} onChange={setField("reason")} placeholder="Share your reasons for joining the club..." rows={4} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-white px-7 py-3 font-bold text-black transition hover:scale-105 hover:bg-cyan-50 disabled:opacity-60"
+          {/* IF USER HAS ACTIVE PAID MEMBERSHIP: SHOW CONFIRMATION CARD & HIDE FORM */}
+          {activeMembership ? (
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="rounded-3xl border border-cyan-400/40 bg-gradient-to-br from-cyan-950/60 via-zinc-950 to-indigo-950/60 p-8 text-center shadow-2xl backdrop-blur-xl md:p-12"
             >
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Submit Application
-            </button>
-          </form>
+              <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-3xl border border-emerald-400/40 bg-emerald-400/15 text-emerald-300 shadow-glow">
+                <ShieldCheck size={36} />
+              </div>
+
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-300">
+                <CheckCircle2 size={14} /> Official Lifetime Member
+              </div>
+
+              <h2 className="text-3xl font-black text-white sm:text-4xl md:text-5xl">
+                Welcome to Lekhok Tripura Club!
+              </h2>
+
+              <p className="mx-auto mt-4 max-w-xl text-sm sm:text-base leading-relaxed text-white/75">
+                Thank you <strong className="text-cyan-300">{activeMembership.fullName}</strong>! Your membership application and payment of <strong className="text-emerald-300">₹1,178.82</strong> have been successfully processed.
+              </p>
+
+              {/* Digital Receipt Box */}
+              <div className="mx-auto mt-8 max-w-lg rounded-2xl border border-white/10 bg-black/40 p-6 text-left text-xs space-y-3">
+                <div className="flex justify-between border-b border-white/10 pb-2.5">
+                  <span className="text-white/50 font-semibold">Member Name:</span>
+                  <span className="font-extrabold text-white">{activeMembership.fullName}</span>
+                </div>
+                <div className="flex justify-between border-b border-white/10 pb-2.5">
+                  <span className="text-white/50 font-semibold">Registered Email:</span>
+                  <span className="font-extrabold text-white">{activeMembership.email}</span>
+                </div>
+                <div className="flex justify-between border-b border-white/10 pb-2.5">
+                  <span className="text-white/50 font-semibold">Phone Number:</span>
+                  <span className="font-extrabold text-white">{activeMembership.phone}</span>
+                </div>
+                <div className="flex justify-between border-b border-white/10 pb-2.5">
+                  <span className="text-white/50 font-semibold">Base Fee + 18% GST:</span>
+                  <span className="font-extrabold text-emerald-300">₹999.00 + ₹179.82 = ₹1,178.82</span>
+                </div>
+                {activeMembership.paymentId && (
+                  <div className="flex justify-between">
+                    <span className="text-white/50 font-semibold">Payment Txn ID:</span>
+                    <span className="font-mono font-bold text-cyan-300">{activeMembership.paymentId}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-cyan-200">
+                <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+                <span>A confirmation email &amp; digital receipt has been sent to <strong>{activeMembership.email}</strong>.</span>
+              </div>
+
+              {/* Action Links */}
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <Link
+                  to="/library"
+                  className="rounded-2xl bg-cyan-400 px-6 py-3.5 text-xs font-black uppercase text-black hover:bg-cyan-300"
+                >
+                  Explore Books
+                </Link>
+                <Link
+                  to="/short-stories"
+                  className="rounded-2xl border border-white/20 bg-white/10 px-6 py-3.5 text-xs font-bold text-white hover:bg-white/20"
+                >
+                  Read Short Stories
+                </Link>
+              </div>
+            </motion.div>
+          ) : (
+            /* IF NOT YET PAID: RENDER APPLICATION FORM & GST FEE SUMMARY */
+            <>
+              <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Join Our Club</h2>
+              <p data-reveal className="mt-2 text-center text-xs sm:text-sm text-white/60">
+                Complete your details and proceed to payment to activate your lifetime club membership.
+              </p>
+
+              <form
+                onSubmit={handleSubmit}
+                data-reveal
+                className="mt-8 rounded-2xl border border-white/10 bg-white/[0.055] p-6 shadow-card backdrop-blur-xl md:p-8"
+              >
+                {/* GST Pricing Summary Card */}
+                <div className="mb-8 overflow-hidden rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-zinc-950 to-indigo-950/60 p-5 shadow-xl">
+                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4 mb-4">
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-400/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-cyan-300">
+                        <Award size={12} /> Lifetime Club Membership Fee
+                      </span>
+                      <p className="mt-1 text-xs text-white/65">
+                        Includes author visiting cards, official club badge, membership card &amp; 10% discount on publishing.
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-2xl font-black text-emerald-300">₹1,178.82</div>
+                      <div className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">₹999 + 18% GST</div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2 text-xs text-white/70 sm:grid-cols-3">
+                    <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+                      <span>Base Membership:</span>
+                      <strong className="text-white">₹999.00</strong>
+                    </div>
+                    <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+                      <span>GST (18%):</span>
+                      <strong className="text-white">₹179.82</strong>
+                    </div>
+                    <div className="flex items-center justify-between sm:justify-start sm:gap-2">
+                      <span className="text-cyan-300 font-bold">Total Payable:</span>
+                      <strong className="text-emerald-300 font-black text-sm">₹1,178.82</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {message.text && (
+                  <div
+                    className={`mb-6 flex items-start gap-3 rounded-xl border p-4 text-xs font-semibold ${
+                      message.type === "success"
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                        : "border-red-500/30 bg-red-500/10 text-red-300"
+                    }`}
+                  >
+                    {message.type === "success"
+                      ? <CheckCircle2 className="h-5 w-5 shrink-0" />
+                      : <AlertCircle className="h-5 w-5 shrink-0" />}
+                    <span>{message.text}</span>
+                  </div>
+                )}
+
+                <div className="grid gap-4 text-left md:grid-cols-2">
+                  <Field label="Full Name">
+                    <input required value={form.fullName} onChange={setField("fullName")} placeholder="Enter your full name" className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
+                  </Field>
+                  <Field label="Mail ID">
+                    <input required type="email" value={form.email} onChange={setField("email")} placeholder="example@mail.com" className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
+                  </Field>
+                  <Field label="Phone Number">
+                    <input required value={form.phone} onChange={setField("phone")} placeholder="10-digit mobile number" className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
+                  </Field>
+                  <Field label="WhatsApp Number">
+                    <input required value={form.whatsapp} onChange={setField("whatsapp")} placeholder="10-digit WhatsApp number" className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
+                  </Field>
+                  <Field label="Date of Birth">
+                    <input required type="date" value={form.dateOfBirth} onChange={setField("dateOfBirth")} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-3 text-sm text-white outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
+                  </Field>
+                  <div />
+                  <label className="block text-sm font-bold text-white/75 md:col-span-2">
+                    Address
+                    <textarea required value={form.address} onChange={setField("address")} placeholder="Enter your complete address" rows={3} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
+                  </label>
+                  <label className="block text-sm font-bold text-white/75 md:col-span-2">
+                    Why you want to join our team?
+                    <textarea required value={form.reason} onChange={setField("reason")} placeholder="Share your reasons for joining the club..." rows={4} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
+                  </label>
+                </div>
+
+                <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-white/60">
+                    <CreditCard className="h-4 w-4 text-cyan-400 shrink-0" />
+                    <span>Secure 256-bit Encrypted Payment via Razorpay</span>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 px-8 py-3.5 text-xs font-black uppercase tracking-wider text-black shadow-[0_0_30px_rgba(6,182,212,0.4)] transition hover:scale-105 disabled:opacity-60 cursor-pointer"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> Processing Payment...
+                      </>
+                    ) : (
+                      <>
+                        Proceed to Pay ₹1,178.82 <ArrowRight size={16} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+
         </div>
       </section>
 
-      <div className="section-shell pb-16 pt-0">
-        <Link to="/" className="text-sm font-semibold text-white/45 transition hover:text-cyan-300">
-          Back to home
-        </Link>
-      </div>
-
       <FooterSection />
     </main>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <label className="block text-sm font-bold text-white/75">
+      {label}
+      {children}
+    </label>
   );
 }

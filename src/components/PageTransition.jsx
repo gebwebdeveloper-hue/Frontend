@@ -4,10 +4,10 @@ export default function PageTransition({ children }) {
   return (
     <motion.main
       className="w-full overflow-x-hidden max-w-full"
-      initial={{ opacity: 0, y: 24, filter: "blur(12px)" }}
-      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      exit={{ opacity: 0, y: -18, filter: "blur(10px)" }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
     >
       {children}
     </motion.main>

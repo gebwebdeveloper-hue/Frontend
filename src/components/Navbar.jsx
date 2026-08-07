@@ -13,6 +13,7 @@ const baseLinks = [
   { label: "Buy Books", to: "/library" },
   { label: "Read Stories", to: "/short-stories" },
   { label: "News & Updates", to: "/news" },
+  { label: "About Us", to: "/about-us" },
 ];
 
 export default function Navbar() {

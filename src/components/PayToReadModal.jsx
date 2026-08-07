@@ -287,15 +287,30 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess, onOp
                 /* ── PAYMENT FORM ── */
                 <form onSubmit={handleRazorpayPay} className="mt-5 space-y-4">
                   {/* Price Display */}
-                  <div className="rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/50 to-indigo-950/40 p-4 flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs text-white/60">Story Access Fee</p>
-                      <p className="text-3xl font-black text-white">₹{story.price}</p>
-                    </div>
-                    <div className="flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-3 py-1 text-[10px] font-bold text-emerald-300 border border-emerald-400/30">
-                      <ShieldCheck size={14} /> Instant Access
-                    </div>
-                  </div>
+                  {(() => {
+                    const baseStoryPrice = Number(story.price || 0);
+                    const storyGst = Math.round(baseStoryPrice * 0.18 * 100) / 100;
+                    const storyTotalWithGst = (baseStoryPrice + storyGst).toFixed(2);
+                    return (
+                      <div className="rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/50 to-indigo-950/40 p-4 space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs text-white/60">Story Access Fee (Incl. 18% GST)</p>
+                            <p className="text-3xl font-black text-white">₹{storyTotalWithGst}</p>
+                          </div>
+                          <div className="flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-3 py-1 text-[10px] font-bold text-emerald-300 border border-emerald-400/30">
+                            <ShieldCheck size={14} /> Instant Access
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] text-white/60 border-t border-white/10 pt-2">
+                          <span>Base Price: <strong>₹{baseStoryPrice.toFixed(2)}</strong></span>
+                          <span>GST (18%): <strong>₹{storyGst.toFixed(2)}</strong></span>
+                          <span className="text-cyan-300 font-bold">Total: <strong>₹{storyTotalWithGst}</strong></span>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Auth Status Prompt */}
                   {!checkingAuth && !authUser && (
@@ -392,7 +407,7 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess, onOp
                       ) : !authUser ? (
                         <>Login / Sign In to Pay</>
                       ) : (
-                        <>Pay ₹{story.price} via Razorpay</>
+                        <>Pay ₹{(Number(story.price || 0) * 1.18).toFixed(2)} via Razorpay</>
                       )}
                     </button>
                   </div>

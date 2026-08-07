@@ -360,7 +360,7 @@ export default function NewsletterReaderPage() {
                       Paid Story Access Required
                     </h2>
                     <p className={`mt-2 text-sm max-w-md mx-auto ${isLightMode ? "text-slate-600" : "text-white/60"}`}>
-                      This story requires a reading fee of <strong className="text-cyan-400">₹{story.price}</strong>. Please sign in to your account and complete the payment to unlock full reading access.
+                      This story requires a reading fee of <strong className="text-cyan-400">₹{(Number(story.price || 0) * 1.18).toFixed(2)}</strong> (Base ₹{Number(story.price || 0).toFixed(2)} + 18% GST). Please sign in to your account and complete payment to unlock full access.
                     </p>
                   </div>
                   <button
@@ -373,7 +373,7 @@ export default function NewsletterReaderPage() {
                     }}
                     className="rounded-full bg-cyan-400 px-8 py-3.5 text-sm font-black text-black hover:bg-cyan-300 transition shadow-glow shadow-cyan-400/20"
                   >
-                    {!authUser ? `Sign In or Register to Unlock Story (₹${story.price})` : `Pay ₹${story.price} via Razorpay`}
+                    {!authUser ? `Sign In or Register to Unlock Story` : `Pay ₹${(Number(story.price || 0) * 1.18).toFixed(2)} via Razorpay`}
                   </button>
                 </div>
               ) : (

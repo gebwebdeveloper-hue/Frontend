@@ -1177,6 +1177,12 @@ export default function AdminBooksPage() {
                     >
                       Manage Users
                     </Link>
+                    <Link
+                      to="/admin/club"
+                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
+                    >
+                      Club Members
+                    </Link>
                   </div>
                   
                   <button
