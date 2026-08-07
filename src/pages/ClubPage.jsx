@@ -5,7 +5,8 @@ import {
   Users, PenLine, CalendarDays, BookOpen,
   Sparkles, IdCard, BookMarked, Network,
   Mic2, FileText, Eye, Trophy, MessageCircle,
-  ShieldCheck, CreditCard, Award, ArrowRight
+  ShieldCheck, CreditCard, Award, ArrowRight,
+  Mail, Phone
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -477,8 +478,31 @@ export default function ClubPage() {
                     >
                       <div className="text-lg font-black text-cyan-300/85">{String(i + 1).padStart(2, "0")}.</div>
                       <div>
-                        <h3 className="text-xl font-black text-white">{member.name}</h3>
-                        <p className="mt-1 text-sm text-white/55">{member.role}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-xl font-black text-white">{member.name}</h3>
+                          <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-0.5 text-xs font-bold text-cyan-300">
+                            {member.role || "Member"}
+                          </span>
+                        </div>
+
+                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-white/65">
+                          {member.email && (
+                            <div className="flex items-center gap-1.5">
+                              <Mail className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+                              <a href={`mailto:${member.email}`} className="hover:text-cyan-300 transition">
+                                {member.email}
+                              </a>
+                            </div>
+                          )}
+                          {member.phone && (
+                            <div className="flex items-center gap-1.5">
+                              <Phone className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                              <a href={`tel:${member.phone}`} className="hover:text-emerald-300 transition">
+                                {member.phone}
+                              </a>
+                            </div>
+                          )}
+                        </div>
                       </div>
                       {member.portfolioUrl ? (
                         <a
