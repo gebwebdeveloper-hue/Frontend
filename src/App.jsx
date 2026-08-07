@@ -102,6 +102,8 @@ export default function App() {
           <Route path="/mybooks" element={<Navigate to="/library" replace />} />
           <Route path="/about-us" element={<AboutPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/publish-with-us" element={<AboutPage />} />
+          <Route path="/publish" element={<AboutPage />} />
           <Route path="/the-story-of-success" element={<Navigate to="/news" replace />} />
           <Route path="/story-of-success" element={<Navigate to="/news" replace />} />
           <Route path="/april-2022" element={<Navigate to="/news" replace />} />

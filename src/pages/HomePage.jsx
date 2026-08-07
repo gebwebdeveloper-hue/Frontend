@@ -15,11 +15,11 @@ export default function HomePage() {
       <HeroSection />
       <FeaturedBooksSection />
       <CategoriesSection />
-      <EnquirySection />
       <BestsellingBooksSection />
-      <TestimonialsSection />
       <div id="faq"><FaqSection /></div>
       <CtaSection />
+      <EnquirySection />
+      <TestimonialsSection />
       <FooterSection />
     </PageTransition>
   );

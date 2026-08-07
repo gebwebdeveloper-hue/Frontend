@@ -23,7 +23,7 @@ export default function CategoriesSection() {
         <motion.div data-reveal>
           <p className="text-sm font-bold uppercase tracking-[0.5em] text-cyan-300/75">Lekhok Tripura Club</p>
           <h2 className="mt-5 bg-gradient-to-r from-cyan-300 via-white to-fuchsia-300 bg-clip-text text-4xl font-black uppercase tracking-[0.08em] text-transparent md:text-6xl animate-text-gradient select-none">
-            Readers & Writers Club
+            Ready to join Our club?
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/65 md:text-lg">
             A literary community connecting readers, writers, poets, bloggers, and literature lovers across Tripura.

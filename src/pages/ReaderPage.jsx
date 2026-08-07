@@ -79,14 +79,69 @@ const publishingPlans = [
   },
 ];
 
-const addonsList = [
-  { id: "website", name: "Dedicated Author's Website", price: "₹5,000 – ₹7,000", desc: "Custom personal author website to showcase your biography, portfolio, and direct book links." },
-  { id: "cover", name: "Premium Book Cover Design (Professional Artist)", price: "₹2,000 – ₹4,000", desc: "High-quality artist-designed book cover with custom illustrations and professional typography." },
-  { id: "illustration", name: "Custom Illustration Artwork", price: "₹50 – ₹500 / Illustration/Sketch", desc: "Original hand-crafted or digital artwork for your book's interior or cover." },
-  { id: "typing", name: "Manuscript Typing", price: "₹0.70 per Word", desc: "Professional word-by-word manuscript typing from handwritten or physical copies." },
-  { id: "proofreading", name: "Professional Proofreading", price: "₹0.40 per Word", desc: "Thorough spell check, grammar correction, and consistency review by professional editors." },
-  { id: "marketing", name: "Additional Meta (Facebook & Instagram) Advertisement", price: "Author's Budget + 30% Marketing Management Fee", desc: "Extra promotional campaigns beyond your plan's ad budget with full campaign management." },
+const ADDONS_MASTER_LIST = [
+  { name: "Professional Cover Design", price: "₹3,000", numericPrice: 3000, desc: "High-quality artist-designed book cover." },
+  { name: "Book Trailer / Promotional Video", price: "₹3,000", numericPrice: 3000, desc: "Promotional HD video trailer for social media." },
+  { name: "Social Media Marketing", price: "₹1,000 for 6 days", numericPrice: 1000, desc: "Targeted promotional campaign for 6 days." },
+  { name: "Author Website", price: "₹6,200", numericPrice: 6200, desc: "Dedicated personal website for author branding." },
+  { name: "Book Launch Event", price: "₹10,000", numericPrice: 10000, desc: "Virtual or physical book launch event." },
+  { name: "Press Release", price: "₹10,000", numericPrice: 10000, desc: "Media coverage & official press distribution." },
+  { name: "Author Interview", price: "₹25,000", numericPrice: 25000, desc: "Featured literary interview & media spotlight." },
+  { name: "Book Review Campaign", price: "₹10,000", numericPrice: 10000, desc: "Book reviews by literature bloggers & critics." },
+  { name: "Printed Bookmarks", price: "₹500", numericPrice: 500, desc: "Custom printed bookmarks." },
+  { name: "Posters", price: "₹50 / per poster", numericPrice: 50, desc: "Promotional printed posters." },
+  { name: "Author Visiting Card", price: "₹500", numericPrice: 500, desc: "Personalized author visiting cards." },
+  { name: "QR Code for Book", price: "₹100", numericPrice: 100, desc: "Custom QR code linking to book store." },
+  { name: "Copyright Registration Assistance", price: "₹6,000", numericPrice: 6000, desc: "Official copyright filing support." },
+  { name: "Translation Service", price: "₹10,000", numericPrice: 10000, desc: "Professional manuscript translation." },
+  { name: "Audiobook Publishing", price: "₹10,000", numericPrice: 10000, desc: "Audiobook recording & publishing." },
+  { name: "Premium Cover Finish (Matte / Gloss / Spot UV)", price: "₹2,000", numericPrice: 2000, desc: "Special cover lamination finish." },
+  { name: "Amazon A+ Content", price: "₹3,000", numericPrice: 3000, desc: "Rich Amazon listing graphics & layout." },
+  { name: "Roll-up Standee", price: "₹1,500", numericPrice: 1500, desc: "Promotional roll-up display standee." },
 ];
+
+function calculateTotalPricing(planName, selectedAddonsList = []) {
+  const planPrices = {
+    basic: { base: 4999, name: "Basic Publishing Plan" },
+    essential: { base: 7999, name: "Essential Publishing Plan" },
+    popular: { base: 11999, name: "Popular Publishing Plan" },
+  };
+
+  const norm = String(planName || "").toLowerCase();
+  const planInfo = norm.includes("essential")
+    ? planPrices.essential
+    : norm.includes("popular")
+    ? planPrices.popular
+    : planPrices.basic;
+
+  let addonsTotal = 0;
+  const addonsBreakdown = [];
+
+  (selectedAddonsList || []).forEach((addonName) => {
+    const item = ADDONS_MASTER_LIST.find(
+      (a) => a.name === addonName || addonName.startsWith(a.name) || a.name.startsWith(addonName)
+    );
+    if (item) {
+      addonsTotal += item.numericPrice;
+      addonsBreakdown.push(item);
+    }
+  });
+
+  const basePrice = planInfo.base;
+  const subtotal = basePrice + addonsTotal;
+  const gst = subtotal * 0.18;
+  const total = subtotal + gst;
+
+  return {
+    planName: planInfo.name,
+    basePrice,
+    addonsTotal,
+    addonsBreakdown,
+    subtotal,
+    gst,
+    total,
+  };
+}
 
 const services = [
   { icon: PencilLine, title: "Editorial Services", copy: "Manuscript review, clarity checks, proofreading, copy editing, and language polish." },
@@ -305,7 +360,8 @@ export default function ReaderPage() {
           planName: selectedPlan || "Basic Publishing Plan",
           name: form.name,
           email: form.email,
-          phone: form.phone
+          phone: form.phone,
+          addons: selectedAddons,
         })
       });
 
@@ -602,21 +658,17 @@ export default function ReaderPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                      {[
-                        { Icon: Globe, iconColor: "text-cyan-300", name: "Dedicated Author's Website", price: "₹5,000 – ₹7,000" },
-                        { Icon: Palette, iconColor: "text-pink-300", name: "Premium Book Cover Design (Professional Artist)", price: "₹2,000 – ₹4,000" },
-                        { Icon: Pencil, iconColor: "text-amber-300", name: "Custom Illustration Artwork", price: "₹50 – ₹500 per Illustration/Sketch" },
-                        { Icon: Keyboard, iconColor: "text-emerald-300", name: "Manuscript Typing", price: "₹0.70 per Word" },
-                        { Icon: FileEdit, iconColor: "text-violet-300", name: "Professional Proofreading", price: "₹0.40 per Word" },
-                        { Icon: Megaphone, iconColor: "text-orange-300", name: "Additional Meta (Facebook & Instagram) Advertisement", price: "Author's Budget + 30% Marketing Management Fee" },
-                      ].map((s) => (
+                      {ADDONS_MASTER_LIST.map((s) => (
                         <tr key={s.name} className="hover:bg-white/[0.02]">
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/[0.06]`}>
-                                <s.Icon className={`h-3.5 w-3.5 ${s.iconColor}`} />
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/[0.06]">
+                                <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
                               </div>
-                              <span className="font-medium text-white/85">{s.name}</span>
+                              <div>
+                                <span className="font-medium text-white/85 block">{s.name}</span>
+                                {s.desc && <span className="text-[11px] text-white/45 block mt-0.5">{s.desc}</span>}
+                              </div>
                             </div>
                           </td>
                           <td className="p-4 font-extrabold text-cyan-300 text-right whitespace-nowrap text-xs">{s.price}</td>
@@ -931,29 +983,8 @@ export default function ReaderPage() {
                           </h4>
                           <p className="text-xs text-white/45 mb-4">Select any optional services to enhance your book publishing package.</p>
                           <div className="grid gap-2.5 sm:grid-cols-2 text-xs">
-                            {[
-                              "Professional Cover Design",
-                              "Premium Cover Finish (Matte / Gloss / Spot UV)",
-                              "Book Trailer / Promotional Video",
-                              "Social Media Marketing",
-                              "Author Website",
-                              "Amazon A+ Content",
-                              "Book Launch Event",
-                              "Press Release",
-                              "Author Interview",
-                              "Book Review Campaign",
-                              "Printed Bookmarks",
-                              "Posters",
-                              "Roll-up Standee",
-                              "Author Visiting Card",
-                              "QR Code for Book",
-                              "Additional Author Copies",
-                              "Book Fair Display",
-                              "National & International Distribution",
-                              "Copyright Registration Assistance",
-                              "Translation Service",
-                              "Audiobook Publishing",
-                            ].map((addon) => {
+                            {ADDONS_MASTER_LIST.map((addonObj) => {
+                              const addon = addonObj.name;
                               const isSelected = selectedAddons.includes(addon);
                               return (
                                 <button
@@ -966,16 +997,21 @@ export default function ReaderPage() {
                                         : [...prev, addon]
                                     );
                                   }}
-                                  className={`flex items-center gap-2.5 p-3 rounded-xl border text-left transition ${
+                                  className={`flex items-center justify-between gap-2 p-3 rounded-xl border text-left transition ${
                                     isSelected
-                                      ? "border-cyan-300 bg-cyan-300/15 text-cyan-100 font-bold"
+                                      ? "border-cyan-300 bg-cyan-300/15 text-cyan-100 font-bold shadow-md shadow-cyan-500/10"
                                       : "border-white/10 bg-white/5 text-white/65 hover:border-white/20 hover:text-white"
                                   }`}
                                 >
-                                  <div className={`h-4 w-4 shrink-0 rounded border flex items-center justify-center ${isSelected ? "border-cyan-300 bg-cyan-300 text-black font-black" : "border-white/30"}`}>
-                                    {isSelected && "✓"}
+                                  <div className="flex items-center gap-2 overflow-hidden">
+                                    <div className={`h-4 w-4 shrink-0 rounded border flex items-center justify-center ${isSelected ? "border-cyan-300 bg-cyan-300 text-black font-black" : "border-white/30"}`}>
+                                      {isSelected && "✓"}
+                                    </div>
+                                    <span className="truncate">{addon}</span>
                                   </div>
-                                  <span>{addon}</span>
+                                  <span className={`shrink-0 rounded-md px-2 py-0.5 text-[10px] font-extrabold ${isSelected ? "bg-cyan-300 text-black" : "bg-white/10 text-cyan-300"}`}>
+                                    +{addonObj.price}
+                                  </span>
                                 </button>
                               );
                             })}
@@ -999,30 +1035,40 @@ export default function ReaderPage() {
 
                         {/* Price Summary Breakdown Box */}
                         {(() => {
-                          const planPrices = {
-                            basic: { base: 4999, gst: 899.82, total: 5898.82, name: "Basic Publishing Plan" },
-                            essential: { base: 7999, gst: 1439.82, total: 9438.82, name: "Essential Publishing Plan" },
-                            popular: { base: 11999, gst: 2159.82, total: 14158.82, name: "Popular Publishing Plan" },
-                          };
-                          const norm = String(selectedPlan || "").toLowerCase();
-                          const pricing = norm.includes("essential") ? planPrices.essential : (norm.includes("popular") ? planPrices.popular : planPrices.basic);
+                          const pricing = calculateTotalPricing(selectedPlan, selectedAddons);
 
                           return (
-                            <div className="md:col-span-2 mt-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-zinc-950 to-indigo-950/60 p-4 space-y-2">
-                              <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="md:col-span-2 mt-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-zinc-950 to-indigo-950/60 p-4 space-y-3 shadow-xl">
+                              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
                                 <div>
                                   <p className="text-xs text-white/60">Selected Plan Package</p>
-                                  <p className="text-lg font-black text-white">{selectedPlan || pricing.name}</p>
+                                  <p className="text-lg font-black text-white">{pricing.planName}</p>
                                 </div>
                                 <div className="text-right">
                                   <p className="text-xs text-white/60">Total Payable Fee (Incl. 18% GST)</p>
                                   <p className="text-2xl font-black text-cyan-300">₹{pricing.total.toFixed(2)}</p>
                                 </div>
                               </div>
-                              <div className="flex flex-wrap items-center justify-between text-xs text-white/60 border-t border-white/10 pt-2 gap-2">
-                                <span>Base Plan Price: <strong>₹{pricing.base.toFixed(2)}</strong></span>
+
+                              {pricing.addonsBreakdown.length > 0 && (
+                                <div className="space-y-1.5 text-xs border-b border-white/10 pb-3">
+                                  <p className="font-bold text-cyan-300">Selected Add-on Services ({pricing.addonsBreakdown.length}):</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {pricing.addonsBreakdown.map((item) => (
+                                      <span key={item.name} className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-bold text-cyan-200">
+                                        {item.name}: ₹{item.numericPrice.toLocaleString("en-IN")}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="flex flex-wrap items-center justify-between text-xs text-white/70 gap-2">
+                                <span>Base Plan: <strong>₹{pricing.basePrice.toLocaleString("en-IN")}.00</strong></span>
+                                <span>Add-ons Total: <strong>₹{pricing.addonsTotal.toLocaleString("en-IN")}.00</strong></span>
+                                <span>Subtotal: <strong>₹{pricing.subtotal.toLocaleString("en-IN")}.00</strong></span>
                                 <span>GST (18%): <strong>₹{pricing.gst.toFixed(2)}</strong></span>
-                                <span className="text-emerald-300 font-bold">Total Amount: <strong>₹{pricing.total.toFixed(2)}</strong></span>
+                                <span className="text-cyan-300 font-extrabold text-sm">Total Amount: <strong>₹{pricing.total.toFixed(2)}</strong></span>
                               </div>
                             </div>
                           );
