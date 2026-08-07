@@ -40,7 +40,7 @@ const publishingPlans = [
   {
     id: "essential",
     name: "Essential Publishing Plan",
-    price: "₹7,999",
+    price: "₹9,999",
     Icon: Star,
     iconBg: "bg-violet-400/15",
     iconColor: "text-violet-300",
@@ -60,7 +60,7 @@ const publishingPlans = [
   {
     id: "popular",
     name: "Popular Publishing Plan",
-    price: "₹11,999",
+    price: "₹14,999",
     Icon: Crown,
     iconBg: "bg-amber-400/15",
     iconColor: "text-amber-300",
@@ -103,8 +103,8 @@ const ADDONS_MASTER_LIST = [
 function calculateTotalPricing(planName, selectedAddonsList = []) {
   const planPrices = {
     basic: { base: 4999, name: "Basic Publishing Plan" },
-    essential: { base: 7999, name: "Essential Publishing Plan" },
-    popular: { base: 11999, name: "Popular Publishing Plan" },
+    essential: { base: 9999, name: "Essential Publishing Plan" },
+    popular: { base: 14999, name: "Popular Publishing Plan" },
   };
 
   const norm = String(planName || "").toLowerCase();
