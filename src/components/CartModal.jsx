@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Trash2, X, AlertCircle, CheckCircle2, Loader2, Sparkles, ArrowRight, Copy, MapPin, CreditCard, ShieldCheck } from "lucide-react";
 import { getCart, removeFromCart, clearCart } from "../utils/cart.js";
+import { INDIA_STATES, DISTRICTS_BY_STATE } from "../utils/indiaData.js";
 import { API_BASE, SERVER_URL } from "../config.js";
 import { loadRazorpayScript } from "../utils/razorpay.js";
 import AuthModal from "./AuthModal.jsx";
@@ -20,12 +21,24 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
   const [deliveryForm, setDeliveryForm] = useState({
     co: "",
     country: "India",
+    state: "",
     district: "",
     block: "",
     pin: "",
     postOffice: "",
     nearbyLocation: ""
   });
+
+  const getDeliveryCharge = (state) => {
+    if (!state) return 120;
+    const s = state.trim().toLowerCase();
+    if (s === "tripura") return 80;
+    if (s === "west bengal") return 100;
+    return 120;
+  };
+
+  // Districts available for the currently selected state
+  const availableDistricts = deliveryForm.state ? (DISTRICTS_BY_STATE[deliveryForm.state] || []) : [];
 
   const refreshCart = () => {
     setCartItems(getCart());
@@ -63,6 +76,10 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
   );
 
   const totalPrice = cartItems.reduce((acc, item) => acc + (Number(item.price) || 0), 0);
+  const totalBasePrice = cartItems.reduce((acc, item) => acc + (Number(item.basePrice || item.price) || 0), 0);
+  const totalGST = Math.round((totalPrice - totalBasePrice) * 100) / 100;
+  const deliveryCharge = hasPhysicalItems ? getDeliveryCharge(deliveryForm.state) : 0;
+  const grandTotal = totalPrice + deliveryCharge;
 
   const formatPrice = (price) => `₹${price}`;
 
@@ -93,6 +110,10 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
   const handleAddressSubmit = (e) => {
     e.preventDefault();
     if (hasPhysicalItems) {
+      if (!deliveryForm.state) {
+        setErrorMsg("Please select your State.");
+        return;
+      }
       if (!deliveryForm.district || !deliveryForm.block || !deliveryForm.pin || !deliveryForm.nearbyLocation) {
         setErrorMsg("Please fill out all required address fields.");
         return;
@@ -120,7 +141,7 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
 
       const orderPayload = {
         items: cartItems,
-        note: `Cart purchase of ${cartItems.length} items totaling ₹${totalPrice}`,
+        note: `Cart purchase of ${cartItems.length} items totaling ₹${grandTotal}`,
         ...(hasPhysicalItems ? deliveryForm : {})
       };
 
@@ -370,9 +391,16 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
 
                           {/* Price & Actions */}
                           <div className="flex items-center gap-4 shrink-0">
-                            <span className="text-lg font-black text-white tracking-wide">
-                              {formatPrice(item.price)}
-                            </span>
+                            <div className="text-right">
+                              <span className="text-lg font-black text-white tracking-wide">
+                                {formatPrice(item.price)}
+                              </span>
+                              {item.basePrice && item.basePrice !== item.price && (
+                                <p className="text-[10px] text-white/35 mt-0.5">
+                                  Base ₹{item.basePrice} + 18% GST
+                                </p>
+                              )}
+                            </div>
                             <button
                               onClick={() => removeFromCart(item.bookId, item.format)}
                               className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/40 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400"
@@ -420,15 +448,41 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                       />
                     </div>
                     <div>
+                      <label className="block text-[10px] font-extrabold uppercase tracking-wider text-white/60 mb-1">State *</label>
+                      <select
+                        required
+                        value={deliveryForm.state}
+                        onChange={(e) => setDeliveryForm({ ...deliveryForm, state: e.target.value, district: "" })}
+                        className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400/50 focus:outline-none"
+                      >
+                        <option value="">-- Select State --</option>
+                        {INDIA_STATES.map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      {deliveryForm.state && (
+                        <p className="mt-1 text-[10px] text-amber-300 font-semibold">
+                          Delivery charge: ₹{getDeliveryCharge(deliveryForm.state)}
+                          {deliveryForm.state === "Tripura" ? " (within Tripura)" :
+                           deliveryForm.state === "West Bengal" ? " (West Bengal)" :
+                           " (Other state)"}
+                        </p>
+                      )}
+                    </div>
+                    <div>
                       <label className="block text-[10px] font-extrabold uppercase tracking-wider text-white/60 mb-1">District *</label>
-                      <input
-                        type="text"
+                      <select
                         required
                         value={deliveryForm.district}
                         onChange={(e) => setDeliveryForm({ ...deliveryForm, district: e.target.value })}
-                        placeholder="e.g. West Tripura"
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/50 focus:outline-none"
-                      />
+                        disabled={!deliveryForm.state}
+                        className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400/50 focus:outline-none disabled:opacity-40"
+                      >
+                        <option value="">{deliveryForm.state ? "-- Select District --" : "-- Select State first --"}</option>
+                        {availableDistricts.map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-[10px] font-extrabold uppercase tracking-wider text-white/60 mb-1">Block *</label>
@@ -502,9 +556,22 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                   <div className="relative overflow-hidden rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 via-indigo-500/5 to-zinc-950 p-6 text-center shadow-lg">
                     <p className="text-xs font-black uppercase tracking-widest text-cyan-300">Total Order Amount</p>
                     <p className="mt-1 text-4xl font-black bg-gradient-to-r from-cyan-300 via-white to-indigo-300 bg-clip-text text-transparent">
-                      {formatPrice(totalPrice)}
+                      {formatPrice(grandTotal)}
                     </p>
                     <p className="mt-1 text-xs font-semibold text-white/50">{cartItems.length} books in this order</p>
+                    {/* Price Breakdown */}
+                    <div className="mt-3 space-y-1 text-[11px] text-white/50">
+                      <div className="flex items-center justify-center gap-3">
+                        <span>Books: ₹{totalBasePrice.toFixed(2)}</span>
+                        <span className="text-white/20">+</span>
+                        <span className="text-amber-300">GST (18%): ₹{totalGST.toFixed(2)}</span>
+                      </div>
+                      {deliveryCharge > 0 && (
+                        <div className="flex items-center justify-center gap-2 text-emerald-300">
+                          <span>+ Delivery ({deliveryForm.state}): ₹{deliveryCharge}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Razorpay Automatic Checkout Card */}
@@ -535,7 +602,7 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                         </>
                       ) : (
                         <>
-                          <CreditCard size={18} /> Pay {formatPrice(totalPrice)} via Razorpay
+                          <CreditCard size={18} /> Pay {formatPrice(grandTotal)} via Razorpay
                         </>
                       )}
                     </button>
@@ -584,6 +651,7 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                   <p className="text-3xl font-black bg-gradient-to-r from-cyan-300 via-white to-indigo-300 bg-clip-text text-transparent">
                     {formatPrice(totalPrice)}
                   </p>
+                  <p className="text-[10px] text-white/30 mt-0.5">incl. 18% GST (₹{totalGST.toFixed(2)}){hasPhysicalItems ? " + delivery" : ""}</p>
                 </div>
 
                 <button

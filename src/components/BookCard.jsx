@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE, SERVER_URL } from "../config.js";
 import AuthModal from "./AuthModal.jsx";
 import { addToCart } from "../utils/cart.js";
+import { INDIA_STATES, DISTRICTS_BY_STATE } from "../utils/indiaData.js";
 
 export default function BookCard({ book, onAuthorClick, isAuthorActive = false }) {
   const location = useLocation();
@@ -52,6 +53,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
   const [deliveryForm, setDeliveryForm] = useState({
     co: "",
     country: "India",
+    state: "",
     district: "",
     block: "",
     pin: "",
@@ -59,6 +61,16 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
     nearbyLocation: ""
   });
 
+  const getDeliveryCharge = (state) => {
+    if (!state) return 120;
+    const s = state.trim().toLowerCase();
+    if (s === "tripura") return 80;
+    if (s === "west bengal") return 100;
+    return 120;
+  };
+
+  // Districts for currently selected state
+  const availableDistricts = deliveryForm.state ? (DISTRICTS_BY_STATE[deliveryForm.state] || []) : [];
 
   // Registration form fields
   const [name, setName] = useState("");
@@ -123,6 +135,10 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
     if (typeof price === "number") return `₹${price}`;
     return String(price || "").replace("$", "₹");
   };
+
+  const GST_RATE = 0.18;
+  // Computes GST-inclusive price
+  const withGST = (basePrice) => Math.round(Number(basePrice) * (1 + GST_RATE) * 100) / 100;
 
   const handleOpenPreview = async (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
@@ -401,7 +417,8 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
     }
   }, [modalStep]);
 
-  const cleanPrice = typeof book.price === "number" ? book.price : String(book.price).replace(/[^0-9]/g, "");
+  const cleanBasePrice = typeof book.price === "number" ? book.price : Number(String(book.price).replace(/[^0-9]/g, ""));
+  const cleanPrice = withGST(cleanBasePrice);
   const upiUrl = `upi://pay?pa=${upiConfig.upiId}&pn=Lekhak%20Tripura&am=${cleanPrice}&cu=INR&tn=Ebook%20Access%20Request`;
   const isMobile = typeof navigator !== "undefined" && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const openPhysicalOrder = async (format) => {
@@ -633,10 +650,11 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                           <p className="text-sm text-white/50 mt-1">by {book.author}</p>
                           <div className="mt-2 text-2xl font-bold text-cyan-300">
                             {selectedFormat === "paperback" && book.paperbackPrice && Number(book.paperbackPrice) > 0
-                              ? formatPrice(book.paperbackPrice)
+                              ? formatPrice(withGST(book.paperbackPrice))
                               : selectedFormat === "hardcover" && book.hardcoverPrice && Number(book.hardcoverPrice) > 0
-                              ? formatPrice(book.hardcoverPrice)
-                              : formatPrice(book.price)}
+                              ? formatPrice(withGST(book.hardcoverPrice))
+                              : formatPrice(withGST(book.price))}
+                            <span className="ml-2 text-xs font-normal text-white/40">(incl. 18% GST)</span>
                           </div>
                         </div>
 
@@ -701,7 +719,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                                   : "border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/40"
                               }`}
                             >
-                              E-Book ({formatPrice(book.price)})
+                              E-Book ({formatPrice(withGST(book.price))})
                             </button>
                           )}
 
@@ -718,7 +736,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                                   : "border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/40"
                               }`}
                             >
-                              Paperback ({formatPrice(book.paperbackPrice)})
+                              Paperback ({formatPrice(withGST(book.paperbackPrice))})
                             </button>
                           ) : (
                             <button
@@ -744,7 +762,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                                   : "border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/40"
                               }`}
                             >
-                              Hardcover ({formatPrice(book.hardcoverPrice)})
+                              Hardcover ({formatPrice(withGST(book.hardcoverPrice))})
                             </button>
                           ) : (
                             <button
@@ -1013,7 +1031,10 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                     <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 flex items-center justify-between">
                       <div>
                         <p className="text-[10px] uppercase tracking-wider text-white/40">Amount to Pay</p>
-                        <p className="text-2xl font-bold text-cyan-300 mt-0.5">{formatPrice(book.price)}</p>
+                        <p className="text-2xl font-bold text-cyan-300 mt-0.5">{formatPrice(withGST(book.price))}</p>
+                        <p className="text-[10px] text-white/35 mt-1">
+                          Base ₹{book.price} + 18% GST = ₹{withGST(book.price)}
+                        </p>
                       </div>
                       <div className="text-right">
                         <span className="inline-block rounded-full bg-cyan-400/10 px-3 py-1 text-[10px] font-semibold text-cyan-300">
@@ -1206,6 +1227,13 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                   <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-300">Delivery Request</p>
                   <h3 className="mt-1 text-xl font-bold capitalize text-white">{physicalFormat} order</h3>
                   <p className="mt-1 text-xs text-white/45">{book.title}</p>
+                  {deliveryForm.state && (
+                    <p className="mt-1 text-[10px] text-amber-300 font-semibold">
+                      Delivery charge: ₹{getDeliveryCharge(deliveryForm.state)}
+                      {deliveryForm.state === "Tripura" ? " (within Tripura)" :
+                       deliveryForm.state === "West Bengal" ? " (West Bengal)" : " (Other state)"}
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -1240,8 +1268,33 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                   <input value={deliveryForm.country} onChange={(e) => setDeliveryForm((f) => ({ ...f, country: e.target.value }))} className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none" />
                 </div>
                 <div>
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/50">State *</label>
+                  <select
+                    required
+                    value={deliveryForm.state}
+                    onChange={(e) => setDeliveryForm((f) => ({ ...f, state: e.target.value, district: "" }))}
+                    className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400/40 focus:outline-none"
+                  >
+                    <option value="">-- Select State --</option>
+                    {INDIA_STATES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
                   <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/50">District *</label>
-                  <input required value={deliveryForm.district} onChange={(e) => setDeliveryForm((f) => ({ ...f, district: e.target.value }))} placeholder="West Tripura" className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none" />
+                  <select
+                    required
+                    value={deliveryForm.district}
+                    onChange={(e) => setDeliveryForm((f) => ({ ...f, district: e.target.value }))}
+                    disabled={!deliveryForm.state}
+                    className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3.5 py-2.5 text-xs text-white focus:border-cyan-400/40 focus:outline-none disabled:opacity-40"
+                  >
+                    <option value="">{deliveryForm.state ? "-- Select District --" : "-- Select State first --"}</option>
+                    {availableDistricts.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/50">Block *</label>

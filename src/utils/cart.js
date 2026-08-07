@@ -1,6 +1,16 @@
 // Cart utility for Lekhok Tripura
 
 const CART_KEY = "lekhok_cart";
+const GST_RATE = 0.18; // 18% GST
+
+/**
+ * Returns the GST-inclusive price for a given base price.
+ * @param {number} basePrice
+ * @returns {number} price after 18% GST (rounded to 2 decimal places)
+ */
+export function applyGST(basePrice) {
+  return Math.round(Number(basePrice) * (1 + GST_RATE) * 100) / 100;
+}
 
 export function getCart() {
   try {
@@ -16,13 +26,14 @@ export function addToCart(book, format = "ebook") {
   const cart = getCart();
   const bookId = book._id || book.id;
 
-  // Determine price based on format
-  let price = book.price || 0;
+  // Determine base price based on format, then apply 18% GST
+  let basePrice = book.price || 0;
   if (format === "paperback") {
-    price = book.paperbackPrice || book.price || 0;
+    basePrice = book.paperbackPrice || book.price || 0;
   } else if (format === "hardcover") {
-    price = book.hardcoverPrice || book.price || 0;
+    basePrice = book.hardcoverPrice || book.price || 0;
   }
+  const price = applyGST(basePrice);
 
   // Check if item with exact bookId + format is already in cart
   const existingIndex = cart.findIndex(
@@ -41,7 +52,8 @@ export function addToCart(book, format = "ebook") {
     author: book.author,
     cover: coverUrl,
     format,
-    price: Number(price),
+    basePrice: Number(basePrice),
+    price: Number(price), // GST-inclusive price
     pages: book.pages || 0
   };
 
