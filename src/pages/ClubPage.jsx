@@ -203,7 +203,7 @@ export default function ClubPage() {
       if (resendScriptLoaded && window.Razorpay && orderData.orderId && orderData.keyId) {
         const options = {
           key: orderData.keyId,
-          amount: Math.round(1178.82 * 100),
+          amount: Math.round(1.18 * 100),
           currency: "INR",
           name: "Lekhok Tripura Publishers",
           description: "Club Membership Fee (₹999 + 18% GST)",
@@ -345,7 +345,7 @@ export default function ClubPage() {
                   </span>
                   <div className="h-4 w-px bg-white/20" />
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl sm:text-3xl font-black text-white">₹999</span>
+                    <span className="text-2xl sm:text-3xl font-black text-white">₹1</span>
                     <span className="text-[10px] font-bold text-amber-300">+ 18% GST</span>
                   </div>
                 </div>
@@ -619,7 +619,7 @@ export default function ClubPage() {
               </h2>
 
               <p className="mx-auto mt-4 max-w-xl text-sm sm:text-base leading-relaxed text-white/75">
-                Thank you <strong className="text-cyan-300">{activeMembership.fullName}</strong>! Your membership application and payment of <strong className="text-emerald-300">₹1,178.82</strong> have been successfully processed.
+                Thank you <strong className="text-cyan-300">{activeMembership.fullName}</strong>! Your membership application and payment of <strong className="text-emerald-300">₹1.18</strong> have been successfully processed.
               </p>
 
               {/* Digital Receipt Box */}
@@ -638,7 +638,7 @@ export default function ClubPage() {
                 </div>
                 <div className="flex justify-between border-b border-white/10 pb-2.5">
                   <span className="text-white/50 font-semibold">Base Fee + 18% GST:</span>
-                  <span className="font-extrabold text-emerald-300">₹999.00 + ₹179.82 = ₹1,178.82</span>
+                  <span className="font-extrabold text-emerald-300">₹1.00 + ₹0.18 = ₹1.18</span>
                 </div>
                 {activeMembership.paymentId && (
                   <div className="flex justify-between">
@@ -849,23 +849,23 @@ export default function ClubPage() {
                     </div>
 
                     <div className="text-right">
-                      <div className="text-2xl font-black text-emerald-300">₹1,178.82</div>
-                      <div className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">₹999 + 18% GST</div>
+                      <div className="text-2xl font-black text-emerald-300">₹1.18</div>
+                      <div className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">Testing Mode (₹1 + 18% GST)</div>
                     </div>
                   </div>
 
                   <div className="grid gap-2 text-xs text-white/70 sm:grid-cols-3">
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2">
                       <span>Base Membership:</span>
-                      <strong className="text-white">₹999.00</strong>
+                      <strong className="text-white">₹1.00</strong>
                     </div>
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2">
                       <span>GST (18%):</span>
-                      <strong className="text-white">₹179.82</strong>
+                      <strong className="text-white">₹0.18</strong>
                     </div>
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2">
                       <span className="text-cyan-300 font-bold">Total Payable:</span>
-                      <strong className="text-emerald-300 font-black text-sm">₹1,178.82</strong>
+                      <strong className="text-emerald-300 font-black text-sm">₹1.18</strong>
                     </div>
                   </div>
                 </div>
@@ -929,7 +929,7 @@ export default function ClubPage() {
                       </>
                     ) : (
                       <>
-                        Proceed to Pay ₹1,178.82 <ArrowRight size={16} />
+                        Proceed to Pay ₹1.18 <ArrowRight size={16} />
                       </>
                     )}
                   </button>
