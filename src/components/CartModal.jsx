@@ -16,6 +16,7 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   // Delivery Address Form
   const [deliveryForm, setDeliveryForm] = useState({
@@ -59,6 +60,7 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
             onClose();
             setShowAuthModal(true);
           } else {
+            setCurrentUser(data.user);
             refreshCart();
             setStep("cart");
             setErrorMsg("");
@@ -75,8 +77,26 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
     (item) => item.format === "paperback" || item.format === "hardcover"
   );
 
-  const totalPrice = cartItems.reduce((acc, item) => acc + (Number(item.price) || 0), 0);
-  const totalBasePrice = cartItems.reduce((acc, item) => acc + (Number(item.basePrice || item.price) || 0), 0);
+  const isClubMember = !!(currentUser?.memberId && String(currentUser.memberId).startsWith("LTCLUB-"));
+  const GST_RATE = 0.18;
+
+  // Recalculate prices considering club membership status
+  const processedItems = cartItems.map((item) => {
+    const rawBase = Number(item.basePrice || item.price) || 0;
+    const basePrice = isClubMember ? Math.round(rawBase * 0.95 * 100) / 100 : rawBase;
+    const price = Math.round(basePrice * (1 + GST_RATE) * 100) / 100;
+    const originalPrice = Math.round(rawBase * (1 + GST_RATE) * 100) / 100;
+    return {
+      ...item,
+      basePrice,
+      price,
+      originalPrice,
+      isClubMember
+    };
+  });
+
+  const totalPrice = processedItems.reduce((acc, item) => acc + (Number(item.price) || 0), 0);
+  const totalBasePrice = processedItems.reduce((acc, item) => acc + (Number(item.basePrice || item.price) || 0), 0);
   const totalGST = Math.round((totalPrice - totalBasePrice) * 100) / 100;
   const deliveryCharge = hasPhysicalItems ? getDeliveryCharge(deliveryForm.state) : 0;
   const grandTotal = totalPrice + deliveryCharge;
@@ -321,7 +341,13 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
               {/* ─────────── 1. CART ITEMS STEP ─────────── */}
               {step === "cart" && (
                 <div>
-                  {cartItems.length === 0 ? (
+                  {isClubMember && processedItems.length > 0 && (
+                    <div className="mb-3.5 flex items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-300">
+                      <ShieldCheck size={16} className="shrink-0 text-emerald-400" />
+                      <span>5% Club Member Discount applied to all book purchases!</span>
+                    </div>
+                  )}
+                  {processedItems.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <div className="grid h-20 w-20 place-items-center rounded-3xl border border-white/10 bg-white/[0.03] text-white/30 mb-4 backdrop-blur-sm shadow-xl">
                         <ShoppingCart size={38} />
@@ -353,7 +379,7 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                     </div>
                   ) : (
                     <div className="space-y-3.5">
-                      {cartItems.map((item, idx) => (
+                      {processedItems.map((item, idx) => (
                         <div
                           key={`${item.bookId}-${item.format}-${idx}`}
                           className="group relative rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 sm:p-4 transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.06] shadow-md backdrop-blur-sm"
@@ -385,6 +411,11 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                                   <span className="rounded-md border border-cyan-400/30 bg-cyan-400/15 px-2 py-0.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-cyan-300 shadow-glow">
                                     {item.format}
                                   </span>
+                                  {isClubMember && (
+                                    <span className="rounded-md border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-300">
+                                      5% Club Off
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -392,10 +423,17 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                             {/* Price & Delete Button */}
                             <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-4 shrink-0">
                               <div className="text-right">
-                                <span className="text-base sm:text-lg font-black text-white tracking-wide">
-                                  {formatPrice(item.price)}
-                                </span>
-                                {item.basePrice && item.basePrice !== item.price && (
+                                <div className="flex items-baseline gap-1.5 justify-end">
+                                  {isClubMember && item.originalPrice > item.price && (
+                                    <span className="text-xs font-bold text-white/40 line-through">
+                                      {formatPrice(item.originalPrice)}
+                                    </span>
+                                  )}
+                                  <span className="text-base sm:text-lg font-black text-white tracking-wide">
+                                    {formatPrice(item.price)}
+                                  </span>
+                                </div>
+                                {item.basePrice && (
                                   <p className="text-[9px] sm:text-[10px] text-white/40 mt-0.5 whitespace-nowrap">
                                     Base ₹{item.basePrice} + 18% GST
                                   </p>

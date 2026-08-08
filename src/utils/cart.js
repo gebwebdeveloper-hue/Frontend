@@ -22,18 +22,25 @@ export function getCart() {
   }
 }
 
-export function addToCart(book, format = "ebook") {
+export function addToCart(book, format = "ebook", user = null) {
   const cart = getCart();
   const bookId = book._id || book.id;
 
-  // Determine base price based on format, then apply 18% GST
-  let basePrice = book.price || 0;
+  // Determine base price based on format
+  let rawBasePrice = book.price || 0;
   if (format === "paperback") {
-    basePrice = book.paperbackPrice || book.price || 0;
+    rawBasePrice = book.paperbackPrice || book.price || 0;
   } else if (format === "hardcover") {
-    basePrice = book.hardcoverPrice || book.price || 0;
+    rawBasePrice = book.hardcoverPrice || book.price || 0;
   }
+
+  // Check if user is an active club member (memberId starts with LTCLUB-)
+  const isClubMember = !!(user?.memberId && String(user.memberId).startsWith("LTCLUB-"));
+  const basePrice = isClubMember
+    ? Math.round(Number(rawBasePrice) * 0.95 * 100) / 100
+    : Number(rawBasePrice);
   const price = applyGST(basePrice);
+  const originalPrice = applyGST(rawBasePrice);
 
   // Check if item with exact bookId + format is already in cart
   const existingIndex = cart.findIndex(
@@ -54,6 +61,8 @@ export function addToCart(book, format = "ebook") {
     format,
     basePrice: Number(basePrice),
     price: Number(price), // GST-inclusive price
+    originalPrice: Number(originalPrice),
+    isClubMember,
     pages: book.pages || 0
   };
 

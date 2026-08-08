@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Loader2, CheckCircle2, AlertCircle,
   Users, PenLine, CalendarDays, BookOpen,
   Sparkles, IdCard, BookMarked, Network,
   Mic2, FileText, Eye, Trophy, MessageCircle,
   ShieldCheck, CreditCard, Award, ArrowRight,
-  Mail, Phone
+  Mail, Phone, Copy
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -97,6 +97,14 @@ export default function ClubPage() {
 
   // Active membership state (if user already paid)
   const [activeMembership, setActiveMembership] = useState(null);
+  const [copiedMemberId, setCopiedMemberId] = useState(false);
+
+  // Receipt card modal state (shown ONLY right after payment)
+  const [showReceiptCard, setShowReceiptCard] = useState(false);
+  const [justPaid, setJustPaid] = useState(false);
+  const [countdown, setCountdown] = useState(8);
+  const countdownRef = useRef(null);
+  const navigate = useNavigate();
 
   // Load active membership from localStorage or backend query
   useEffect(() => {
@@ -112,6 +120,25 @@ export default function ClubPage() {
       }
     }
   }, []);
+
+  // Auto-dismiss countdown after fresh payment
+  useEffect(() => {
+    if (!justPaid) return;
+    clearInterval(countdownRef.current);
+    countdownRef.current = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(countdownRef.current);
+          setJustPaid(false);
+          setShowReceiptCard(false);
+          navigate("/");
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(countdownRef.current);
+  }, [justPaid, navigate]);
 
   // Fetch active members list
   useEffect(() => {
@@ -232,10 +259,13 @@ export default function ClubPage() {
         const memberInfo = verifyData.member;
         localStorage.setItem("lekhok_club_member", JSON.stringify(memberInfo));
         setActiveMembership(memberInfo);
+        setShowReceiptCard(true);
+        setJustPaid(true);
+        setCountdown(8);
         setForm(initialForm);
         setMessage({
           type: "success",
-          text: "Welcome to Lekhok Tripura Club! Your membership is active. A confirmation email with your payment receipt has been sent to your inbox.",
+          text: "Welcome to Lekhok Tripura Club! Your membership is active. A confirmation email with your Member ID has been sent to your inbox.",
         });
       } else {
         setMessage({ type: "error", text: verifyData.message || "Payment verification failed." });
@@ -545,8 +575,8 @@ export default function ClubPage() {
       <section id="join-club" className="section-shell relative z-10 py-16">
         <div className="mx-auto max-w-5xl">
 
-          {/* IF USER HAS ACTIVE PAID MEMBERSHIP: SHOW CONFIRMATION CARD & HIDE FORM */}
-          {activeMembership ? (
+          {/* IF FRESH PAYMENT: SHOW CONFIRMATION RECEIPT CARD */}
+          {showReceiptCard && activeMembership ? (
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -555,6 +585,30 @@ export default function ClubPage() {
               <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-3xl border border-emerald-400/40 bg-emerald-400/15 text-emerald-300 shadow-glow">
                 <ShieldCheck size={36} />
               </div>
+
+              {/* Auto-dismiss countdown bar */}
+              {justPaid && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-semibold text-white/50">
+                      Redirecting to home in <strong className="text-cyan-300">{countdown}s</strong>…
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => { clearInterval(countdownRef.current); setJustPaid(false); }}
+                      className="text-[10px] text-white/30 hover:text-white/70 transition underline"
+                    >
+                      Stay on page
+                    </button>
+                  </div>
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-indigo-400 transition-all duration-1000 ease-linear"
+                      style={{ width: `${(countdown / 8) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-300">
                 <CheckCircle2 size={14} /> Official Lifetime Member
@@ -594,16 +648,23 @@ export default function ClubPage() {
                 )}
               </div>
 
-              <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-cyan-200">
-                <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
-                <span>A confirmation email &amp; digital receipt has been sent to <strong>{activeMembership.email}</strong>.</span>
-              </div>
-
               {/* Action Links */}
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearInterval(countdownRef.current);
+                    setJustPaid(false);
+                    setShowReceiptCard(false);
+                    navigate("/");
+                  }}
+                  className="rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-8 py-3.5 text-sm font-black uppercase tracking-wider text-black shadow-lg hover:opacity-90 transition"
+                >
+                  ✓ OK
+                </button>
                 <Link
                   to="/library"
-                  className="rounded-2xl bg-cyan-400 px-6 py-3.5 text-xs font-black uppercase text-black hover:bg-cyan-300"
+                  className="rounded-2xl bg-white/10 border border-white/20 px-6 py-3.5 text-xs font-black uppercase text-white hover:bg-white/20"
                 >
                   Explore Books
                 </Link>
@@ -614,14 +675,161 @@ export default function ClubPage() {
                   Read Short Stories
                 </Link>
               </div>
+
+              {/* Member ID display */}
+              {activeMembership.memberId && (
+                <div className="mx-auto mt-6 max-w-lg">
+                  <p className="text-[10px] font-black uppercase tracking-[0.35em] text-amber-300 mb-3 text-center">Your Member ID</p>
+                  <div className="relative flex items-center justify-between rounded-2xl border-2 border-amber-400/40 bg-gradient-to-r from-amber-950/60 to-zinc-950 px-6 py-4 shadow-xl">
+                    <span className="font-mono text-2xl font-black text-white tracking-widest">{activeMembership.memberId}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(activeMembership.memberId).catch(() => {});
+                        setCopiedMemberId(true);
+                        setTimeout(() => setCopiedMemberId(false), 2500);
+                      }}
+                      className="flex items-center gap-1.5 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300 hover:bg-amber-400/20 transition cursor-pointer"
+                    >
+                      <Copy size={13} />
+                      {copiedMemberId ? "Copied!" : "Copy ID"}
+                    </button>
+                  </div>
+
+                  {/* Activation instructions */}
+                  <div className="mt-4 rounded-2xl border border-emerald-400/20 bg-emerald-950/30 p-4 text-left space-y-2">
+                    <p className="text-xs font-black text-emerald-300 flex items-center gap-1.5">
+                      <ShieldCheck size={13} /> How to Activate Your Discounts
+                    </p>
+                    <ol className="text-xs text-white/65 space-y-1 list-decimal list-inside leading-relaxed">
+                      <li>Click your <strong className="text-white">Profile icon</strong> (top-right corner)</li>
+                      <li>Select <strong className="text-white">"Edit Profile"</strong> from the dropdown</li>
+                      <li>Scroll to the <strong className="text-cyan-300">"Club Membership"</strong> section</li>
+                      <li>Paste your Member ID: <span className="font-mono text-amber-300">{activeMembership.memberId}</span></li>
+                      <li>Click <strong className="text-white">"Activate Membership"</strong> — done!</li>
+                    </ol>
+                    <div className="mt-3 grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-cyan-300">
+                        <BookOpen size={11} className="shrink-0" /> 5% OFF Books
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-300">
+                        <PenLine size={11} className="shrink-0" /> 10% OFF Publishing
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          ) : activeMembership ? (
+            /* PERMANENT ACTIVE MEMBER DASHBOARD FOR MEMBERS (NO BANNER, NO FORM) */
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="rounded-3xl border border-cyan-400/40 bg-gradient-to-br from-cyan-950/60 via-zinc-950 to-indigo-950/60 p-8 text-center shadow-2xl backdrop-blur-xl md:p-12"
+            >
+              <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-3xl border border-emerald-400/40 bg-emerald-400/15 text-emerald-300 shadow-glow">
+                <ShieldCheck size={36} />
+              </div>
+
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-300">
+                <CheckCircle2 size={14} /> Official Lifetime Member
+              </div>
+
+              <h2 className="text-3xl font-black text-white sm:text-4xl md:text-5xl">
+                Welcome back, {activeMembership.fullName}! 🎉
+              </h2>
+
+              <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-white/70">
+                Your club membership is active. Enjoy <strong className="text-cyan-300">5% OFF</strong> on all book purchases and <strong className="text-indigo-300">10% OFF</strong> on your next book publishing.
+              </p>
+
+              {/* Member ID Display */}
+              {activeMembership.memberId && (
+                <div className="mx-auto mt-6 max-w-lg">
+                  <p className="text-[10px] font-black uppercase tracking-[0.35em] text-amber-300 mb-2.5 text-center">Your Exclusive Member ID</p>
+                  <div className="relative flex items-center justify-between rounded-2xl border-2 border-amber-400/40 bg-gradient-to-r from-amber-950/60 to-zinc-950 px-6 py-4 shadow-xl">
+                    <span className="font-mono text-2xl font-black text-white tracking-widest">{activeMembership.memberId}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(activeMembership.memberId).catch(() => {});
+                        setCopiedMemberId(true);
+                        setTimeout(() => setCopiedMemberId(false), 2500);
+                      }}
+                      className="flex items-center gap-1.5 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300 hover:bg-amber-400/20 transition cursor-pointer"
+                    >
+                      <Copy size={13} />
+                      {copiedMemberId ? "Copied!" : "Copy ID"}
+                    </button>
+                  </div>
+
+                  {/* Activation instructions */}
+                  <div className="mt-4 rounded-2xl border border-emerald-400/20 bg-emerald-950/30 p-4 text-left space-y-2">
+                    <p className="text-xs font-black text-emerald-300 flex items-center gap-1.5">
+                      <ShieldCheck size={13} /> How to Activate Discounts on Your Profile
+                    </p>
+                    <ol className="text-xs text-white/65 space-y-1 list-decimal list-inside leading-relaxed">
+                      <li>Click your <strong className="text-white">Profile icon</strong> (top-right corner)</li>
+                      <li>Select <strong className="text-white">"Edit Profile"</strong> from the menu</li>
+                      <li>Scroll down to <strong className="text-cyan-300">"Club Membership"</strong></li>
+                      <li>Paste your Member ID: <span className="font-mono text-amber-300">{activeMembership.memberId}</span> and click <strong className="text-white">Activate</strong></li>
+                    </ol>
+                  </div>
+                </div>
+              )}
+
+              {/* Benefits summary cards */}
+              <div className="mx-auto mt-6 grid max-w-lg grid-cols-2 gap-3">
+                <div className="flex items-center gap-2.5 rounded-2xl border border-cyan-400/20 bg-cyan-400/8 p-3.5 text-left">
+                  <BookOpen size={18} className="text-cyan-400 shrink-0" />
+                  <div>
+                    <p className="text-xs font-black text-cyan-300">5% OFF</p>
+                    <p className="text-[10px] text-white/50">Book Purchases</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-2xl border border-indigo-400/20 bg-indigo-400/8 p-3.5 text-left">
+                  <PenLine size={18} className="text-indigo-400 shrink-0" />
+                  <div>
+                    <p className="text-xs font-black text-indigo-300">10% OFF</p>
+                    <p className="text-[10px] text-white/50">Book Publishing</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <Link
+                  to="/library"
+                  className="rounded-2xl bg-cyan-400 px-6 py-3 text-xs font-black uppercase text-black hover:bg-cyan-300 transition shadow-lg shadow-cyan-400/20"
+                >
+                  Explore Library
+                </Link>
+                <Link
+                  to="/short-stories"
+                  className="rounded-2xl border border-white/20 bg-white/10 px-6 py-3 text-xs font-bold text-white hover:bg-white/20 transition"
+                >
+                  Read Short Stories
+                </Link>
+              </div>
             </motion.div>
           ) : (
             /* IF NOT YET PAID: RENDER APPLICATION FORM & GST FEE SUMMARY */
             <>
+              {/* ── BANNER ── placed above the form heading */}
+              <div className="mb-8 overflow-hidden rounded-3xl shadow-2xl shadow-cyan-400/10">
+                <img
+                  src="/ChatGPT Image Aug 8, 2026, 07_32_01 PM.png"
+                  alt="Lekhok Tripura Club Member Benefits — 5% Off Books, 10% Off Publishing"
+                  className="w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+
               <h2 data-reveal className="text-center text-4xl font-black text-white md:text-5xl">Join Our Club</h2>
               <p data-reveal className="mt-2 text-center text-xs sm:text-sm text-white/60">
                 Complete your details and proceed to payment to activate your lifetime club membership.
               </p>
+
 
               <form
                 onSubmit={handleSubmit}

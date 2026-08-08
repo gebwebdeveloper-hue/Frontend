@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Loader2, Search, Trash2, Edit3, Plus, ArrowLeft,
   RefreshCw, CheckCircle2, Shield, Phone, Mail, MapPin, Calendar,
-  MessageSquare, UserCheck, Clock, X, AlertCircle, RotateCcw
+  MessageSquare, UserCheck, Clock, X, AlertCircle, RotateCcw, Copy
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
@@ -441,10 +441,23 @@ export default function AdminClubPage() {
                       </button>
                     </div>
 
-                    {/* Member Name */}
+                    {/* Member Name + Member ID badge */}
                     <h3 className="text-lg font-black text-white group-hover:text-cyan-300 transition">
                       {member.fullName}
                     </h3>
+                    {member.memberId && (
+                      <div className="mt-1.5 flex items-center gap-1.5">
+                        <span className="font-mono text-[11px] font-black text-amber-300 tracking-wider">{member.memberId}</span>
+                        <button
+                          type="button"
+                          onClick={() => { navigator.clipboard.writeText(member.memberId).catch(() => {}); }}
+                          className="text-white/30 hover:text-amber-300 transition"
+                          title="Copy Member ID"
+                        >
+                          <Copy size={11} />
+                        </button>
+                      </div>
+                    )}
 
                     {/* Details List */}
                     <div className="mt-3 space-y-2 text-xs text-white/65">

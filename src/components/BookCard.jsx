@@ -30,20 +30,36 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
   const [physicalError, setPhysicalError] = useState("");
   const [physicalSuccess, setPhysicalSuccess] = useState("");
   const [cartFeedback, setCartFeedback] = useState({ type: "", text: "" });
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.user) {
+          setCurrentUser(data.user);
+          return data.user;
+        }
+      }
+    } catch {}
+    return null;
+  };
+
+  useEffect(() => {
+    fetchCurrentUser();
+    window.addEventListener("lekhak:login", fetchCurrentUser);
+    return () => window.removeEventListener("lekhak:login", fetchCurrentUser);
+  }, []);
 
   const handleAddToCartAction = async () => {
     try {
-      const meRes = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
-      if (!meRes.ok) {
+      const user = await fetchCurrentUser();
+      if (!user) {
         setShowAuthModal(true);
         return;
       }
-      const meData = await meRes.json();
-      if (!meData.success || !meData.user) {
-        setShowAuthModal(true);
-        return;
-      }
-      const res = addToCart(book, selectedFormat);
+      const res = addToCart(book, selectedFormat, user);
       setCartFeedback({ type: res.success ? "success" : "info", text: res.message });
       setTimeout(() => setCartFeedback({ type: "", text: "" }), 3500);
     } catch {
@@ -140,6 +156,13 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
   // Computes GST-inclusive price
   const withGST = (basePrice) => Math.round(Number(basePrice) * (1 + GST_RATE) * 100) / 100;
 
+  const calcFinalPrice = (rawBase) => {
+    if (!rawBase || Number(rawBase) <= 0) return 0;
+    const isClubMember = !!(currentUser?.memberId && String(currentUser.memberId).startsWith("LTCLUB-"));
+    const base = isClubMember ? Math.round(Number(rawBase) * 0.95 * 100) / 100 : Number(rawBase);
+    return withGST(base);
+  };
+
   const handleOpenPreview = async (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
     
@@ -177,6 +200,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
       // Pre-fill email/name so payment form shows user info
       if (meData.user.email) setEmail(meData.user.email);
       if (meData.user.name) setName(meData.user.name);
+      setCurrentUser(meData.user);
 
       // Admin gets instant access
       if (meData.user.role === "admin") {
@@ -648,14 +672,41 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                         <div>
                           <h4 className="text-2xl font-bold text-white leading-tight">{book.title}</h4>
                           <p className="text-sm text-white/50 mt-1">by {book.author}</p>
-                          <div className="mt-2 text-2xl font-bold text-cyan-300">
-                            {selectedFormat === "paperback" && book.paperbackPrice && Number(book.paperbackPrice) > 0
-                              ? formatPrice(withGST(book.paperbackPrice))
+                          
+                          {/* Price calculation with 5% Club Discount if active */}
+                          {(() => {
+                            const isClubMember = !!(currentUser?.memberId && String(currentUser.memberId).startsWith("LTCLUB-"));
+                            const selRawBase = selectedFormat === "paperback" && book.paperbackPrice && Number(book.paperbackPrice) > 0
+                              ? Number(book.paperbackPrice)
                               : selectedFormat === "hardcover" && book.hardcoverPrice && Number(book.hardcoverPrice) > 0
-                              ? formatPrice(withGST(book.hardcoverPrice))
-                              : formatPrice(withGST(book.price))}
-                            <span className="ml-2 text-xs font-normal text-white/40">(incl. 18% GST)</span>
-                          </div>
+                              ? Number(book.hardcoverPrice)
+                              : Number(book.price || 0);
+
+                            const originalFinal = withGST(selRawBase);
+                            const discBase = isClubMember ? Math.round(selRawBase * 0.95 * 100) / 100 : selRawBase;
+                            const finalPrice = withGST(discBase);
+
+                            return (
+                              <div className="mt-2.5">
+                                {isClubMember && (
+                                  <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-emerald-300">
+                                    <ShieldCheck size={13} /> 5% Club Member Discount Applied
+                                  </div>
+                                )}
+                                <div className="flex items-baseline gap-2">
+                                  {isClubMember && originalFinal > finalPrice && (
+                                    <span className="text-lg font-bold text-white/40 line-through">
+                                      {formatPrice(originalFinal)}
+                                    </span>
+                                  )}
+                                  <span className="text-2xl font-bold text-cyan-300">
+                                    {formatPrice(finalPrice)}
+                                  </span>
+                                  <span className="text-xs font-normal text-white/40">(incl. 18% GST)</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         {/* Description */}
@@ -719,7 +770,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                                   : "border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/40"
                               }`}
                             >
-                              E-Book ({formatPrice(withGST(book.price))})
+                              E-Book ({formatPrice(calcFinalPrice(book.price))})
                             </button>
                           )}
 
@@ -736,7 +787,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                                   : "border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/40"
                               }`}
                             >
-                              Paperback ({formatPrice(withGST(book.paperbackPrice))})
+                              Paperback ({formatPrice(calcFinalPrice(book.paperbackPrice))})
                             </button>
                           ) : (
                             <button
@@ -762,7 +813,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
                                   : "border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/40"
                               }`}
                             >
-                              Hardcover ({formatPrice(withGST(book.hardcoverPrice))})
+                              Hardcover ({formatPrice(calcFinalPrice(book.hardcoverPrice))})
                             </button>
                           ) : (
                             <button

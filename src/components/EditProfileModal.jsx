@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Camera, User, Phone, Mail, MapPin, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { X, Camera, User, Phone, Mail, MapPin, Loader2, CheckCircle2, AlertCircle, Award, Copy, ShieldCheck, BookOpen, PenLine } from "lucide-react";
 import { API_BASE } from "../config.js";
 
 export default function EditProfileModal({ user, onClose, onUpdated }) {
@@ -18,6 +18,14 @@ export default function EditProfileModal({ user, onClose, onUpdated }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Club membership activation state
+  const [memberIdInput, setMemberIdInput] = useState("");
+  const [memberActivating, setMemberActivating] = useState(false);
+  const [memberError, setMemberError] = useState("");
+  const [memberSuccess, setMemberSuccess] = useState("");
+  const [activeMemberId, setActiveMemberId] = useState(user?.memberId || "");
+  const [copied, setCopied] = useState(false);
 
   // Lock body & Lenis scroll while modal is open
   useEffect(() => {
@@ -94,6 +102,44 @@ export default function EditProfileModal({ user, onClose, onUpdated }) {
       setError("Network error connecting to server.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleActivateMembership = async (e) => {
+    e.preventDefault();
+    if (!memberIdInput.trim()) return;
+    setMemberActivating(true);
+    setMemberError("");
+    setMemberSuccess("");
+    try {
+      const res = await fetch(`${API_BASE}/profile/activate-membership`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ memberId: memberIdInput.trim().toUpperCase() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActiveMemberId(data.memberId);
+        setMemberSuccess(data.message || "Club membership activated! Discounts are now active.");
+        setMemberIdInput("");
+        window.dispatchEvent(new Event("lekhak:login"));
+        if (onUpdated) onUpdated(data.user);
+      } else {
+        setMemberError(data.message || "Activation failed.");
+      }
+    } catch {
+      setMemberError("Network error. Please try again.");
+    } finally {
+      setMemberActivating(false);
+    }
+  };
+
+  const handleCopyMemberId = () => {
+    if (activeMemberId) {
+      navigator.clipboard.writeText(activeMemberId).catch(() => {});
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -271,6 +317,98 @@ export default function EditProfileModal({ user, onClose, onUpdated }) {
                     className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:border-cyan-400/50 focus:outline-none font-mono placeholder-white/20"
                   />
                 </div>
+              </div>
+
+              {/* ── CLUB MEMBERSHIP ACTIVATION ── */}
+              <div className="pt-2 border-t border-white/10">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-300 mb-3 flex items-center gap-1.5">
+                  <Award size={12} /> Club Membership
+                </p>
+
+                {activeMemberId ? (
+                  /* Active membership badge */
+                  <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/8 p-4">
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <div className="grid h-8 w-8 place-items-center rounded-full bg-emerald-500/15 border border-emerald-500/30">
+                        <ShieldCheck size={16} className="text-emerald-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-black text-emerald-300">Club Membership Active ✓</p>
+                        <p className="text-[10px] text-white/50">Discounts are applied automatically at checkout</p>
+                      </div>
+                    </div>
+                    {/* Member ID display */}
+                    <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 bg-black/30 px-3.5 py-2.5 mb-3">
+                      <span className="font-mono text-sm font-black text-white tracking-wider">{activeMemberId}</span>
+                      <button
+                        type="button"
+                        onClick={handleCopyMemberId}
+                        className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 transition"
+                      >
+                        <Copy size={11} />
+                        {copied ? "Copied!" : "Copy"}
+                      </button>
+                    </div>
+                    {/* Discount benefits grid */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-400/8 px-3 py-2">
+                        <BookOpen size={13} className="text-cyan-400 shrink-0" />
+                        <div>
+                          <p className="text-[10px] font-black text-cyan-300">5% OFF</p>
+                          <p className="text-[9px] text-white/50">Book Purchases</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-xl border border-indigo-400/20 bg-indigo-400/8 px-3 py-2">
+                        <PenLine size={13} className="text-indigo-400 shrink-0" />
+                        <div>
+                          <p className="text-[10px] font-black text-indigo-300">10% OFF</p>
+                          <p className="text-[9px] text-white/50">Book Publishing</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* Not yet activated — show input */
+                  <div className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-4 space-y-3">
+                    <p className="text-xs text-white/70 leading-relaxed">
+                      🎯 Paste the <strong className="text-amber-300">Member ID</strong> from your club confirmation email to unlock discounts.
+                    </p>
+                    {memberSuccess && (
+                      <div className="flex items-start gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-300">
+                        <CheckCircle2 size={14} className="shrink-0 mt-0.5" />
+                        <span>{memberSuccess}</span>
+                      </div>
+                    )}
+                    {memberError && (
+                      <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
+                        <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                        <span>{memberError}</span>
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={memberIdInput}
+                        onChange={(e) => setMemberIdInput(e.target.value.toUpperCase())}
+                        placeholder="e.g. LTCLUB-1234"
+                        className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white font-mono focus:border-amber-400/50 focus:outline-none placeholder-white/20 uppercase"
+                        maxLength={12}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleActivateMembership}
+                        disabled={memberActivating || !memberIdInput.trim()}
+                        className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-400 px-4 py-2.5 text-xs font-black text-black hover:opacity-90 transition disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {memberActivating ? <Loader2 size={12} className="animate-spin" /> : <ShieldCheck size={12} />}
+                        Activate
+                      </button>
+                    </div>
+                    <p className="text-[9px] text-white/35 leading-relaxed">
+                      Your Member ID is in the confirmation email sent after joining the club. It looks like <span className="font-mono text-white/50">LTCLUB-XXXX</span>.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Actions */}

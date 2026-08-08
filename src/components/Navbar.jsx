@@ -293,11 +293,16 @@ export default function Navbar() {
                 <div className="relative ml-4" ref={profileRef}>
                   <button
                     onClick={() => setProfileOpen((p) => !p)}
-                    className="group flex h-11 w-11 items-center justify-center rounded-full border border-cyan-400/40 bg-gradient-to-br from-cyan-400 to-indigo-500 font-bold text-black text-lg shadow-lg hover:scale-110 transition-transform duration-200 overflow-hidden select-none"
+                    className="group relative flex h-11 w-11 items-center justify-center rounded-full border border-cyan-400/40 bg-gradient-to-br from-cyan-400 to-indigo-500 font-bold text-black text-lg shadow-lg hover:scale-110 transition-transform duration-200 overflow-hidden select-none"
                     title={authUser.name || authUser.email}
                   >
                     {authUser.avatarUrl ? (
-                      <img src={authUser.avatarUrl} alt={authUser.name || "User Avatar"} className="h-full w-full object-cover" />
+                      <img
+                        src={authUser.avatarUrl}
+                        alt={authUser.name || "User Avatar"}
+                        className="absolute inset-0 h-full w-full rounded-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
                     ) : (
                       userInitial
                     )}
@@ -453,9 +458,14 @@ export default function Navbar() {
                   className="flex flex-col items-center gap-3.5 rounded-2xl border border-white/10 bg-white/[0.04] p-5"
                 >
                   <div className="flex flex-col items-center text-center">
-                    <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full border-2 border-cyan-400/40 bg-gradient-to-br from-cyan-400 to-indigo-500 text-2xl font-black text-black overflow-hidden shadow-lg select-none">
+                    <div className="relative mb-2 h-16 w-16 overflow-hidden rounded-full border-2 border-cyan-400/40 bg-gradient-to-br from-cyan-400 to-indigo-500 text-2xl font-black text-black shadow-lg select-none flex items-center justify-center">
                       {authUser.avatarUrl ? (
-                        <img src={authUser.avatarUrl} alt={authUser.name || "User Avatar"} className="h-full w-full object-cover" />
+                        <img
+                          src={authUser.avatarUrl}
+                          alt={authUser.name || "User Avatar"}
+                          className="absolute inset-0 h-full w-full rounded-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
                       ) : (
                         userInitial
                       )}

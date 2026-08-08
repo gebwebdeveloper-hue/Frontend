@@ -100,7 +100,7 @@ const ADDONS_MASTER_LIST = [
   { name: "Roll-up Standee", price: "₹1,500", numericPrice: 1500, desc: "Promotional roll-up display standee." },
 ];
 
-function calculateTotalPricing(planName, selectedAddonsList = [], posterCount = 1) {
+function calculateTotalPricing(planName, selectedAddonsList = [], posterCount = 1, isClubMember = false) {
   const planPrices = {
     basic: { base: 4999, name: "Basic Publishing Plan" },
     essential: { base: 9999, name: "Essential Publishing Plan" },
@@ -136,14 +136,17 @@ function calculateTotalPricing(planName, selectedAddonsList = [], posterCount = 
     }
   });
 
-  const basePrice = planInfo.base;
+  const rawBasePrice = planInfo.base;
+  const basePrice = isClubMember ? Math.round(rawBasePrice * 0.90 * 100) / 100 : rawBasePrice;
   const subtotal = basePrice + addonsTotal;
   const gst = subtotal * 0.18;
   const total = subtotal + gst;
 
   return {
     planName: planInfo.name,
+    rawBasePrice,
     basePrice,
+    isClubMember,
     addonsTotal,
     addonsBreakdown,
     subtotal,
@@ -225,12 +228,16 @@ export default function ReaderPage() {
   const [manuscript, setManuscript] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const isClubMember = !!(currentUser?.memberId && String(currentUser.memberId).startsWith("LTCLUB-"));
 
   useEffect(() => {
     fetch(`${API_BASE}/auth/me`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!data?.success || !data.user) return;
+        setCurrentUser(data.user);
         setForm((current) => ({
           ...current,
           name: current.name || data.user.name || "",
@@ -380,6 +387,7 @@ export default function ReaderPage() {
           email: form.email,
           phone: form.phone,
           addons: preparedAddons,
+          isClubMember,
         })
       });
 
@@ -575,7 +583,22 @@ export default function ReaderPage() {
                       <plan.Icon className={`h-5 w-5 ${plan.iconColor}`} />
                     </div>
                     <h3 className="text-xl font-black text-white leading-tight">{plan.name}</h3>
-                    <p className="mt-1 text-3xl font-black text-white">{plan.price}<span className="text-sm font-bold text-white/50">/–</span></p>
+                    {(() => {
+                      const cardPricing = calculateTotalPricing(plan.name, [], 1, isClubMember);
+                      return (
+                        <div className="mt-1">
+                          {isClubMember ? (
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-xl font-bold text-white/40 line-through">{plan.price}</span>
+                              <span className="text-3xl font-black text-emerald-300">₹{cardPricing.basePrice.toLocaleString("en-IN")}</span>
+                              <span className="rounded-md bg-emerald-400/20 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-300 border border-emerald-400/30">10% Club Off</span>
+                            </div>
+                          ) : (
+                            <p className="text-3xl font-black text-white">{plan.price}<span className="text-sm font-bold text-white/50">/–</span></p>
+                          )}
+                        </div>
+                      );
+                    })()}
                     <p className="mt-3 text-sm text-white/65 leading-relaxed">{plan.description}</p>
 
                     {plan.base && (
@@ -1124,10 +1147,17 @@ export default function ReaderPage() {
 
                         {/* Price Summary Breakdown Box */}
                         {(() => {
-                          const pricing = calculateTotalPricing(selectedPlan, selectedAddons, posterCount);
+                          const pricing = calculateTotalPricing(selectedPlan, selectedAddons, posterCount, isClubMember);
 
                           return (
                             <div className="md:col-span-2 mt-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-zinc-950 to-indigo-950/60 p-4 space-y-3 shadow-xl">
+                              {isClubMember && (
+                                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs font-bold text-emerald-300">
+                                  <ShieldCheck size={16} className="text-emerald-400 shrink-0" />
+                                  <span>10% Club Member Discount Applied on Base Publishing Plan!</span>
+                                </div>
+                              )}
+
                               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
                                 <div>
                                   <p className="text-xs text-white/60">Selected Plan Package</p>
@@ -1153,7 +1183,17 @@ export default function ReaderPage() {
                               )}
 
                               <div className="flex flex-wrap items-center justify-between text-xs text-white/70 gap-2">
-                                <span>Base Plan: <strong>₹{pricing.basePrice.toLocaleString("en-IN")}.00</strong></span>
+                                <span>
+                                  Base Plan:{" "}
+                                  {isClubMember && pricing.rawBasePrice > pricing.basePrice ? (
+                                    <>
+                                      <span className="line-through text-white/40 mr-1">₹{pricing.rawBasePrice.toLocaleString("en-IN")}.00</span>
+                                      <strong className="text-emerald-300">₹{pricing.basePrice.toLocaleString("en-IN")}.00</strong>
+                                    </>
+                                  ) : (
+                                    <strong>₹{pricing.basePrice.toLocaleString("en-IN")}.00</strong>
+                                  )}
+                                </span>
                                 <span>Add-ons Total: <strong>₹{pricing.addonsTotal.toLocaleString("en-IN")}.00</strong></span>
                                 <span>Subtotal: <strong>₹{pricing.subtotal.toLocaleString("en-IN")}.00</strong></span>
                                 <span>GST (18%): <strong>₹{pricing.gst.toFixed(2)}</strong></span>
@@ -1213,9 +1253,8 @@ export default function ReaderPage() {
                       {loading && <Loader2 className="h-4 w-4 animate-spin text-black" />}
                       {selectedPlan ? (
                         (() => {
-                          const norm = String(selectedPlan || "").toLowerCase();
-                          const total = norm.includes("essential") ? "9,438.82" : (norm.includes("popular") ? "14,158.82" : "5,898.82");
-                          return `Pay ₹${total} via Razorpay & Submit Registration`;
+                          const currentPricing = calculateTotalPricing(selectedPlan, selectedAddons, posterCount, isClubMember);
+                          return `Pay ₹${currentPricing.total.toFixed(2)} via Razorpay & Submit Registration`;
                         })()
                       ) : "Submit Free Sponsored Publishing Request"}
                     </button>
