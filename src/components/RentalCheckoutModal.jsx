@@ -155,7 +155,7 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
     year: "numeric",
   });
 
-  // Handle instant Library Card Purchase (₹99 + 18% GST = ₹116.82)
+  // Handle instant Library Card Purchase (₹1 Test Price)
   const handleBuyLibraryCard = async () => {
     setBuyingCard(true);
     setCardError("");
@@ -189,7 +189,7 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
         amount: orderData.amount,
         currency: "INR",
         name: "Lekhok Tripura Publishers",
-        description: "Library Membership Card (₹99 + 18% GST = ₹116.82)",
+        description: "Library Membership Card (₹1)",
         order_id: orderData.orderId,
         prefill: {
           name: renterName || user?.name || "",
@@ -779,7 +779,7 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
                         <span className="font-black text-emerald-300 text-base tracking-wider">{userLibraryCard.cardId}</span>
                       </div>
                       <a
-                        href={userLibraryCard.pdfUrl?.startsWith("http") ? userLibraryCard.pdfUrl : `${SERVER_URL}${userLibraryCard.pdfUrl}`}
+                        href={`${API_BASE}/library-card/download/${userLibraryCard.cardId}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-3 py-2 text-[11px] font-bold text-emerald-300 hover:bg-emerald-400/20 transition"
@@ -791,7 +791,7 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
                 ) : (
                   <div className="space-y-2.5">
                     <p className="text-[11px] text-white/70 leading-relaxed">
-                      A valid <strong className="text-emerald-300">Library Card ID</strong> is required to rent books. Buy a digital Library Card for <strong className="text-amber-300 font-bold">₹99 + 18% GST (₹116.82)</strong> using the member details filled above.
+                      A valid <strong className="text-emerald-300">Library Card ID</strong> is required to rent books. Buy a digital Library Card for <strong className="text-amber-300 font-bold">₹1</strong> using the member details filled above.
                     </p>
 
                     {cardError && <p className="text-xs text-red-400 font-semibold">{cardError}</p>}
@@ -808,7 +808,7 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
                         </>
                       ) : (
                         <>
-                          <CreditCard size={15} /> Buy Library Card (₹116.82 Incl. GST)
+                          <CreditCard size={15} /> Buy Library Card (₹1)
                         </>
                       )}
                     </button>
