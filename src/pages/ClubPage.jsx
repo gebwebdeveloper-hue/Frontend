@@ -138,7 +138,24 @@ export default function ClubPage() {
       });
   }, []);
 
-  // Auto-dismiss countdown after fresh payment
+  const [liveStats, setLiveStats] = useState({
+    members: 4,
+    writers: 4,
+    events: 2,
+    books: 50,
+  });
+
+  // Fetch live dynamic stats
+  useEffect(() => {
+    fetch(`${API_BASE}/club/stats`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && data?.stats) {
+          setLiveStats(data.stats);
+        }
+      })
+      .catch((err) => console.error("Error loading dynamic club stats:", err));
+  }, []);
   useEffect(() => {
     if (!justPaid) return;
     clearInterval(countdownRef.current);
@@ -368,14 +385,14 @@ export default function ClubPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="inline-flex items-center gap-3.5 rounded-2xl border border-emerald-400/40 bg-zinc-950/85 px-5 py-3 backdrop-blur-md shadow-xl shadow-black/40">
-                    <span className="text-[11px] font-black uppercase tracking-widest text-emerald-300">
+                  <div className="inline-flex items-center gap-3.5 rounded-2xl border border-amber-400/40 bg-zinc-950/85 px-5 py-3 backdrop-blur-md shadow-xl shadow-black/40">
+                    <span className="text-[11px] font-black uppercase tracking-widest text-amber-300">
                       Lifetime Membership
                     </span>
                     <div className="h-4 w-px bg-white/20" />
                     <div className="flex items-baseline gap-1">
-                      <span className="text-2xl sm:text-3xl font-black text-white">₹1</span>
-                      <span className="text-[10px] font-bold text-emerald-300">(Test Fee)</span>
+                      <span className="text-2xl sm:text-3xl font-black text-white">₹999</span>
+                      <span className="text-[10px] font-bold text-amber-300">+ 18% GST</span>
                     </div>
                   </div>
                 )}
@@ -436,7 +453,12 @@ export default function ClubPage() {
 
         {/* ── Stats Row Below Hero ── */}
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map(({ icon: Icon, value, label }) => (
+          {[
+            { icon: Users,        value: String(liveStats.members || 0), label: "Members" },
+            { icon: PenLine,      value: String(liveStats.writers || 0), label: "Writers" },
+            { icon: CalendarDays, value: String(liveStats.events || 0),  label: "Events"  },
+            { icon: BookOpen,     value: String(liveStats.books || 0),   label: "Books"   },
+          ].map(({ icon: Icon, value, label }) => (
             <motion.div
               key={label}
               data-reveal
@@ -899,10 +921,10 @@ export default function ClubPage() {
                 className="mt-8 rounded-2xl border border-white/10 bg-white/[0.055] p-6 shadow-card backdrop-blur-xl md:p-8"
               >
                 {/* GST Pricing Summary Card */}
-                <div className="mb-8 overflow-hidden rounded-2xl border border-emerald-400/30 bg-gradient-to-r from-emerald-950/60 via-zinc-950 to-teal-950/60 p-5 shadow-xl">
+                <div className="mb-8 overflow-hidden rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-zinc-950 to-indigo-950/60 p-5 shadow-xl">
                   <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4 mb-4">
                     <div>
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-emerald-300">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-400/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-cyan-300">
                         <Award size={12} /> Lifetime Club Membership Fee
                       </span>
                       <p className="mt-1 text-xs text-white/65">
@@ -911,23 +933,23 @@ export default function ClubPage() {
                     </div>
 
                     <div className="text-right">
-                      <div className="text-2xl font-black text-emerald-300">₹1</div>
-                      <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Test Purchase Fee</div>
+                      <div className="text-2xl font-black text-emerald-300">₹1,178.82</div>
+                      <div className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">₹999 + 18% GST</div>
                     </div>
                   </div>
 
                   <div className="grid gap-2 text-xs text-white/70 sm:grid-cols-3">
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2">
                       <span>Base Membership:</span>
-                      <strong className="text-white">₹1.00</strong>
+                      <strong className="text-white">₹999.00</strong>
                     </div>
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2">
-                      <span>GST (0% Test):</span>
-                      <strong className="text-white">₹0.00</strong>
+                      <span>GST (18%):</span>
+                      <strong className="text-white">₹179.82</strong>
                     </div>
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2">
                       <span className="text-cyan-300 font-bold">Total Payable:</span>
-                      <strong className="text-emerald-300 font-black text-sm">₹1.00</strong>
+                      <strong className="text-emerald-300 font-black text-sm">₹1,178.82</strong>
                     </div>
                   </div>
                 </div>
