@@ -130,6 +130,14 @@ export default function AdminStoriesDatabasePage() {
               >
                 <ArrowLeft size={15} /> Back to Admin
               </Link>
+
+              <Link
+                to="/admin"
+                state={{ tab: "newsletter" }}
+                className="flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-gradient-to-r from-cyan-400 to-teal-300 px-4 py-2 text-sm font-bold text-black shadow-glow hover:scale-105 transition shrink-0"
+              >
+                <Pencil size={15} /> Write / Compose Story
+              </Link>
               
               <button
                 onClick={() => setShowFilters((v) => !v)}

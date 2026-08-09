@@ -179,46 +179,38 @@ export default function AdminUsersPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-zinc-950 text-white px-4 py-8 sm:px-8 max-w-7xl mx-auto pt-24 pb-16">
+      <div className="min-h-screen bg-zinc-950 text-white px-4 sm:px-8 max-w-7xl mx-auto pt-32 sm:pt-36 md:pt-40 pb-16">
         
         {/* Responsive Admin Navbar */}
         <AdminNavbar />
 
-        {/* Header Title Section */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        {/* Page Title, Search & Actions Bar */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl mb-8">
           <div>
-            <h1 className="text-3xl font-extrabold text-white">Registered Users Directory</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Registered Users Directory</h1>
             <p className="text-xs text-white/50 mt-1">
               All registered platform members ({users.length} total readers), purchase history, and access management.
             </p>
           </div>
 
-          <button
-            onClick={fetchUsers}
-            className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/10 transition cursor-pointer"
-          >
-            <RefreshCw size={13} className={loading ? "animate-spin text-cyan-400" : ""} /> Refresh List
-          </button>
-        </div>
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            <div className="w-full sm:w-72 relative">
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, email, or phone..."
+                className="w-full rounded-2xl border border-white/10 bg-white/5 pl-9 pr-4 py-2.5 text-xs text-white placeholder-white/30 focus:border-cyan-400/40 focus:outline-none"
+              />
+            </div>
 
-        {/* Page Title & Search */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl mb-8">
-          <div>
-            <h1 className="text-3xl font-extrabold text-white">Registered Users Directory</h1>
-            <p className="text-xs text-white/50 mt-1">
-              All registered platform members ({users.length} total readers), purchase history, and access management.
-            </p>
-          </div>
-
-          <div className="w-full sm:w-80 relative">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by reader name, email, or phone..."
-              className="w-full rounded-2xl border border-white/10 bg-white/5 pl-9 pr-4 py-3 text-xs text-white placeholder-white/30 focus:border-cyan-400/40 focus:outline-none"
-            />
+            <button
+              onClick={fetchUsers}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/10 transition cursor-pointer shrink-0"
+            >
+              <RefreshCw size={13} className={loading ? "animate-spin text-cyan-400" : ""} /> Refresh List
+            </button>
           </div>
         </div>
 

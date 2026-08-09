@@ -11,6 +11,27 @@ import { loadRazorpayScript } from "../utils/razorpay.js";
 
 const publishingPlans = [
   {
+    id: "starter",
+    name: "Starter Publishing Plan",
+    price: "₹999",
+    Icon: BookMarked,
+    iconBg: "bg-emerald-400/15",
+    iconColor: "text-emerald-300",
+    color: "from-emerald-400/10 to-teal-600/10",
+    border: "border-emerald-400/30",
+    badge: "New",
+    description: "An entry-level publishing package covering all the essentials to get your book published professionally.",
+    features: [
+      "ISBN Allocation",
+      "Basic Book Cover Design",
+      "Book Formatting",
+      "Paperback Edition",
+      "E-book Edition",
+      "Listing on the Lekhok Tripura Publishers Website (E-book)",
+      "Certificate of Publishing",
+    ],
+  },
+  {
     id: "basic",
     name: "Basic Publishing Plan",
     price: "₹4,999",
@@ -101,6 +122,7 @@ const ADDONS_MASTER_LIST = [
 
 function calculateTotalPricing(planName, selectedAddonsList = [], posterCount = 1, isClubMember = false) {
   const planPrices = {
+    starter: { base: 999, name: "Starter Publishing Plan" },
     basic: { base: 4999, name: "Basic Publishing Plan" },
     essential: { base: 9999, name: "Essential Publishing Plan" },
     popular: { base: 14999, name: "Popular Publishing Plan" },
@@ -111,6 +133,8 @@ function calculateTotalPricing(planName, selectedAddonsList = [], posterCount = 
     ? planPrices.essential
     : norm.includes("popular")
     ? planPrices.popular
+    : norm.includes("starter")
+    ? planPrices.starter
     : planPrices.basic;
 
   let addonsTotal = 0;
@@ -564,50 +588,50 @@ export default function ReaderPage() {
                 </p>
               </div>
 
-              {/* THREE PLAN CARDS */}
-              <div className="grid gap-8 lg:grid-cols-3">
+              {/* PLAN CARDS - SINGLE ROW */}
+              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
                 {publishingPlans.map((plan, idx) => (
                   <motion.div
                     key={plan.id}
                     data-reveal
-                    whileHover={{ y: -6 }}
-                    className={`relative flex flex-col rounded-3xl border ${plan.border} bg-gradient-to-b ${plan.color} p-8 backdrop-blur-xl shadow-card`}
+                    whileHover={{ y: -6, scale: 1.02 }}
+                    className={`relative flex flex-col rounded-3xl border ${plan.border} bg-gradient-to-b ${plan.color} p-6 backdrop-blur-xl shadow-card`}
                   >
                     {/* Badge */}
-                    <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-xl">
+                    <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-xl whitespace-nowrap">
                       {plan.badge}
                     </span>
 
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${plan.iconBg} mb-4`}>
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${plan.iconBg} mb-4`}>
                       <plan.Icon className={`h-5 w-5 ${plan.iconColor}`} />
                     </div>
-                    <h3 className="text-xl font-black text-white leading-tight">{plan.name}</h3>
+                    <h3 className="text-lg font-black text-white leading-tight">{plan.name}</h3>
                     {(() => {
                       const cardPricing = calculateTotalPricing(plan.name, [], 1, isClubMember);
                       return (
                         <div className="mt-1">
                           {isClubMember ? (
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-xl font-bold text-white/40 line-through">{plan.price}</span>
-                              <span className="text-3xl font-black text-emerald-300">₹{cardPricing.basePrice.toLocaleString("en-IN")}</span>
-                              <span className="rounded-md bg-emerald-400/20 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-300 border border-emerald-400/30">10% Club Off</span>
+                            <div className="flex items-baseline gap-1.5 flex-wrap">
+                              <span className="text-lg font-bold text-white/40 line-through">{plan.price}</span>
+                              <span className="text-2xl font-black text-emerald-300">₹{cardPricing.basePrice.toLocaleString("en-IN")}</span>
+                              <span className="rounded-md bg-emerald-400/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-emerald-300 border border-emerald-400/30">10% Off</span>
                             </div>
                           ) : (
-                            <p className="text-3xl font-black text-white">{plan.price}<span className="text-sm font-bold text-white/50">/–</span></p>
+                            <p className="text-2xl font-black text-white">{plan.price}</p>
                           )}
                         </div>
                       );
                     })()}
-                    <p className="mt-3 text-sm text-white/65 leading-relaxed">{plan.description}</p>
+                    <p className="mt-2 text-xs text-white/60 leading-relaxed flex-1">{plan.description}</p>
 
                     {plan.base && (
-                      <p className="mt-5 text-xs font-black uppercase tracking-wider text-cyan-300">{plan.base}</p>
+                      <p className="mt-4 text-[10px] font-black uppercase tracking-wider text-cyan-300">{plan.base}</p>
                     )}
 
-                    <ul className="mt-4 space-y-2.5 flex-1">
+                    <ul className="mt-3 space-y-1.5 flex-1">
                       {plan.features.map((f) => (
-                        <li key={f} className="flex items-start gap-2.5 text-sm text-white/80">
-                          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
+                        <li key={f} className="flex items-start gap-2 text-xs text-white/75">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400 mt-0.5" />
                           <span>{f}</span>
                         </li>
                       ))}
@@ -616,7 +640,7 @@ export default function ReaderPage() {
                     <button
                       type="button"
                       onClick={() => openPlanModal(`${plan.name}`)}
-                      className="mt-8 w-full rounded-full bg-white py-3.5 text-sm font-black text-black transition hover:scale-105 hover:bg-cyan-50 shadow-md"
+                      className="mt-6 w-full rounded-full bg-white py-3 text-xs font-black text-black transition hover:scale-105 hover:bg-cyan-50 shadow-md"
                     >
                       Choose {plan.name.split(" ")[0]} Plan
                     </button>

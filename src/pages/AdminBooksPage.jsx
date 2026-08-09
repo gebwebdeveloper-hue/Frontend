@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, BookOpen, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X, CheckCircle2, Truck, Box, Package, MapPin } from "lucide-react";
+import { Sparkles, BookOpen, BookMarked, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X, CheckCircle2, Truck, Box, Package, MapPin } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
 import AdminNavbar from "../components/AdminNavbar.jsx";
@@ -303,6 +303,12 @@ export default function AdminBooksPage() {
       }
     }
   }, [location.state?.editBookId, booksList]);
+
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab);
+    }
+  }, [location.state?.tab]);
 
   useEffect(() => {
     if (location.state?.editNewsletterId && newsletterList.length > 0) {
@@ -2148,6 +2154,13 @@ export default function AdminBooksPage() {
                       </span>
                     )}
                   </button>
+                  <Link
+                    to="/admin/stories"
+                    className="rounded-full bg-white/5 border border-white/10 px-5 py-2 text-xs font-bold text-white/70 hover:text-white hover:border-white/30 transition flex items-center gap-1.5"
+                  >
+                    <BookMarked size={13} />
+                    <span>View Stories Database Table</span>
+                  </Link>
                 </div>
               </div>
 

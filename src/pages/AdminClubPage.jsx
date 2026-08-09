@@ -303,7 +303,7 @@ export default function AdminClubPage() {
 
   return (
     <PageTransition>
-      <main className="min-h-screen bg-zinc-950 pt-28 pb-20 text-white">
+      <main className="min-h-screen bg-zinc-950 pt-32 sm:pt-36 md:pt-40 pb-20 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           
           {/* Responsive Admin Navbar */}
