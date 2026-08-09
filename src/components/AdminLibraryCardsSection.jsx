@@ -235,7 +235,7 @@ export default function AdminLibraryCardsSection() {
                     <td className="px-5 py-4 text-right">
                       {card.pdfUrl ? (
                         <a
-                          href={`${SERVER_URL}${card.pdfUrl}`}
+                          href={card.pdfUrl?.startsWith("http") ? card.pdfUrl : `${SERVER_URL}${card.pdfUrl}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-300 hover:bg-emerald-400/20 transition"

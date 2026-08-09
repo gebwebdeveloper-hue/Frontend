@@ -779,7 +779,7 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
                         <span className="font-black text-emerald-300 text-base tracking-wider">{userLibraryCard.cardId}</span>
                       </div>
                       <a
-                        href={`${SERVER_URL}${userLibraryCard.pdfUrl}`}
+                        href={userLibraryCard.pdfUrl?.startsWith("http") ? userLibraryCard.pdfUrl : `${SERVER_URL}${userLibraryCard.pdfUrl}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-3 py-2 text-[11px] font-bold text-emerald-300 hover:bg-emerald-400/20 transition"
