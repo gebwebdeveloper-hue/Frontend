@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   X, BookOpen, Clock, AlertTriangle, ShieldCheck, MapPin, Loader2,
   ArrowRight, User, Phone, Mail, Home, Building2, Store, CreditCard,
-  ArrowLeft, CheckCircle2, Shield, FileText, Upload, Calendar, Compass
+  ArrowLeft, CheckCircle2, Shield, FileText, Upload, Calendar, Compass, Eye
 } from "lucide-react";
 import { API_BASE, SERVER_URL } from "../config.js";
 import { loadRazorpayScript } from "../utils/razorpay.js";
@@ -43,8 +43,8 @@ const TRIPURA_DISTRICTS = [
   "Unakoti"
 ];
 
-export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }) {
-  const [step, setStep] = useState("details"); // 'details' | 'payment'
+export default function RentalCheckoutModal({ book, directCardMode = false, isOpen, onClose, onSuccess }) {
+  const [step, setStep] = useState("card_step"); // 'card_step' | 'rent_details' | 'payment'
 
   // User form details
   const [renterName, setRenterName] = useState("");
@@ -69,15 +69,16 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
   const [buyingCard, setBuyingCard] = useState(false);
   const [isCardSuspended, setIsCardSuspended] = useState(false);
   const [cardError, setCardError] = useState("");
+  const [cardSuccessMsg, setCardSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState(null);
 
   useEffect(() => {
     if (!isOpen) return;
-    setStep("details");
     setError("");
     setCardError("");
+    setCardSuccessMsg("");
     setIsCardSuspended(false);
 
     // Lock background scroll and pause Lenis smooth scroll
@@ -123,25 +124,36 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
             if (data.libraryCard.pinCode) setPinCode(data.libraryCard.pinCode);
             if (data.libraryCard.policeStation) setPoliceStation(data.libraryCard.policeStation);
             if (data.libraryCard.emergencyContact) setEmergencyContact(data.libraryCard.emergencyContact);
+
+            if (!directCardMode && book) {
+              setStep("rent_details");
+            } else {
+              setStep("card_step");
+            }
           } else {
             setUserLibraryCard(null);
+            setStep("card_step");
           }
+        } else {
+          setStep("card_step");
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setStep("card_step");
+      });
 
     return () => {
       document.body.style.overflow = prevBodyOverflow || "unset";
       document.documentElement.style.overflow = prevHtmlOverflow || "unset";
       if (window.lenis) window.lenis.start();
     };
-  }, [isOpen]);
+  }, [isOpen, book, directCardMode]);
 
-  if (!isOpen || !book) return null;
+  if (!isOpen || (!book && !directCardMode)) return null;
 
-  const rentalPrice = book.rentalPrice || 50;
-  const rentalDuration = book.rentalDurationDays || 15;
-  const finePerDay = book.finePerDay || 5;
+  const rentalPrice = book?.rentalPrice || 50;
+  const rentalDuration = book?.rentalDurationDays || 15;
+  const finePerDay = book?.finePerDay || 5;
 
   // 18% GST Calculation for Rental
   const gstAmount = Number((rentalPrice * 0.18).toFixed(2));
@@ -161,10 +173,10 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
     setCardError("");
 
     if (!renterName.trim()) { setCardError("Please enter your Full Name."); setBuyingCard(false); return; }
-    if (!renterPhone.trim() || renterPhone.length < 10) { setCardError("Please enter a valid 10-digit Phone Number."); setBuyingCard(false); return; }
+    if (!renterPhone.trim() || renterPhone.length !== 10) { setCardError("Phone Number must be a valid 10-digit number."); setBuyingCard(false); return; }
     if (!dob.trim()) { setCardError("Please enter your Date of Birth (DOB)."); setBuyingCard(false); return; }
     if (!fatherName.trim()) { setCardError("Please enter Father's Name."); setBuyingCard(false); return; }
-    if (!emergencyContact.trim()) { setCardError("Please enter Emergency Contact No."); setBuyingCard(false); return; }
+    if (!emergencyContact.trim() || emergencyContact.length !== 10) { setCardError("Emergency Contact No. must be a valid 10-digit number."); setBuyingCard(false); return; }
 
     try {
       const isLoaded = await loadRazorpayScript();
@@ -226,6 +238,10 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
               setUserLibraryCard(verifyData.libraryCard);
               setLibraryCardId(verifyData.libraryCard.cardId);
               setLibraryCardPdfUrl(verifyData.libraryCard.pdfUrl);
+              setCardSuccessMsg(`🎉 Digital Library Card issued! Card ID: ${verifyData.libraryCard.cardId}`);
+              if (!directCardMode && book) {
+                setStep("rent_details");
+              }
             } else {
               setCardError(verifyData.message || "Library Card verification failed.");
             }
@@ -255,16 +271,16 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
     setError("");
 
     if (!renterName.trim()) { setError("Please enter your Full Name."); return; }
-    if (!renterPhone.trim() || renterPhone.length < 10) { setError("Please enter a valid 10-digit Phone Number."); return; }
+    if (!renterPhone.trim() || renterPhone.length !== 10) { setError("Phone Number must be a valid 10-digit number."); return; }
     if (!renterEmail.trim()) { setError("Please enter your Gmail / Email Address."); return; }
     if (!dob.trim()) { setError("Please enter your Date of Birth (DOB)."); return; }
     if (!fatherName.trim()) { setError("Please enter Father's Name."); return; }
+    if (!emergencyContact.trim() || emergencyContact.length !== 10) { setError("Emergency Contact No. must be a valid 10-digit number."); return; }
     if (!district.trim()) { setError("Please enter District."); return; }
     if (!villageTown.trim()) { setError("Please enter Village / Town Name."); return; }
     if (!postOffice.trim()) { setError("Please enter Post Office."); return; }
     if (!pinCode.trim()) { setError("Please enter Pin Code."); return; }
     if (!policeStation.trim()) { setError("Please enter Police Station."); return; }
-    if (!emergencyContact.trim()) { setError("Please enter Emergency Contact No."); return; }
     if (!libraryCardId.trim()) {
       setError("A valid Library Card ID is required. Please buy a card or enter your Library Card ID.");
       return;
@@ -289,7 +305,7 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          bookId: book._id,
+          bookId: book?._id,
           renterName,
           renterPhone,
           renterEmail,
@@ -309,7 +325,7 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
           amount: orderData.amount,
           currency: orderData.currency || "INR",
           name: "Lekhok Tripura Publishers",
-          description: `Book Rental: ${book.title} (Incl. 18% GST)`,
+          description: `Book Rental: ${book?.title || ""} (Incl. 18% GST)`,
           order_id: orderData.orderId,
           prefill: {
             name: renterName || user?.name || "",
@@ -344,7 +360,7 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
       let res;
       if (libraryCardPdfFile) {
         const formData = new FormData();
-        formData.append("bookId", book._id);
+        formData.append("bookId", book?._id || "");
         formData.append("renterName", renterName);
         formData.append("renterPhone", renterPhone);
         formData.append("renterEmail", renterEmail);
@@ -375,7 +391,7 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
-            bookId: book._id,
+            bookId: book?._id,
             renterName,
             renterPhone,
             renterEmail,
@@ -445,41 +461,47 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
           {/* Header */}
           <div className="mb-5 flex items-center gap-3">
             <div className="grid h-12 w-12 place-items-center rounded-2xl border border-emerald-400/30 bg-emerald-400/10 text-emerald-400">
-              <BookOpen size={24} />
+              {step === "card_step" ? <CreditCard size={24} /> : <BookOpen size={24} />}
             </div>
             <div>
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400">
-                📖 BOOK RENT CHECKOUT
+                {step === "card_step" ? "📇 DIGITAL LIBRARY CARD" : "📖 BOOK RENT CHECKOUT"}
               </span>
               <h2 className="text-xl font-black text-white">
-                {step === "details" ? "1. Reader Member Details & Library Card" : "2. Razorpay Online Payment"}
+                {step === "card_step"
+                  ? (!userLibraryCard ? (book ? "1. Purchase Digital Library Card (Required)" : "Buy Digital Library Card") : "Library Card Status")
+                  : step === "rent_details"
+                  ? "2. Member Details & Rental Checkout"
+                  : "3. Online Payment Checkout"}
               </h2>
             </div>
           </div>
 
-          {/* Selected Book Summary */}
-          <div className="mb-5 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-            {book.cover?.url ? (
-              <img
-                src={book.cover.url.startsWith("http") ? book.cover.url : `${SERVER_URL}${book.cover.url}`}
-                alt={book.title}
-                className="h-16 w-12 rounded-lg object-cover shadow-md shrink-0"
-              />
-            ) : (
-              <div className="grid h-16 w-12 place-items-center rounded-lg bg-zinc-800 text-xs font-bold text-white/40 shrink-0">
-                BOOK
-              </div>
-            )}
-            <div className="overflow-hidden">
-              <h3 className="font-extrabold text-white text-sm line-clamp-1">{book.title}</h3>
-              <p className="text-xs text-white/60">by {book.author}</p>
-              <div className="mt-1 flex items-center gap-2 text-xs">
-                <span className="font-black text-emerald-300">₹{rentalPrice} Base Fee</span>
-                <span className="text-white/40">•</span>
-                <span className="text-white/70 font-semibold">{rentalDuration} Days Duration</span>
+          {/* Selected Book Summary (If renting a book) */}
+          {book && (
+            <div className="mb-5 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+              {book.cover?.url ? (
+                <img
+                  src={book.cover.url.startsWith("http") ? book.cover.url : `${SERVER_URL}${book.cover.url}`}
+                  alt={book.title}
+                  className="h-16 w-12 rounded-lg object-cover shadow-md shrink-0"
+                />
+              ) : (
+                <div className="grid h-16 w-12 place-items-center rounded-lg bg-zinc-800 text-xs font-bold text-white/40 shrink-0">
+                  BOOK
+                </div>
+              )}
+              <div className="overflow-hidden">
+                <h3 className="font-extrabold text-white text-sm line-clamp-1">{book.title}</h3>
+                <p className="text-xs text-white/60">by {book.author}</p>
+                <div className="mt-1 flex items-center gap-2 text-xs">
+                  <span className="font-black text-emerald-300">₹{rentalPrice} Base Fee</span>
+                  <span className="text-white/40">•</span>
+                  <span className="text-white/70 font-semibold">{rentalDuration} Days Duration</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {error && (
             <div className="mb-4 flex items-center gap-2 rounded-2xl border border-red-400/30 bg-red-950/40 p-3.5 text-xs text-red-300">
@@ -488,9 +510,393 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
             </div>
           )}
 
-          {/* STEP 1: USER DETAILS & LIBRARY CARD */}
-          {step === "details" && (
+          {cardSuccessMsg && (
+            <div className="mb-4 flex items-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-950/60 p-3.5 text-xs text-emerald-300 font-bold">
+              <CheckCircle2 size={16} className="shrink-0 text-emerald-400" />
+              <span>{cardSuccessMsg}</span>
+            </div>
+          )}
+
+          {/* ════════════ STEP 1: LIBRARY CARD PURCHASE / REGISTRATION ════════════ */}
+          {step === "card_step" && (
+            <div className="space-y-4 text-xs">
+              {!userLibraryCard ? (
+                <>
+                  <div className="rounded-2xl border border-amber-400/40 bg-amber-950/30 p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-amber-300 font-extrabold text-xs">
+                        <AlertTriangle size={16} /> Digital Library Card Required
+                      </div>
+                      <a
+                        href={`${API_BASE}/library-card/download/demo`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-300 hover:bg-emerald-400/20 transition"
+                      >
+                        <Eye size={12} /> View Demo Card
+                      </a>
+                    </div>
+                    <p className="text-xs text-white/75 leading-relaxed">
+                      {book
+                        ? "A valid Digital Library Card is required to rent books. Fill in your details below to purchase your lifetime valid Digital Library Card for ₹1, then proceed to rent your book."
+                        : "Fill in your member details below to issue your lifetime valid Digital Library Card for ₹1."}
+                    </p>
+                  </div>
+
+                  {cardError && (
+                    <div className="rounded-xl border border-red-400/30 bg-red-950/40 p-3 text-xs text-red-300 font-semibold">
+                      {cardError}
+                    </div>
+                  )}
+
+                  {/* PERSONAL IDENTIFICATION FIELDS */}
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+                    <div className="text-xs font-black uppercase tracking-wider text-emerald-300 flex items-center gap-2">
+                      <User size={14} /> Personal Identification
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
+                          Full Name *
+                        </label>
+                        <input
+                          required
+                          type="text"
+                          value={renterName}
+                          onChange={(e) => setRenterName(e.target.value)}
+                          placeholder="Enter full name"
+                          className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1 flex items-center gap-1">
+                          <Calendar size={11} className="text-emerald-400" /> DOB (Date of Birth) *
+                        </label>
+                        <input
+                          required
+                          type="date"
+                          value={dob}
+                          onChange={(e) => setDob(e.target.value)}
+                          className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white outline-none focus:border-emerald-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
+                          Father's Name *
+                        </label>
+                        <input
+                          required
+                          type="text"
+                          value={fatherName}
+                          onChange={(e) => setFatherName(e.target.value)}
+                          placeholder="Enter Father's Name"
+                          className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1 flex items-center gap-1">
+                          <Phone size={11} className="text-amber-400" /> Emergency Contact No. *
+                        </label>
+                        <input
+                          required
+                          type="text"
+                          value={emergencyContact}
+                          onChange={(e) => setEmergencyContact(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
+                          placeholder="10-digit emergency phone"
+                          className={`w-full rounded-xl border bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400 ${
+                            emergencyContact.length > 0 && emergencyContact.length < 10 ? "border-red-500/80" : "border-white/15"
+                          }`}
+                        />
+                        {emergencyContact.length > 0 && emergencyContact.length < 10 && (
+                          <p className="text-[10px] font-bold text-red-400 mt-1">⚠️ Not a valid 10-digit number</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
+                          Phone Number *
+                        </label>
+                        <input
+                          required
+                          type="text"
+                          value={renterPhone}
+                          onChange={(e) => setRenterPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
+                          placeholder="10-digit phone number"
+                          className={`w-full rounded-xl border bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400 ${
+                            renterPhone.length > 0 && renterPhone.length < 10 ? "border-red-500/80" : "border-white/15"
+                          }`}
+                        />
+                        {renterPhone.length > 0 && renterPhone.length < 10 && (
+                          <p className="text-[10px] font-bold text-red-400 mt-1">⚠️ Not a valid 10-digit number</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
+                          Gmail / Email Address *
+                        </label>
+                        <input
+                          required
+                          type="email"
+                          value={renterEmail}
+                          onChange={(e) => setRenterEmail(e.target.value)}
+                          placeholder="your.email@gmail.com"
+                          className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RESIDENTIAL DETAILS */}
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+                    <div className="text-xs font-black uppercase tracking-wider text-cyan-300 flex items-center gap-2">
+                      <Compass size={14} /> Residential &amp; Location Details
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
+                          State *
+                        </label>
+                        <select
+                          value={state}
+                          onChange={(e) => {
+                            const newSt = e.target.value;
+                            setState(newSt);
+                            if (newSt === "Tripura") setDistrict("West Tripura");
+                            else setDistrict("");
+                          }}
+                          className="w-full rounded-xl border border-white/15 bg-zinc-900 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400 cursor-pointer"
+                        >
+                          {INDIAN_STATES.map((st) => (
+                            <option key={st} value={st}>
+                              {st}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
+                          District *
+                        </label>
+                        {state === "Tripura" ? (
+                          <select
+                            value={district}
+                            onChange={(e) => setDistrict(e.target.value)}
+                            className="w-full rounded-xl border border-white/15 bg-zinc-900 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400 cursor-pointer"
+                          >
+                            {TRIPURA_DISTRICTS.map((dist) => (
+                              <option key={dist} value={dist}>
+                                {dist}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            required
+                            type="text"
+                            value={district}
+                            onChange={(e) => setDistrict(e.target.value)}
+                            placeholder="Enter District name"
+                            className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
+                          Vill / Town Name *
+                        </label>
+                        <input
+                          required
+                          type="text"
+                          value={villageTown}
+                          onChange={(e) => setVillageTown(e.target.value)}
+                          placeholder="Enter Village or Town"
+                          className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
+                          Post Office *
+                        </label>
+                        <input
+                          required
+                          type="text"
+                          value={postOffice}
+                          onChange={(e) => setPostOffice(e.target.value)}
+                          placeholder="Enter Post Office"
+                          className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
+                          Pin Code *
+                        </label>
+                        <input
+                          required
+                          type="text"
+                          value={pinCode}
+                          onChange={(e) => setPinCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+                          placeholder="6-digit PIN code"
+                          className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
+                          Police Station *
+                        </label>
+                        <input
+                          required
+                          type="text"
+                          value={policeStation}
+                          onChange={(e) => setPoliceStation(e.target.value)}
+                          placeholder="Enter Police Station"
+                          className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BUY BUTTON */}
+                  <button
+                    type="button"
+                    onClick={handleBuyLibraryCard}
+                    disabled={buyingCard}
+                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 py-3.5 text-xs font-black uppercase text-black shadow-lg shadow-emerald-400/20 hover:scale-[1.01] transition disabled:opacity-60 cursor-pointer"
+                  >
+                    {buyingCard ? (
+                      <>
+                        <Loader2 className="animate-spin" size={16} /> Processing Card Purchase...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard size={16} /> Buy Digital Library Card (₹1)
+                      </>
+                    )}
+                  </button>
+
+                  {/* MANUAL LINK SECTION */}
+                  <div className="pt-2 border-t border-white/10 space-y-2">
+                    <p className="text-[10px] text-white/50 font-bold">ALREADY HAVE A CARD? ENTER ID &amp; UPLOAD PDF:</p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <input
+                        type="text"
+                        placeholder="Card ID (e.g. LTC-849204)"
+                        value={libraryCardId}
+                        onChange={(e) => setLibraryCardId(e.target.value)}
+                        className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
+                      />
+                      <div className="flex items-center">
+                        <input
+                          type="file"
+                          accept=".pdf,application/pdf"
+                          onChange={(e) => setLibraryCardPdfFile(e.target.files?.[0] || null)}
+                          className="text-[11px] text-white/70 file:mr-2 file:rounded-lg file:border-0 file:bg-emerald-400/20 file:px-2.5 file:py-1.5 file:text-[10px] file:font-bold file:text-emerald-300 hover:file:bg-emerald-400/30 cursor-pointer"
+                        />
+                      </div>
+                    </div>
+
+                    {book && libraryCardId.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => setStep("rent_details")}
+                        className="mt-2 w-full rounded-xl border border-emerald-400/40 bg-emerald-400/15 py-2 text-xs font-extrabold text-emerald-300 hover:bg-emerald-400/25 transition cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        Link Card &amp; Proceed to Rent <ArrowRight size={14} />
+                      </button>
+                    )}
+                  </div>
+                </>
+              ) : (
+                /* ACTIVE CARD VIEW */
+                <div className="rounded-2xl border border-emerald-400/30 bg-emerald-950/30 p-5 space-y-4 shadow-lg text-center">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <span className="text-xs font-bold text-white/70">ACTIVE LIBRARY CARD</span>
+                    <span className="rounded-full bg-emerald-400/20 border border-emerald-400/30 px-3 py-1 text-xs font-black text-emerald-300">
+                      ✓ Active
+                    </span>
+                  </div>
+
+                  <div className="py-2">
+                    <span className="text-[10px] text-white/50 block font-bold tracking-wider uppercase mb-1">MEMBER CARD ID</span>
+                    <span className="text-3xl font-black text-emerald-300 tracking-wider">{userLibraryCard.cardId}</span>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-3">
+                    <a
+                      href={`${API_BASE}/library-card/download/${userLibraryCard.cardId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-4 py-2 text-xs font-bold text-emerald-300 hover:bg-emerald-400/20 transition"
+                    >
+                      <FileText size={14} /> View Card PDF
+                    </a>
+                  </div>
+
+                  {book && (
+                    <button
+                      type="button"
+                      onClick={() => setStep("rent_details")}
+                      className="w-full rounded-2xl bg-emerald-400 py-3.5 text-xs font-black uppercase tracking-wider text-black shadow-lg hover:bg-emerald-300 transition cursor-pointer flex items-center justify-center gap-2 mt-2"
+                    >
+                      Proceed to Rent Book ({book.title}) <ArrowRight size={16} />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ════════════ STEP 2: MEMBER DETAILS & BOOK RENTAL CHECKOUT ════════════ */}
+          {step === "rent_details" && (
             <form onSubmit={handleProceedToPayment} className="space-y-4 text-xs">
+              {/* ACTIVE CARD BADGE BAR */}
+              <div className="rounded-2xl border border-emerald-400/40 bg-emerald-950/40 p-3.5 flex items-center justify-between shadow-md">
+                <div className="flex items-center gap-2.5">
+                  <CreditCard className="text-emerald-400" size={18} />
+                  <div>
+                    <span className="text-[10px] text-white/50 block font-bold">ACTIVE LIBRARY CARD</span>
+                    <span className="font-black text-emerald-300 text-sm tracking-wider">{userLibraryCard?.cardId || libraryCardId}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {(userLibraryCard?.cardId || libraryCardId) && (
+                    <a
+                      href={`${API_BASE}/library-card/download/${userLibraryCard?.cardId || libraryCardId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-xl border border-emerald-400/40 bg-emerald-400/15 px-2.5 py-1.5 text-[11px] font-bold text-emerald-300 hover:bg-emerald-400/25 transition"
+                    >
+                      <FileText size={12} /> View PDF
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setStep("card_step")}
+                    className="text-[11px] font-bold text-white/50 hover:text-white underline cursor-pointer"
+                  >
+                    Change
+                  </button>
+                </div>
+              </div>
+
               {/* SELF PICKUP NOTICE BANNER */}
               <div className="rounded-2xl border border-amber-400/40 bg-gradient-to-r from-amber-950/40 via-zinc-950 to-amber-950/40 p-4 shadow-lg">
                 <div className="flex items-start gap-3">
@@ -525,17 +931,16 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
                 </div>
               </div>
 
-              {/* SECTION 1: PERSONAL IDENTIFICATION */}
+              {/* CONFIRM RENTER DETAILS */}
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
                 <div className="text-xs font-black uppercase tracking-wider text-emerald-300 flex items-center gap-2">
-                  <User size={14} /> Personal Identification
+                  <User size={14} /> Member &amp; Address Confirmation
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {/* Name */}
                   <div>
                     <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
-                      Full Name *
+                      Renter Name *
                     </label>
                     <input
                       required
@@ -547,55 +952,6 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
                     />
                   </div>
 
-                  {/* DOB */}
-                  <div>
-                    <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1 flex items-center gap-1">
-                      <Calendar size={11} className="text-emerald-400" /> DOB (Date of Birth) *
-                    </label>
-                    <input
-                      required
-                      type="date"
-                      value={dob}
-                      onChange={(e) => setDob(e.target.value)}
-                      className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white outline-none focus:border-emerald-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {/* Father's Name */}
-                  <div>
-                    <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
-                      Father's Name *
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      value={fatherName}
-                      onChange={(e) => setFatherName(e.target.value)}
-                      placeholder="Enter Father's Name"
-                      className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
-                    />
-                  </div>
-
-                  {/* Emergency Contact */}
-                  <div>
-                    <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1 flex items-center gap-1">
-                      <Phone size={11} className="text-amber-400" /> Emergency Contact No. *
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      value={emergencyContact}
-                      onChange={(e) => setEmergencyContact(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
-                      placeholder="10-digit emergency phone"
-                      className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {/* Phone */}
                   <div>
                     <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
                       Phone Number *
@@ -606,92 +962,17 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
                       value={renterPhone}
                       onChange={(e) => setRenterPhone(e.target.value.replace(/[^0-9]/g, "").slice(0, 10))}
                       placeholder="10-digit phone number"
-                      className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
+                      className={`w-full rounded-xl border bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400 ${
+                        renterPhone.length > 0 && renterPhone.length < 10 ? "border-red-500/80" : "border-white/15"
+                      }`}
                     />
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
-                      Gmail / Email Address *
-                    </label>
-                    <input
-                      required
-                      type="email"
-                      value={renterEmail}
-                      onChange={(e) => setRenterEmail(e.target.value)}
-                      placeholder="your.email@gmail.com"
-                      className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* SECTION 2: RESIDENTIAL & LOCATION DETAILS */}
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-                <div className="text-xs font-black uppercase tracking-wider text-cyan-300 flex items-center gap-2">
-                  <Compass size={14} /> Residential &amp; Location Details
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {/* State Dropdown */}
-                  <div>
-                    <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
-                      State *
-                    </label>
-                    <select
-                      value={state}
-                      onChange={(e) => {
-                        const newSt = e.target.value;
-                        setState(newSt);
-                        if (newSt === "Tripura") {
-                          setDistrict("West Tripura");
-                        } else {
-                          setDistrict("");
-                        }
-                      }}
-                      className="w-full rounded-xl border border-white/15 bg-zinc-900 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400 cursor-pointer"
-                    >
-                      {INDIAN_STATES.map((st) => (
-                        <option key={st} value={st}>
-                          {st}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* District Dropdown / Custom Input */}
-                  <div>
-                    <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
-                      District *
-                    </label>
-                    {state === "Tripura" ? (
-                      <select
-                        value={district}
-                        onChange={(e) => setDistrict(e.target.value)}
-                        className="w-full rounded-xl border border-white/15 bg-zinc-900 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400 cursor-pointer"
-                      >
-                        {TRIPURA_DISTRICTS.map((dist) => (
-                          <option key={dist} value={dist}>
-                            {dist}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        required
-                        type="text"
-                        value={district}
-                        onChange={(e) => setDistrict(e.target.value)}
-                        placeholder="Enter District name"
-                        className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
-                      />
+                    {renterPhone.length > 0 && renterPhone.length < 10 && (
+                      <p className="text-[10px] font-bold text-red-400 mt-1">⚠️ Not a valid 10-digit number</p>
                     )}
                   </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {/* Vill/Town Name */}
                   <div>
                     <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
                       Vill / Town Name *
@@ -706,24 +987,6 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
                     />
                   </div>
 
-                  {/* Post Office */}
-                  <div>
-                    <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
-                      Post Office *
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      value={postOffice}
-                      onChange={(e) => setPostOffice(e.target.value)}
-                      placeholder="Enter Post Office"
-                      className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {/* Pin Code */}
                   <div>
                     <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
                       Pin Code *
@@ -737,122 +1000,24 @@ export default function RentalCheckoutModal({ book, isOpen, onClose, onSuccess }
                       className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
                     />
                   </div>
-
-                  {/* Police Station */}
-                  <div>
-                    <label className="block text-[11px] font-extrabold uppercase tracking-wider text-white/75 mb-1">
-                      Police Station *
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      value={policeStation}
-                      onChange={(e) => setPoliceStation(e.target.value)}
-                      placeholder="Enter Police Station"
-                      className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
-                    />
-                  </div>
                 </div>
               </div>
 
-              {/* LIBRARY CARD SECTION */}
-              <div className="rounded-2xl border border-emerald-400/30 bg-emerald-950/30 p-4 space-y-3 shadow-md">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="text-emerald-400" size={18} />
-                    <span className="font-extrabold text-white text-xs uppercase tracking-wider">
-                      Library Membership Card *
-                    </span>
-                  </div>
-                  {userLibraryCard && (
-                    <span className="rounded-full bg-emerald-400/20 border border-emerald-400/30 px-2.5 py-0.5 text-[10px] font-black text-emerald-300">
-                      ✓ Active Card
-                    </span>
-                  )}
-                </div>
-
-                {userLibraryCard ? (
-                  <div className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between rounded-xl bg-black/50 p-3 border border-white/10">
-                      <div>
-                        <span className="text-[10px] text-white/50 block font-bold">LIBRARY CARD ID</span>
-                        <span className="font-black text-emerald-300 text-base tracking-wider">{userLibraryCard.cardId}</span>
-                      </div>
-                      <a
-                        href={`${API_BASE}/library-card/download/${userLibraryCard.cardId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-3 py-2 text-[11px] font-bold text-emerald-300 hover:bg-emerald-400/20 transition"
-                      >
-                        <FileText size={14} /> View Card PDF
-                      </a>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2.5">
-                    <p className="text-[11px] text-white/70 leading-relaxed">
-                      A valid <strong className="text-emerald-300">Library Card ID</strong> is required to rent books. Buy a digital Library Card for <strong className="text-amber-300 font-bold">₹1</strong> using the member details filled above.
-                    </p>
-
-                    {cardError && <p className="text-xs text-red-400 font-semibold">{cardError}</p>}
-
-                    <button
-                      type="button"
-                      onClick={handleBuyLibraryCard}
-                      disabled={buyingCard}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 py-2.5 text-xs font-black uppercase text-black shadow-md hover:scale-[1.01] transition disabled:opacity-60 cursor-pointer"
-                    >
-                      {buyingCard ? (
-                        <>
-                          <Loader2 className="animate-spin" size={15} /> Processing Card Purchase...
-                        </>
-                      ) : (
-                        <>
-                          <CreditCard size={15} /> Buy Library Card (₹1)
-                        </>
-                      )}
-                    </button>
-
-                    {/* Or enter ID & upload PDF manually */}
-                    <div className="pt-2 border-t border-white/10 space-y-2">
-                      <p className="text-[10px] text-white/50 font-bold">ALREADY HAVE A CARD? ENTER ID & UPLOAD PDF:</p>
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        <input
-                          type="text"
-                          placeholder="Card ID (e.g. LTC-849204)"
-                          value={libraryCardId}
-                          onChange={(e) => setLibraryCardId(e.target.value)}
-                          className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-emerald-400"
-                        />
-                        <div className="flex items-center">
-                          <input
-                            type="file"
-                            accept=".pdf,application/pdf"
-                            onChange={(e) => setLibraryCardPdfFile(e.target.files?.[0] || null)}
-                            className="text-[11px] text-white/70 file:mr-2 file:rounded-lg file:border-0 file:bg-emerald-400/20 file:px-2.5 file:py-1.5 file:text-[10px] file:font-bold file:text-emerald-300 hover:file:bg-emerald-400/30 cursor-pointer"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* PROCEED BUTTON */}
+              {/* PROCEED TO PAYMENT BUTTON */}
               <button
                 type="submit"
                 className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-400 py-3.5 text-xs font-black uppercase tracking-wider text-black shadow-lg shadow-emerald-400/20 transition hover:bg-emerald-300 cursor-pointer"
               >
-                Proceed to Payment <ArrowRight size={16} />
+                Proceed to Pay Rent (₹{totalAmount.toFixed(2)}) <ArrowRight size={16} />
               </button>
             </form>
           )}
 
-          {/* STEP 2: RAZORPAY PAYMENT BREAKDOWN */}
+          {/* ════════════ STEP 3: RAZORPAY PAYMENT BREAKDOWN ════════════ */}
           {step === "payment" && (
             <div className="space-y-5">
               <button
-                onClick={() => setStep("details")}
+                onClick={() => setStep("rent_details")}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-white/60 hover:text-white transition cursor-pointer"
               >
                 <ArrowLeft size={14} /> Back to details

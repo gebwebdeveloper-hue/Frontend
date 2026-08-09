@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Clock, AlertTriangle, ShieldCheck, Search, Filter, CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
+import { BookOpen, Clock, AlertTriangle, ShieldCheck, Search, Filter, CheckCircle2, ArrowRight, Sparkles, CreditCard, FileText, Eye } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import RentalCheckoutModal from "../components/RentalCheckoutModal.jsx";
@@ -13,6 +13,8 @@ export default function BookRentPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedBookForRent, setSelectedBookForRent] = useState(null);
+  const [directCardMode, setDirectCardMode] = useState(false);
+  const [userLibraryCard, setUserLibraryCard] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [user, setUser] = useState(null);
@@ -50,14 +52,48 @@ export default function BookRentPage() {
     }
   };
 
+  const checkUserLibraryCard = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/library-card/my-card`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.success && data.hasCard && data.libraryCard && !data.isSuspended) {
+          setUserLibraryCard(data.libraryCard);
+          return data.libraryCard;
+        }
+      }
+      setUserLibraryCard(null);
+      return null;
+    } catch {
+      setUserLibraryCard(null);
+      return null;
+    }
+  };
+
   useEffect(() => {
     fetchRentalCatalog();
     checkUserSession();
+    checkUserLibraryCard();
   }, []);
 
   const handleOpenRental = async (book) => {
     const currentUser = await checkUserSession();
+    await checkUserLibraryCard();
     setSelectedBookForRent(book);
+    setDirectCardMode(false);
+
+    if (currentUser) {
+      setIsModalOpen(true);
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
+  const handleBuyCardDirectly = async () => {
+    const currentUser = await checkUserSession();
+    await checkUserLibraryCard();
+    setSelectedBookForRent(null);
+    setDirectCardMode(true);
 
     if (currentUser) {
       setIsModalOpen(true);
@@ -68,8 +104,9 @@ export default function BookRentPage() {
 
   const handleAuthClose = (loggedInUser) => {
     setShowAuthModal(false);
-    if (loggedInUser && selectedBookForRent) {
+    if (loggedInUser) {
       setUser(loggedInUser);
+      checkUserLibraryCard();
       setIsModalOpen(true);
     }
   };
@@ -77,6 +114,7 @@ export default function BookRentPage() {
   const handleRentalSuccess = (result) => {
     setNotification(result.message || "🎉 Book rented successfully!");
     fetchRentalCatalog();
+    checkUserLibraryCard();
     setTimeout(() => setNotification(""), 6000);
   };
 
@@ -129,7 +167,7 @@ export default function BookRentPage() {
 
               <h1 className="text-4xl font-black uppercase leading-[1.08] text-white sm:text-6xl md:text-7xl">
                 RENT BOOKS<br />
-                <span className="bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent drop-shadow-lg">
+                <span className="bg-gradient-to-r from-emerald-300 via-teal-200 via-cyan-300 via-emerald-400 to-emerald-300 bg-clip-text text-transparent drop-shadow-lg animate-text-gradient">
                   Read More. Spend Less.
                 </span>
               </h1>
@@ -179,6 +217,72 @@ export default function BookRentPage() {
               </div>
             </motion.div>
           </div>
+
+          {/* ════════════ HERO DIGITAL LIBRARY CARD CTA ════════════ */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mt-6 rounded-3xl border border-emerald-400/40 bg-gradient-to-r from-emerald-950/80 via-zinc-950 to-teal-950/80 p-6 shadow-2xl backdrop-blur-xl md:p-7"
+          >
+            {userLibraryCard ? (
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3.5 py-1 text-[11px] font-black uppercase tracking-wider text-emerald-300">
+                    <CheckCircle2 size={14} className="text-emerald-400" /> ACTIVE DIGITAL LIBRARY CARD
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-white">
+                    Membership Active: <span className="text-emerald-300 tracking-wider">{userLibraryCard.cardId}</span>
+                  </h2>
+                  <p className="text-xs sm:text-sm text-white/75 max-w-2xl leading-relaxed">
+                    Your digital library card is active and verified. You can rent any available book from the catalog below with 15-day rental windows.
+                  </p>
+                </div>
+
+                <a
+                  href={`${API_BASE}/library-card/download/${userLibraryCard.cardId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-6 py-3.5 text-xs font-black uppercase tracking-wider text-emerald-300 shadow-lg shadow-emerald-400/10 transition hover:bg-emerald-400/20 hover:scale-105 flex items-center gap-2"
+                >
+                  <FileText size={16} /> View Card PDF
+                </a>
+              </div>
+            ) : (
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3.5 py-1 text-[11px] font-black uppercase tracking-wider text-emerald-300">
+                    <CreditCard size={14} /> DIGITAL LIBRARY CARD REQUIRED FOR RENTALS
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-white">
+                    Buy Digital Library Card for <span className="text-amber-300">₹1</span>
+                  </h2>
+                  <p className="text-xs sm:text-sm text-white/75 max-w-2xl leading-relaxed">
+                    A valid Digital Library Card is required to rent books. Get instant lifetime valid digital membership card with unique Card ID &amp; scannable QR code.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 shrink-0">
+                  <a
+                    href={`${API_BASE}/library-card/download/demo`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-2xl border border-emerald-400/40 bg-emerald-400/10 px-5 py-4 text-xs font-black uppercase tracking-wider text-emerald-300 shadow-lg shadow-emerald-400/10 transition hover:bg-emerald-400/20 hover:scale-105 flex items-center gap-2"
+                  >
+                    <Eye size={16} /> View Demo Card
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={handleBuyCardDirectly}
+                    className="rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 px-7 py-4 text-xs font-black uppercase tracking-wider text-black shadow-xl shadow-emerald-400/25 transition hover:scale-105 cursor-pointer flex items-center gap-2"
+                  >
+                    <CreditCard size={16} /> Buy Library Card Now (₹1)
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
 
           {/* ════════════ RENTAL RULES BANNER ════════════ */}
           <motion.div
@@ -415,10 +519,12 @@ export default function BookRentPage() {
         {/* RENTAL CHECKOUT MODAL */}
         <RentalCheckoutModal
           book={selectedBookForRent}
+          directCardMode={directCardMode}
           isOpen={isModalOpen}
           onClose={() => {
             setIsModalOpen(false);
             setSelectedBookForRent(null);
+            setDirectCardMode(false);
           }}
           onSuccess={handleRentalSuccess}
         />

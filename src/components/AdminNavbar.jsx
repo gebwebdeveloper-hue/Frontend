@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   BookOpen, CreditCard, Newspaper, Users, UserCheck,
-  BookMarked, LogOut, Menu, X, Feather, ChevronRight, ChevronLeft
+  BookMarked, LogOut, Menu, X, Feather, ChevronRight
 } from "lucide-react";
 import { API_BASE } from "../config.js";
 
@@ -10,34 +10,22 @@ export default function AdminNavbar({ activeTab, onSelectTab, onLogoutSuccess })
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navRef = useRef(null);
 
-  const desktopScrollRef = useRef(null);
-  const mobileScrollRef = useRef(null);
+  const currentPath = location.pathname;
 
-  const [canScrollDesktopLeft, setCanScrollDesktopLeft] = useState(false);
-  const [canScrollDesktopRight, setCanScrollDesktopRight] = useState(false);
-
-  const checkDesktopScroll = () => {
-    if (desktopScrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = desktopScrollRef.current;
-      setCanScrollDesktopLeft(scrollLeft > 5);
-      setCanScrollDesktopRight(scrollLeft < scrollWidth - clientWidth - 5);
-    }
-  };
-
+  // Dynamically pad parent container on desktop so page content flows beside left sidebar
   useEffect(() => {
-    checkDesktopScroll();
-    window.addEventListener("resize", checkDesktopScroll);
-    return () => window.removeEventListener("resize", checkDesktopScroll);
-  }, []);
-
-  const scrollDesktop = (direction) => {
-    if (desktopScrollRef.current) {
-      const scrollAmount = direction === "left" ? -220 : 220;
-      desktopScrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-      setTimeout(checkDesktopScroll, 300);
+    const parent = navRef.current?.parentElement;
+    if (parent) {
+      parent.classList.add("lg:pl-72", "xl:pl-80", "transition-all");
     }
-  };
+    return () => {
+      if (parent) {
+        parent.classList.remove("lg:pl-72", "xl:pl-80");
+      }
+    };
+  }, []);
 
   const handleLogout = async () => {
     if (!confirm("Are you sure you want to log out of Admin Dashboard?")) return;
@@ -52,8 +40,6 @@ export default function AdminNavbar({ activeTab, onSelectTab, onLogoutSuccess })
       navigate("/");
     }
   };
-
-  const currentPath = location.pathname;
 
   const navItems = [
     {
@@ -131,184 +117,52 @@ export default function AdminNavbar({ activeTab, onSelectTab, onLogoutSuccess })
   };
 
   return (
-    <nav className="relative z-30 w-full mb-8">
-      {/* DESKTOP & TABLET STRIP */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-white/10 pb-6">
-        {/* Left Side Header */}
-        <div className="flex items-center justify-between lg:justify-start w-full lg:w-auto">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-cyan-400/10 text-cyan-300 font-bold text-xs border border-cyan-400/30">
-              LT
-            </span>
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400">ADMIN CONTROL PANEL</span>
-              <h2 className="text-lg font-bold text-white leading-none">Navigation</h2>
+    <div ref={navRef} className="relative z-30">
+      {/* ════════════ DESKTOP LEFT VERTICAL SIDEBAR (lg: and up) ════════════ */}
+      <aside className="hidden lg:flex fixed top-24 xl:top-28 left-4 xl:left-8 w-64 xl:w-72 max-h-[calc(100vh-7rem)] xl:max-h-[calc(100vh-8.5rem)] z-30 flex-col bg-zinc-950/95 border border-white/10 rounded-3xl p-4 xl:p-5 shadow-2xl backdrop-blur-2xl">
+        {/* Header & Nav Items Container */}
+        <div className="flex-1 flex flex-col min-h-0 min-w-0">
+          {/* Header Brand */}
+          <div className="border-b border-white/10 pb-3 mb-3 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-cyan-400/20 to-emerald-400/20 text-cyan-300 font-black text-xs border border-cyan-400/40 shadow-glow shrink-0">
+                LT
+              </span>
+              <div className="overflow-hidden">
+                <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 block truncate">
+                  ADMIN CONTROL PANEL
+                </span>
+                <h2 className="text-xs font-black text-white leading-none">Navigation</h2>
+              </div>
             </div>
           </div>
 
-          {/* Mobile Hamburger Button */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex items-center gap-2 lg:hidden rounded-xl border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white hover:bg-white/10 transition cursor-pointer"
-          >
-            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
-            <span>Menu</span>
-          </button>
-        </div>
-
-        {/* Desktop Horizontal Scrollable Bar */}
-        <div className="hidden lg:flex items-center gap-2 min-w-0 max-w-full overflow-hidden">
-          {/* Left Arrow Button */}
-          {canScrollDesktopLeft && (
-            <button
-              type="button"
-              onClick={() => scrollDesktop("left")}
-              className="grid h-8 w-8 place-items-center rounded-xl border border-white/20 bg-zinc-900/90 text-white/80 shadow-lg backdrop-blur hover:bg-white hover:text-black transition shrink-0 z-20 cursor-pointer"
-              title="Scroll Left"
-            >
-              <ChevronLeft size={16} />
-            </button>
-          )}
-
-          {/* Scrollable Container (Native Scrollbar Hidden) */}
-          <div
-            ref={desktopScrollRef}
-            onScroll={checkDesktopScroll}
-            onWheel={(e) => {
-              if (e.deltaY !== 0 && desktopScrollRef.current) {
-                desktopScrollRef.current.scrollLeft += e.deltaY;
-                checkDesktopScroll();
-              }
-            }}
-            className="flex items-center gap-1.5 rounded-2xl border border-white/10 bg-white/5 p-1.5 overflow-x-auto max-w-full shrink min-w-0 scrollbar-none [::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-          >
+          {/* Navigation Links - Scrollable Area */}
+          <div className="space-y-1 flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 hover:scrollbar-thumb-emerald-400/40 scrollbar-track-transparent">
             {navItems.map((item) => {
               const active = isItemActive(item);
               const Icon = item.icon;
 
-              if (item.isTab && currentPath === "/admin" && onSelectTab) {
-                return (
-                  <button
-                    key={item.id}
-                    onClick={(e) => handleItemClick(item, e)}
-                    className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap shrink-0 cursor-pointer ${
-                      active
-                        ? "bg-white text-black shadow-md"
-                        : "text-white/70 hover:text-white hover:bg-white/10"
-                    }`}
-                  >
-                    <Icon size={14} className={active ? "text-black" : "text-white/60"} />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              }
-
-              return (
-                <Link
-                  key={item.id}
-                  to={item.path}
-                  className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap shrink-0 ${
-                    active
-                      ? "bg-white text-black shadow-md"
-                      : "text-white/70 hover:text-white hover:bg-white/10"
-                  }`}
-                >
-                  <Icon size={14} className={active ? "text-black" : "text-white/60"} />
-                  <span>{item.isRental ? "📖 " + item.label : item.label}</span>
-                </Link>
+              const content = (
+                <>
+                  <Icon size={15} className={active ? "text-emerald-300 shrink-0" : "text-white/60 shrink-0"} />
+                  <span className="font-extrabold text-[11px] tracking-wide truncate">{item.label}</span>
+                  <ChevronRight size={13} className={`ml-auto transition-transform shrink-0 ${active ? "text-emerald-400 translate-x-0.5" : "text-white/20"}`} />
+                </>
               );
-            })}
-          </div>
-
-          {/* Right Arrow Button */}
-          {canScrollDesktopRight && (
-            <button
-              type="button"
-              onClick={() => scrollDesktop("right")}
-              className="grid h-8 w-8 place-items-center rounded-xl border border-white/20 bg-zinc-900/90 text-white/80 shadow-lg backdrop-blur hover:bg-white hover:text-black transition shrink-0 z-20 cursor-pointer"
-              title="Scroll Right"
-            >
-              <ChevronRight size={16} />
-            </button>
-          )}
-
-          {/* Logout Button */}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs font-bold text-red-300 hover:bg-red-500/20 hover:border-red-500/50 transition shrink-0 cursor-pointer ml-1"
-          >
-            <LogOut size={14} />
-            <span>Log Out</span>
-          </button>
-        </div>
-      </div>
-
-      {/* MOBILE SCROLLABLE TAB STRIP (< 1024px) */}
-      <div className="flex lg:hidden items-center gap-2 overflow-x-auto py-2 scrollbar-none [::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-w-full">
-        {navItems.map((item) => {
-          const active = isItemActive(item);
-          const Icon = item.icon;
-
-          if (item.isTab && currentPath === "/admin" && onSelectTab) {
-            return (
-              <button
-                key={item.id}
-                onClick={(e) => handleItemClick(item, e)}
-                className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition whitespace-nowrap shrink-0 border cursor-pointer ${
-                  active
-                    ? "bg-white text-black border-white shadow-md font-black"
-                    : "border-white/10 bg-white/5 text-white/70 hover:text-white"
-                }`}
-              >
-                <Icon size={13} />
-                <span>{item.label}</span>
-              </button>
-            );
-          }
-
-          return (
-            <Link
-              key={item.id}
-              to={item.path}
-              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition whitespace-nowrap shrink-0 border ${
-                active
-                  ? "bg-white text-black border-white shadow-md font-black"
-                  : "border-white/10 bg-white/5 text-white/70 hover:text-white"
-              }`}
-            >
-              <Icon size={13} />
-              <span>{item.isRental ? "📖 " + item.label : item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* MOBILE DROPDOWN MENU PANEL */}
-      {mobileMenuOpen && (
-        <div className="mt-3 lg:hidden rounded-2xl border border-white/15 bg-zinc-950/95 p-4 backdrop-blur-2xl shadow-2xl space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="grid gap-1">
-            {navItems.map((item) => {
-              const active = isItemActive(item);
-              const Icon = item.icon;
 
               if (item.isTab && currentPath === "/admin" && onSelectTab) {
                 return (
                   <button
                     key={item.id}
                     onClick={(e) => handleItemClick(item, e)}
-                    className={`flex items-center justify-between rounded-xl px-4 py-3 text-xs font-bold transition cursor-pointer ${
+                    className={`w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs transition-all cursor-pointer ${
                       active
-                        ? "bg-white text-black"
-                        : "text-white/80 hover:bg-white/10 hover:text-white"
+                        ? "bg-gradient-to-r from-emerald-400/20 via-teal-400/10 to-transparent border border-emerald-400/40 text-emerald-300 shadow-md shadow-emerald-400/10 font-black"
+                        : "border border-transparent text-white/75 hover:text-white hover:bg-white/5 hover:border-white/10"
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <Icon size={16} />
-                      <span>{item.label}</span>
-                    </div>
-                    <ChevronRight size={14} className="opacity-50" />
+                    {content}
                   </button>
                 );
               }
@@ -318,34 +172,146 @@ export default function AdminNavbar({ activeTab, onSelectTab, onLogoutSuccess })
                   key={item.id}
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between rounded-xl px-4 py-3 text-xs font-bold transition ${
+                  className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs transition-all ${
                     active
-                      ? "bg-white text-black"
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
+                      ? "bg-gradient-to-r from-emerald-400/20 via-teal-400/10 to-transparent border border-emerald-400/40 text-emerald-300 shadow-md shadow-emerald-400/10 font-black"
+                      : "border border-transparent text-white/75 hover:text-white hover:bg-white/5 hover:border-white/10"
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon size={16} />
-                    <span>{item.isRental ? "📖 " + item.label : item.label}</span>
-                  </div>
-                  <ChevronRight size={14} className="opacity-50" />
+                  {content}
                 </Link>
               );
             })}
           </div>
+        </div>
 
-          <div className="pt-2 border-t border-white/10">
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-bold text-red-300 hover:bg-red-500/20 transition cursor-pointer"
-            >
-              <LogOut size={16} />
-              <span>Log Out of Admin Panel</span>
-            </button>
+        {/* Footer Logout Action - Always Pinned & Visible at Bottom */}
+        <div className="pt-3 border-t border-white/10 mt-3 shrink-0">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-xs font-black uppercase tracking-wider text-red-300 hover:bg-red-500/20 hover:border-red-500/50 transition cursor-pointer shadow-lg"
+          >
+            <LogOut size={14} />
+            <span>Log Out</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* ════════════ MOBILE & TABLET COMPACT TOP BAR (< lg) ════════════ */}
+      <div className="flex lg:hidden items-center justify-between rounded-2xl border border-white/10 bg-zinc-950/80 p-3.5 backdrop-blur-xl mb-6 shadow-xl">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-cyan-400/10 text-cyan-300 font-bold text-xs border border-cyan-400/30">
+            LT
+          </span>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 block">ADMIN CONTROL</span>
+            <h2 className="text-xs font-black text-white leading-none">Navigation</h2>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white hover:bg-white/10 transition cursor-pointer"
+        >
+          {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          <span>Menu</span>
+        </button>
+      </div>
+
+      {/* ════════════ MOBILE SLIDE-OVER LEFT DRAWER ════════════ */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Overlay Backdrop */}
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 bg-black/80 backdrop-blur-md"
+          />
+
+          {/* Slide-over Drawer Panel */}
+          <aside className="fixed top-0 left-0 bottom-0 w-72 max-w-[85vw] bg-zinc-950 border-r border-white/10 p-6 z-50 overflow-y-auto flex flex-col justify-between shadow-2xl animate-in slide-in-from-left duration-300">
+            <div>
+              <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex items-center justify-center h-9 w-9 rounded-xl bg-cyan-400/10 text-cyan-300 font-bold text-xs border border-cyan-400/30">
+                    LT
+                  </span>
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 block">ADMIN CONTROL</span>
+                    <h2 className="text-sm font-black text-white leading-none">Navigation</h2>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-white/70 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="space-y-1.5">
+                {navItems.map((item) => {
+                  const active = isItemActive(item);
+                  const Icon = item.icon;
+
+                  const content = (
+                    <>
+                      <Icon size={16} className={active ? "text-emerald-300" : "text-white/60"} />
+                      <span className="font-extrabold text-xs">{item.label}</span>
+                      <ChevronRight size={14} className="ml-auto opacity-50" />
+                    </>
+                  );
+
+                  if (item.isTab && currentPath === "/admin" && onSelectTab) {
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={(e) => handleItemClick(item, e)}
+                        className={`w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-xs transition-all cursor-pointer ${
+                          active
+                            ? "bg-emerald-400/20 border border-emerald-400/40 text-emerald-300 font-black"
+                            : "text-white/75 hover:bg-white/10 hover:text-white"
+                        }`}
+                      >
+                        {content}
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={item.id}
+                      to={item.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-xs transition-all ${
+                        active
+                          ? "bg-emerald-400/20 border border-emerald-400/40 text-emerald-300 font-black"
+                          : "text-white/75 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      {content}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-white/10 mt-6">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-red-300 hover:bg-red-500/20 transition cursor-pointer"
+              >
+                <LogOut size={16} />
+                <span>Log Out</span>
+              </button>
+            </div>
+          </aside>
+        </div>
       )}
-    </nav>
+    </div>
   );
 }
