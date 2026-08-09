@@ -11,6 +11,7 @@ import { API_BASE } from "../config.js";
 
 const baseLinks = [
   { label: "Buy Books", to: "/library" },
+  { label: "Book Rent", to: "/rentals" },
   { label: "Read Stories", to: "/short-stories" },
   { label: "News & Updates", to: "/news" },
   { label: "About Us", to: "/about-us" },

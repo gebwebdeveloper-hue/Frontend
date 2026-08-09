@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { BookOpen, CheckCircle2, Clock, AlertTriangle, ShieldCheck, RefreshCw, Loader2, Search, ArrowRight, ListPlus, FileText, BellRing } from "lucide-react";
-import { API_BASE } from "../config.js";
+import { BookOpen, CheckCircle2, Clock, AlertTriangle, ShieldCheck, RefreshCw, Loader2, Search, ArrowRight, ListPlus, FileText, BellRing, CreditCard } from "lucide-react";
+import { API_BASE, SERVER_URL } from "../config.js";
 import AdminRentalCatalogManager from "./AdminRentalCatalogManager.jsx";
+import AdminLibraryCardsSection from "./AdminLibraryCardsSection.jsx";
 
 export default function AdminRentalsSection() {
-  const [subTab, setSubTab] = useState("catalog"); // 'catalog' | 'orders'
+  const [subTab, setSubTab] = useState("catalog"); // 'catalog' | 'orders' | 'library_cards'
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("all");
@@ -114,7 +115,7 @@ export default function AdminRentalsSection() {
   return (
     <div className="space-y-6">
       {/* Navigation Sub-Tabs */}
-      <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+      <div className="flex flex-wrap items-center gap-3 border-b border-white/10 pb-4">
         <button
           type="button"
           onClick={() => setSubTab("catalog")}
@@ -138,10 +139,24 @@ export default function AdminRentalsSection() {
         >
           <FileText size={16} /> Rental Orders &amp; Returns ({rentals.length})
         </button>
+
+        <button
+          type="button"
+          onClick={() => setSubTab("library_cards")}
+          className={`flex items-center gap-2 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-wider transition cursor-pointer ${
+            subTab === "library_cards"
+              ? "bg-gradient-to-r from-emerald-400 to-teal-300 text-black shadow-lg shadow-emerald-400/20"
+              : "border border-emerald-400/40 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/20"
+          }`}
+        >
+          <CreditCard size={16} /> 💳 Issued Library Cards &amp; Revoke Access
+        </button>
       </div>
 
       {subTab === "catalog" ? (
         <AdminRentalCatalogManager onCatalogUpdated={fetchRentals} />
+      ) : subTab === "library_cards" ? (
+        <AdminLibraryCardsSection />
       ) : (
         <div className="space-y-6">
           {/* Metrics Banner */}
@@ -295,6 +310,23 @@ export default function AdminRentalsSection() {
                           <p className="text-[10px] text-white/60">{r.renterEmail}</p>
                           <p className="text-[10px] font-mono text-emerald-300">{r.renterPhone}</p>
                           <p className="text-[10px] text-white/40 line-clamp-1">Address: {r.deliveryAddress}</p>
+                          {r.libraryCardId && (
+                            <div className="mt-1 flex items-center gap-1.5">
+                              <span className="inline-block rounded-full bg-emerald-400/20 border border-emerald-400/30 px-2 py-0.5 text-[9px] font-black text-emerald-300">
+                                💳 Card: {r.libraryCardId}
+                              </span>
+                              {r.libraryCardPdf?.url && (
+                                <a
+                                  href={`${SERVER_URL}${r.libraryCardPdf.url}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[9px] font-bold text-cyan-300 hover:underline flex items-center gap-0.5"
+                                >
+                                  <FileText size={10} /> Card PDF
+                                </a>
+                              )}
+                            </div>
+                          )}
                           <span className="inline-block text-[9px] font-bold text-amber-300 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full mt-1">
                             📍 Self Pickup: Madhuban kathaltali, Tarader Thikana, Agartala, Tripura 799003
                           </span>

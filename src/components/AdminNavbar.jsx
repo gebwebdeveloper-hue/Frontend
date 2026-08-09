@@ -107,6 +107,12 @@ export default function AdminNavbar({ activeTab, onSelectTab, onLogoutSuccess })
       icon: BookMarked,
       isRental: true,
     },
+    {
+      id: "library_cards",
+      label: "Library Cards",
+      path: "/admin/library-cards",
+      icon: CreditCard,
+    },
   ];
 
   const isItemActive = (item) => {
