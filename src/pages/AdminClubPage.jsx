@@ -97,7 +97,7 @@ export default function AdminClubPage() {
 
   // Lock body scroll when modal is open
   useEffect(() => {
-    if (isModalOpen || deletingMember || popupMessage) {
+    if (isModalOpen || deletingMember || refundModalOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -105,7 +105,16 @@ export default function AdminClubPage() {
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [isModalOpen, deletingMember, popupMessage]);
+  }, [isModalOpen, deletingMember, refundModalOpen]);
+
+  // Auto-dismiss popup message alert after 5 seconds
+  useEffect(() => {
+    if (!popupMessage) return;
+    const timer = setTimeout(() => {
+      setPopupMessage(null);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [popupMessage]);
 
   // 1. Auth Check
   useEffect(() => {
