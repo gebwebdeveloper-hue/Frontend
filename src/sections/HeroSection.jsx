@@ -1,4 +1,4 @@
-import { ArrowRight, Sparkles, BookOpen, ShieldCheck } from "lucide-react";
+import { ArrowRight, Sparkles, BookOpen, ShieldCheck, BookMarked } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
@@ -86,6 +86,14 @@ export default function HeroSection() {
             >
               <BookOpen size={18} className="text-cyan-300" />
               <span>Read Books</span>
+            </Link>
+
+            <Link
+              to="/rentals"
+              className="group flex items-center gap-2.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-7 py-4 text-sm sm:text-base font-semibold text-emerald-300 backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:bg-emerald-400/20 hover:border-emerald-400/60 shadow-[0_0_20px_rgba(16,185,129,0.15)]"
+            >
+              <BookMarked size={18} className="text-emerald-400" />
+              <span>Rent Books</span>
             </Link>
           </motion.div>
 

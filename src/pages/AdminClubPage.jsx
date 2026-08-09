@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
+import AdminNavbar from "../components/AdminNavbar.jsx";
 import { API_BASE } from "../config.js";
 
 const initialFormState = {
@@ -296,15 +297,12 @@ export default function AdminClubPage() {
       <main className="min-h-screen bg-zinc-950 pt-28 pb-20 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           
+          {/* Responsive Admin Navbar */}
+          <AdminNavbar />
+
           {/* Header & Back Link */}
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
             <div>
-              <Link
-                to="/admin"
-                className="mb-2 inline-flex items-center gap-2 text-xs font-semibold text-white/50 transition hover:text-cyan-400"
-              >
-                <ArrowLeft size={14} /> Back to Admin Dashboard
-              </Link>
               <h1 className="text-3xl font-black uppercase tracking-wider text-white sm:text-4xl">
                 Club Members &amp; Applications
               </h1>
@@ -316,13 +314,13 @@ export default function AdminClubPage() {
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={fetchMembers}
-                className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold text-white transition hover:bg-white/10"
+                className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold text-white transition hover:bg-white/10 cursor-pointer"
               >
                 <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
               </button>
               <button
                 onClick={handleOpenAdd}
-                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 px-6 py-3 text-xs font-black uppercase tracking-wider text-black shadow-[0_0_30px_rgba(6,182,212,0.3)] transition hover:scale-105"
+                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 px-6 py-3 text-xs font-black uppercase tracking-wider text-black shadow-[0_0_30px_rgba(6,182,212,0.3)] transition hover:scale-105 cursor-pointer"
               >
                 <Plus size={16} /> Add Member
               </button>

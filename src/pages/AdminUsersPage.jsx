@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
+import AdminNavbar from "../components/AdminNavbar.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
 
 export default function AdminUsersPage() {
@@ -180,8 +181,11 @@ export default function AdminUsersPage() {
     <PageTransition>
       <div className="min-h-screen bg-zinc-950 text-white px-4 py-8 sm:px-8 max-w-7xl mx-auto pt-24 pb-16">
         
-        {/* Navigation & Header */}
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between border-b border-white/10 pb-6 mb-8 gap-4">
+        {/* Responsive Admin Navbar */}
+        <AdminNavbar />
+
+        {/* Header Title Section */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-extrabold text-white">Registered Users Directory</h1>
             <p className="text-xs text-white/50 mt-1">
@@ -189,54 +193,12 @@ export default function AdminUsersPage() {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-            {/* Tabs */}
-            <div className="flex rounded-full bg-white/5 p-1 border border-white/10 overflow-x-auto max-w-full whitespace-nowrap scrollbar-none">
-              <Link
-                to="/admin"
-                className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-              >
-                Manage Books
-              </Link>
-              <Link
-                to="/admin/purchases"
-                className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-              >
-                Razorpay Payments
-              </Link>
-              <Link
-                to="/admin/news"
-                className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-              >
-                News &amp; Updates
-              </Link>
-              <Link
-                to="/admin"
-                className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-              >
-                Authors
-              </Link>
-              <Link
-                to="/admin?tab=newsletter"
-                className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-              >
-                Free Stories
-              </Link>
-              <Link
-                to="/admin/users"
-                className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 bg-white text-black"
-              >
-                Manage Users
-              </Link>
-            </div>
-
-            <button
-              onClick={fetchUsers}
-              className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10 transition shrink-0"
-            >
-              <RefreshCw size={13} className={loading ? "animate-spin text-cyan-400" : ""} /> Refresh List
-            </button>
-          </div>
+          <button
+            onClick={fetchUsers}
+            className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/10 transition cursor-pointer"
+          >
+            <RefreshCw size={13} className={loading ? "animate-spin text-cyan-400" : ""} /> Refresh List
+          </button>
         </div>
 
         {/* Page Title & Search */}

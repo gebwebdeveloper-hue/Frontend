@@ -4,7 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, BookOpen, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X, CheckCircle2, Truck, Box, Package, MapPin } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
+import AdminNavbar from "../components/AdminNavbar.jsx";
 import AdminUsersPage from "./AdminUsersPage.jsx";
+import AdminRentalsSection from "../components/AdminRentalsSection.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
 import JoditEditor from "jodit-react";
 
@@ -145,6 +147,10 @@ export default function AdminBooksPage() {
   const [comingSoon, setComingSoon] = useState(false);
   const [listenInYoutube, setListenInYoutube] = useState(false);
   const [youtubeLink, setYoutubeLink] = useState("");
+  const [isRentalAvailable, setIsRentalAvailable] = useState(false);
+  const [rentalPrice, setRentalPrice] = useState("50");
+  const [rentalDurationDays, setRentalDurationDays] = useState("15");
+  const [finePerDay, setFinePerDay] = useState("5");
   const [editingBook, setEditingBook] = useState(null);
 
   // File states
@@ -830,6 +836,10 @@ export default function AdminBooksPage() {
     setComingSoon(false);
     setListenInYoutube(false);
     setYoutubeLink("");
+    setIsRentalAvailable(false);
+    setRentalPrice("50");
+    setRentalDurationDays("15");
+    setFinePerDay("5");
     setCoverFile(null);
     setPdfFile(null);
     setPreviewPdfFile(null);
@@ -858,6 +868,10 @@ export default function AdminBooksPage() {
     setComingSoon(book.comingSoon || false);
     setListenInYoutube(book.listenInYoutube || false);
     setYoutubeLink(book.youtubeLink || "");
+    setIsRentalAvailable(book.isRentalAvailable || false);
+    setRentalPrice(String(book.rentalPrice || "50"));
+    setRentalDurationDays(String(book.rentalDurationDays || "15"));
+    setFinePerDay(String(book.finePerDay || "5"));
 
     setCoverFile(null);
     setPdfFile(null);
@@ -902,6 +916,10 @@ export default function AdminBooksPage() {
     formData.append("comingSoon", String(comingSoon));
     formData.append("listenInYoutube", String(listenInYoutube));
     formData.append("youtubeLink", listenInYoutube ? youtubeLink : "");
+    formData.append("isRentalAvailable", String(isRentalAvailable));
+    formData.append("rentalPrice", rentalPrice);
+    formData.append("rentalDurationDays", rentalDurationDays);
+    formData.append("finePerDay", finePerDay);
 
     if (coverFile) {
       formData.append("cover", coverFile);
@@ -1125,73 +1143,13 @@ export default function AdminBooksPage() {
           {/* ADMIN DASHBOARD */}
           {step === "dashboard" && (
             <div>
-              {/* Header section with title and logout */}
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between border-b border-white/10 pb-6 mb-8 gap-6">
-                <div>
-                  <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-                  <p className="mt-1 text-sm text-white/55">Manage your digital assets and review readers access requests.</p>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                  {/* Tabs */}
-                  <div className="flex rounded-full bg-white/5 p-1 border border-white/10 overflow-x-auto max-w-full whitespace-nowrap scrollbar-none">
-                    <button
-                      onClick={() => setActiveTab("books")}
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 ${
-                        activeTab === "books" ? "bg-white text-black" : "text-white/60 hover:text-white"
-                      }`}
-                    >
-                      Manage Books
-                    </button>
-                    <Link
-                      to="/admin/purchases"
-                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-                    >
-                      Razorpay Payments
-                    </Link>
-                    <Link
-                      to="/admin/news"
-                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-                    >
-                      News &amp; Updates
-                    </Link>
-                    <button
-                      onClick={() => setActiveTab("authors")}
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 ${
-                        activeTab === "authors" ? "bg-white text-black" : "text-white/60 hover:text-white"
-                      }`}
-                    >
-                      Authors
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("newsletter")}
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 ${
-                        activeTab === "newsletter" ? "bg-white text-black" : "text-white/60 hover:text-white"
-                      }`}
-                    >
-                      Free Stories
-                    </button>
-                    <Link
-                      to="/admin/users"
-                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-                    >
-                      Manage Users
-                    </Link>
-                    <Link
-                      to="/admin/club"
-                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-                    >
-                      Club Members
-                    </Link>
-                  </div>
-                  
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500/20 hover:border-red-500/30 transition shrink-0 w-full sm:w-auto"
-                  >
-                    <LogOut size={14} /> Log Out
-                  </button>
-                </div>
+              {/* Responsive Admin Navbar */}
+              <AdminNavbar activeTab={activeTab} onSelectTab={setActiveTab} onLogoutSuccess={handleLogout} />
+
+              {/* Title Section */}
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+                <p className="mt-1 text-sm text-white/55">Manage your digital assets and review readers access requests.</p>
               </div>
 
               {/* TAB 1: BOOKS */}
@@ -1480,6 +1438,83 @@ export default function AdminBooksPage() {
                               placeholder="https://www.youtube.com/watch?v=..."
                               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
                             />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* RENTAL SYSTEM SETTINGS */}
+                      <div className="rounded-2xl border border-emerald-400/40 bg-gradient-to-r from-emerald-950/40 via-zinc-950 to-teal-950/40 p-5 space-y-4 md:col-span-2 mt-2 shadow-lg">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <label className="flex items-center gap-3 cursor-pointer text-sm font-black text-emerald-300">
+                              <input
+                                type="checkbox"
+                                checked={isRentalAvailable}
+                                onChange={(e) => setIsRentalAvailable(e.target.checked)}
+                                className="h-5 w-5 rounded border-emerald-400/50 bg-white/10 text-emerald-400 focus:ring-0 focus:ring-offset-0 focus:outline-none cursor-pointer"
+                              />
+                              <span>📖 Feature &amp; List Book in "Book Rental System"</span>
+                            </label>
+                            <p className="text-[11px] text-white/55 mt-1 ml-8">
+                              When enabled, this book will automatically appear on the public <strong className="text-emerald-300">Rent Books</strong> page.
+                            </p>
+                          </div>
+
+                          <span className={`self-start sm:self-center text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shrink-0 ${
+                            isRentalAvailable
+                              ? "bg-emerald-400 text-black shadow-md shadow-emerald-400/20"
+                              : "bg-white/5 border border-white/10 text-white/40"
+                          }`}>
+                            {isRentalAvailable ? "Rental Enabled" : "Rental Disabled"}
+                          </span>
+                        </div>
+
+                        {isRentalAvailable && (
+                          <div className="grid gap-4 sm:grid-cols-3 pt-3 border-t border-emerald-500/20">
+                            <div>
+                              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-emerald-300/90 mb-1.5">
+                                Rental Fee (₹) *
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                required={isRentalAvailable}
+                                value={rentalPrice}
+                                onChange={(e) => setRentalPrice(e.target.value)}
+                                placeholder="50"
+                                className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs font-bold text-white focus:border-emerald-400 focus:bg-white/10 focus:outline-none"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-emerald-300/90 mb-1.5">
+                                Rental Period (Days) *
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                required={isRentalAvailable}
+                                value={rentalDurationDays}
+                                onChange={(e) => setRentalDurationDays(e.target.value)}
+                                placeholder="15"
+                                className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs font-bold text-white focus:border-emerald-400 focus:bg-white/10 focus:outline-none"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-amber-300/90 mb-1.5">
+                                Late Fine Per Day (₹) *
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                required={isRentalAvailable}
+                                value={finePerDay}
+                                onChange={(e) => setFinePerDay(e.target.value)}
+                                placeholder="5"
+                                className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs font-bold text-white focus:border-emerald-400 focus:bg-white/10 focus:outline-none"
+                              />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -2641,6 +2676,9 @@ export default function AdminBooksPage() {
 
           {/* TAB 5: USERS MANAGEMENT */}
           {activeTab === "users" && <AdminUsersPage />}
+
+          {/* TAB 6: RENTALS MANAGEMENT */}
+          {activeTab === "rentals" && <AdminRentalsSection />}
         </div>
       )}
     </div>

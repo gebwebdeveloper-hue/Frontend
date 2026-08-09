@@ -540,6 +540,25 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
               Coming Soon
             </div>
           )}
+
+          {/* Book Rental Status Badge */}
+          {book.isRentalAvailable && !book.comingSoon && (
+            <div className="absolute top-2 left-2 z-10">
+              {book.rentalStatus === "available" ? (
+                <span className="rounded-full border border-emerald-400/50 bg-emerald-950/90 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-emerald-300 shadow-lg backdrop-blur-md">
+                  📖 RENT: ₹{book.rentalPrice || 50}
+                </span>
+              ) : book.rentalStatus === "on_rent" ? (
+                <span className="rounded-full border border-red-400/50 bg-red-950/90 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-red-300 shadow-lg backdrop-blur-md">
+                  🔴 ON RENT
+                </span>
+              ) : (
+                <span className="rounded-full border border-amber-400/50 bg-amber-950/90 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-amber-300 shadow-lg backdrop-blur-md">
+                  🟡 RETURN PENDING
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">

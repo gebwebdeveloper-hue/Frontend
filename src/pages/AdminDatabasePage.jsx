@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, Loader2, Search, Trash2, Pencil, ArrowLeft,
-  Filter, X, ChevronDown, BadgeCheck, Clock, Flame, Star
+  Filter, X, ChevronDown, BadgeCheck, Clock, Flame, Star, CheckCircle2
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
@@ -23,12 +23,13 @@ export default function AdminDatabasePage() {
   // Books
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [togglingRentalId, setTogglingRentalId] = useState(null);
 
   // Filters
   const [search, setSearch] = useState("");
   const [authorFilter, setAuthorFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
-  const [flagFilter, setFlagFilter] = useState("All"); // All | trending | ourPublication | featured | comingSoon
+  const [flagFilter, setFlagFilter] = useState("All"); // All | trending | ourPublication | featured | comingSoon | rental
   const [showFilters, setShowFilters] = useState(false);
 
   // Auth check
@@ -49,7 +50,7 @@ export default function AdminDatabasePage() {
   // Fetch books
   const fetchBooks = () => {
     setLoading(true);
-    fetch(`${API_BASE}/books?limit=100`, { credentials: "include" })
+    fetch(`${API_BASE}/books?limit=2000`, { credentials: "include" })
       .then((r) => r.json())
       .then((d) => { if (d.success) setBooks(d.books || []); })
       .catch(console.error)
@@ -69,6 +70,39 @@ export default function AdminDatabasePage() {
       .catch(() => alert("Failed to delete book."));
   };
 
+  // Toggle rental availability directly from Database View
+  const handleToggleRental = async (book) => {
+    const newStatus = !book.isRentalAvailable;
+    setTogglingRentalId(book._id);
+
+    try {
+      const res = await fetch(`${API_BASE}/rentals/admin/book/${book._id}/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          isRentalAvailable: newStatus,
+          rentalPrice: book.rentalPrice || 50,
+          rentalDurationDays: book.rentalDurationDays || 15,
+          finePerDay: book.finePerDay || 5,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setBooks((prev) =>
+          prev.map((b) => (b._id === book._id ? { ...b, isRentalAvailable: newStatus } : b))
+        );
+      } else {
+        alert(data.message || "Failed to update rental status.");
+      }
+    } catch {
+      alert("Error connecting to server.");
+    } finally {
+      setTogglingRentalId(null);
+    }
+  };
+
   // Unique authors list for datalist
   const authorsList = useMemo(() => [...new Set(books.map((b) => b.author))].sort(), [books]);
 
@@ -84,7 +118,8 @@ export default function AdminDatabasePage() {
         flagFilter === "trending" ? b.trending :
         flagFilter === "ourPublication" ? b.ourPublication :
         flagFilter === "featured" ? b.featured :
-        flagFilter === "comingSoon" ? b.comingSoon : true;
+        flagFilter === "comingSoon" ? b.comingSoon :
+        flagFilter === "rental" ? b.isRentalAvailable : true;
       return matchSearch && matchAuthor && matchCategory && matchFlag;
     });
   }, [books, search, authorFilter, categoryFilter, flagFilter]);
@@ -167,113 +202,114 @@ export default function AdminDatabasePage() {
         </div>
 
         {/* Expanded filters */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden border-t border-white/8"
-              >
-                <div className="mx-auto max-w-7xl px-6 py-4 grid gap-4 md:grid-cols-3">
-                  {/* Author filter */}
-                  <div>
-                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">Filter by Author</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        list="authors-list"
-                        value={authorFilter}
-                        onChange={(e) => setAuthorFilter(e.target.value)}
-                        placeholder="Type an author name..."
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-white/25 focus:border-cyan-400/40 focus:outline-none"
-                      />
-                      <datalist id="authors-list">
-                        {authorsList.map((a) => <option key={a} value={a} />)}
-                      </datalist>
-                      {authorFilter && (
-                        <button onClick={() => setAuthorFilter("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition">
-                          <X size={13} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Category filter */}
-                  <div>
-                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">Filter by Category</label>
-                    <div className="relative">
-                      <select
-                        value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-cyan-400/40 focus:outline-none"
-                        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
-                      >
-                        {CATEGORIES.map((c) => <option key={c} value={c} style={{ background: "#0a0a0a" }}>{c}</option>)}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Flag filter */}
-                  <div>
-                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">Filter by Status</label>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { key: "All", label: "All" },
-                        { key: "trending", label: "Trending", icon: <Flame size={11} /> },
-                        { key: "featured", label: "Bestselling", icon: <Star size={11} /> },
-                        { key: "ourPublication", label: "Our Publication", icon: <BadgeCheck size={11} /> },
-                        { key: "comingSoon", label: "Coming Soon", icon: <Clock size={11} /> },
-                      ].map(({ key, label, icon }) => (
-                        <button
-                          key={key}
-                          onClick={() => setFlagFilter(key)}
-                          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                            flagFilter === key
-                              ? "bg-cyan-400 text-black"
-                              : "bg-white/5 border border-white/10 text-white/60 hover:bg-white/10"
-                          }`}
-                        >
-                          {icon}{label}
-                        </button>
-                      ))}
-                    </div>
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden border-t border-white/8"
+            >
+              <div className="mx-auto max-w-7xl px-6 py-4 grid gap-4 md:grid-cols-3">
+                {/* Author filter */}
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">Filter by Author</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      list="authors-list"
+                      value={authorFilter}
+                      onChange={(e) => setAuthorFilter(e.target.value)}
+                      placeholder="Type an author name..."
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-white/25 focus:border-cyan-400/40 focus:outline-none"
+                    />
+                    <datalist id="authors-list">
+                      {authorsList.map((a) => <option key={a} value={a} />)}
+                    </datalist>
+                    {authorFilter && (
+                      <button onClick={() => setAuthorFilter("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition">
+                        <X size={13} />
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                {/* Active filters summary + clear */}
-                {(authorFilter || categoryFilter !== "All" || flagFilter !== "All") && (
-                  <div className="mx-auto max-w-7xl px-6 pb-4 flex items-center gap-3">
-                    <span className="text-xs text-white/40">Active filters:</span>
-                    {authorFilter && (
-                      <span className="flex items-center gap-1.5 rounded-full bg-indigo-400/10 border border-indigo-400/20 px-3 py-1 text-xs text-indigo-300">
-                        Author: {authorFilter}
-                        <button onClick={() => setAuthorFilter("")}><X size={11} /></button>
-                      </span>
-                    )}
-                    {categoryFilter !== "All" && (
-                      <span className="flex items-center gap-1.5 rounded-full bg-fuchsia-400/10 border border-fuchsia-400/20 px-3 py-1 text-xs text-fuchsia-300">
-                        {categoryFilter}
-                        <button onClick={() => setCategoryFilter("All")}><X size={11} /></button>
-                      </span>
-                    )}
-                    {flagFilter !== "All" && (
-                      <span className="flex items-center gap-1.5 rounded-full bg-amber-400/10 border border-amber-400/20 px-3 py-1 text-xs text-amber-300">
-                        {flagFilter}
-                        <button onClick={() => setFlagFilter("All")}><X size={11} /></button>
-                      </span>
-                    )}
-                    <button
-                      onClick={() => { setAuthorFilter(""); setCategoryFilter("All"); setFlagFilter("All"); }}
-                      className="ml-auto text-xs text-white/30 hover:text-white/70 transition"
+                {/* Category filter */}
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">Filter by Category</label>
+                  <div className="relative">
+                    <select
+                      value={categoryFilter}
+                      onChange={(e) => setCategoryFilter(e.target.value)}
+                      className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-cyan-400/40 focus:outline-none"
+                      style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
                     >
-                      Clear all
-                    </button>
+                      {CATEGORIES.map((c) => <option key={c} value={c} style={{ background: "#0a0a0a" }}>{c}</option>)}
+                    </select>
                   </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </div>
+
+                {/* Flag filter */}
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">Filter by Status</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { key: "All", label: "All" },
+                      { key: "rental", label: "Rental Books", icon: <CheckCircle2 size={11} className="text-emerald-400" /> },
+                      { key: "trending", label: "Trending", icon: <Flame size={11} /> },
+                      { key: "featured", label: "Bestselling", icon: <Star size={11} /> },
+                      { key: "ourPublication", label: "Our Publication", icon: <BadgeCheck size={11} /> },
+                      { key: "comingSoon", label: "Coming Soon", icon: <Clock size={11} /> },
+                    ].map(({ key, label, icon }) => (
+                      <button
+                        key={key}
+                        onClick={() => setFlagFilter(key)}
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                          flagFilter === key
+                            ? "bg-cyan-400 text-black"
+                            : "bg-white/5 border border-white/10 text-white/60 hover:bg-white/10"
+                        }`}
+                      >
+                        {icon}{label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Active filters summary + clear */}
+              {(authorFilter || categoryFilter !== "All" || flagFilter !== "All") && (
+                <div className="mx-auto max-w-7xl px-6 pb-4 flex items-center gap-3">
+                  <span className="text-xs text-white/40">Active filters:</span>
+                  {authorFilter && (
+                    <span className="flex items-center gap-1.5 rounded-full bg-indigo-400/10 border border-indigo-400/20 px-3 py-1 text-xs text-indigo-300">
+                      Author: {authorFilter}
+                      <button onClick={() => setAuthorFilter("")}><X size={11} /></button>
+                    </span>
+                  )}
+                  {categoryFilter !== "All" && (
+                    <span className="flex items-center gap-1.5 rounded-full bg-fuchsia-400/10 border border-fuchsia-400/20 px-3 py-1 text-xs text-fuchsia-300">
+                      {categoryFilter}
+                      <button onClick={() => setCategoryFilter("All")}><X size={11} /></button>
+                    </span>
+                  )}
+                  {flagFilter !== "All" && (
+                    <span className="flex items-center gap-1.5 rounded-full bg-amber-400/10 border border-amber-400/20 px-3 py-1 text-xs text-amber-300">
+                      {flagFilter}
+                      <button onClick={() => setFlagFilter("All")}><X size={11} /></button>
+                    </span>
+                  )}
+                  <button
+                    onClick={() => { setAuthorFilter(""); setCategoryFilter("All"); setFlagFilter("All"); }}
+                    className="ml-auto text-xs text-white/30 hover:text-white/70 transition"
+                  >
+                    Clear all
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Book Grid */}
         <div className="mx-auto max-w-7xl px-6 py-8">
@@ -316,6 +352,9 @@ export default function AdminDatabasePage() {
 
                       {/* Flags */}
                       <div className="absolute top-2 left-2 flex flex-col gap-1">
+                        {book.isRentalAvailable && (
+                          <span className="rounded-full bg-emerald-500/90 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-black">Rental</span>
+                        )}
                         {book.comingSoon && (
                           <span className="rounded-full bg-amber-400/90 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-widest text-black">Coming Soon</span>
                         )}
@@ -331,28 +370,49 @@ export default function AdminDatabasePage() {
                       </div>
 
                       {/* Action overlay */}
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-3">
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
                         <Link
                           to="/admin"
                           state={{ editBookId: book._id }}
-                          className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-400 text-black hover:bg-cyan-300 transition shadow-lg"
-                          title="Edit"
+                          className="grid h-9 w-9 place-items-center rounded-xl bg-cyan-400 text-black hover:bg-cyan-300 transition shadow-lg"
+                          title="Edit Book"
                         >
-                          <Pencil size={16} />
+                          <Pencil size={15} />
                         </Link>
                         <button
-                          onClick={() => handleDelete(book._id, book.title)}
-                          className="grid h-10 w-10 place-items-center rounded-xl bg-red-500 text-white hover:bg-red-400 transition shadow-lg"
-                          title="Delete"
+                          onClick={() => handleToggleRental(book)}
+                          disabled={togglingRentalId === book._id}
+                          className={`grid h-9 w-9 place-items-center rounded-xl font-bold transition shadow-lg ${
+                            book.isRentalAvailable
+                              ? "bg-emerald-400 text-black hover:bg-emerald-300"
+                              : "bg-white/20 text-white hover:bg-emerald-400 hover:text-black"
+                          }`}
+                          title={book.isRentalAvailable ? "Remove from Book Rental System" : "Add to Book Rental System"}
                         >
-                          <Trash2 size={16} />
+                          {togglingRentalId === book._id ? (
+                            <Loader2 size={15} className="animate-spin" />
+                          ) : (
+                            <CheckCircle2 size={15} />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(book._id, book.title)}
+                          className="grid h-9 w-9 place-items-center rounded-xl bg-red-500 text-white hover:bg-red-400 transition shadow-lg"
+                          title="Delete Book"
+                        >
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </div>
 
                     {/* Info */}
                     <div className="p-4 flex flex-col gap-1">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-cyan-400/70">{book.category}</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-cyan-400/70">{book.category}</span>
+                        {book.isRentalAvailable && (
+                          <span className="text-[9px] font-bold text-emerald-300">₹{book.rentalPrice || 50}/15d</span>
+                        )}
+                      </div>
                       <h3 className="font-bold text-white leading-snug line-clamp-2">{book.title}</h3>
                       <p className="text-xs text-white/45">by {book.author}</p>
                       <div className="mt-2 flex items-center justify-between text-xs text-white/35">

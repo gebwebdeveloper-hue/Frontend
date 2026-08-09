@@ -409,9 +409,11 @@ export default function EditProfileModal({ user, onClose, onUpdated }) {
                     </p>
                   </div>
                 )}
-              </div>
+              {/* ── MY RENTALS SECTION ── */}
+              <UserRentalsSection />
+            </div>
 
-              {/* Actions */}
+            {/* Actions */}
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
@@ -439,3 +441,137 @@ export default function EditProfileModal({ user, onClose, onUpdated }) {
     </AnimatePresence>
   );
 }
+
+function UserRentalsSection() {
+  const [rentals, setRentals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [requestingId, setRequestingId] = useState(null);
+  const [message, setMessage] = useState("");
+
+  const fetchRentals = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE}/rentals/my-rentals`, { credentials: "include" });
+      const data = await res.json();
+      if (data.success) {
+        setRentals(data.rentals || []);
+      }
+    } catch {
+      console.error("Failed to load user rentals.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRentals();
+  }, []);
+
+  const handleRequestReturn = async (rentalId) => {
+    try {
+      setRequestingId(rentalId);
+      setMessage("");
+      const res = await fetch(`${API_BASE}/rentals/${rentalId}/request-return`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage(data.message);
+        fetchRentals();
+      }
+    } catch {
+      setMessage("Failed to submit return request.");
+    } finally {
+      setRequestingId(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="pt-3 border-t border-white/10 text-center py-4 text-xs text-white/40">
+        <Loader2 size={16} className="animate-spin mx-auto mb-1 text-emerald-400" /> Loading your book rentals...
+      </div>
+    );
+  }
+
+  if (rentals.length === 0) return null;
+
+  return (
+    <div className="pt-3 border-t border-white/10">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 mb-3 flex items-center gap-1.5">
+        <BookOpen size={12} /> MY RENTALS ({rentals.length})
+      </p>
+
+      {message && (
+        <div className="mb-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-2.5 text-[11px] font-bold text-emerald-300">
+          {message}
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {rentals.map((r) => {
+          const book = r.bookId || {};
+          const isOverdue = r.status === "overdue" || (r.daysOverdue > 0 && r.status !== "returned");
+          const isReturned = r.status === "returned";
+          const isReturnPending = r.status === "return_requested";
+
+          const startDateStr = new Date(r.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+          const dueDateStr = new Date(r.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
+          return (
+            <div key={r._id} className="rounded-2xl border border-white/10 bg-white/5 p-3 text-xs space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h4 className="font-extrabold text-white text-xs">{book.title || "Book"}</h4>
+                  <p className="text-[10px] text-white/50">Fee: ₹{r.rentalFee} | 15 Days Period</p>
+                </div>
+
+                {isReturned ? (
+                  <span className="rounded-full bg-emerald-400/15 border border-emerald-400/30 px-2.5 py-0.5 text-[9px] font-bold text-emerald-300">
+                    ✅ Returned
+                  </span>
+                ) : isReturnPending ? (
+                  <span className="rounded-full bg-amber-400/15 border border-amber-400/30 px-2.5 py-0.5 text-[9px] font-bold text-amber-300">
+                    🟡 Return Pending
+                  </span>
+                ) : isOverdue ? (
+                  <span className="rounded-full bg-red-400/15 border border-red-400/30 px-2.5 py-0.5 text-[9px] font-black text-red-300">
+                    ⚠️ OVERDUE (+₹{r.totalFine || 0})
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-cyan-400/15 border border-cyan-400/30 px-2.5 py-0.5 text-[9px] font-bold text-cyan-300">
+                    🟢 Currently Rented
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[10px] text-white/60 bg-black/20 p-2 rounded-xl">
+                <div>Taken On: <strong className="text-white">{startDateStr}</strong></div>
+                <div>Return By: <strong className="text-white">{dueDateStr}</strong></div>
+              </div>
+
+              {isOverdue && (
+                <div className="text-[10px] text-red-300 font-bold bg-red-950/40 border border-red-500/20 p-2 rounded-xl">
+                  ⚠️ Overdue by {r.daysOverdue} days. Late Fine: ₹{r.totalFine} (₹5/day).
+                </div>
+              )}
+
+              {!isReturned && !isReturnPending && (
+                <button
+                  type="button"
+                  onClick={() => handleRequestReturn(r._id)}
+                  disabled={requestingId === r._id}
+                  className="w-full rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 py-2 text-[10px] font-black text-black hover:opacity-90 transition disabled:opacity-50 uppercase tracking-wider"
+                >
+                  {requestingId === r._id ? "Submitting Return Request..." : "REQUEST BOOK RETURN"}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+

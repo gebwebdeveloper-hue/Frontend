@@ -26,6 +26,9 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage.jsx";
 import TermsPage from "./pages/TermsPage.jsx";
 import AboutPage from "./pages/AboutPage.jsx";
 import AdminClubPage from "./pages/AdminClubPage.jsx";
+import AdminRentalsPage from "./pages/AdminRentalsPage.jsx";
+import BookRentPage from "./pages/BookRentPage.jsx";
+
 
 // Helper component to normalize URLs (strip trailing slashes, decode spaces/encoded URIs)
 function RouteNormalizer() {
@@ -83,7 +86,11 @@ export default function App() {
           <Route path="/admin/purchases" element={<AdminPurchasesPage />} />
           <Route path="/admin/news" element={<AdminNewsPage />} />
           <Route path="/admin/club" element={<AdminClubPage />} />
+          <Route path="/admin/rentals" element={<AdminRentalsPage />} />
           <Route path="/news" element={<NewsPage />} />
+          <Route path="/rentals" element={<BookRentPage />} />
+          <Route path="/book-rent" element={<Navigate to="/rentals" replace />} />
+          <Route path="/rent" element={<Navigate to="/rentals" replace />} />
           <Route path="/club" element={<ClubPage />} />
           <Route path="/short-stories" element={<NewsletterListingPage />} />
           <Route path="/short-stories/:slug" element={<NewsletterReaderPage />} />

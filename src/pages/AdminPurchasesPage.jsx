@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
+import AdminNavbar from "../components/AdminNavbar.jsx";
 import { API_BASE } from "../config.js";
 
 export default function AdminPurchasesPage() {
@@ -540,62 +541,20 @@ export default function AdminPurchasesPage() {
           {/* DASHBOARD */}
           {step === "dashboard" && (
             <div>
-              {/* Header section */}
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between border-b border-white/10 pb-6 mb-8 gap-6">
-                <div>
-                  <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                    Razorpay Payment History
-                    <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-extrabold uppercase text-cyan-300">
-                      100% Automated
-                    </span>
-                  </h1>
-                  <p className="mt-1 text-sm text-white/55">
-                    Review verified automated Razorpay reader transactions, edit or delete records & manage physical shipment tracking.
-                  </p>
-                </div>
+              {/* Responsive Admin Navbar */}
+              <AdminNavbar onLogoutSuccess={handleLogout} />
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                  {/* Navigation Tabs */}
-                  <div className="flex rounded-full bg-white/5 p-1 border border-white/10 overflow-x-auto max-w-full whitespace-nowrap scrollbar-none">
-                    <Link
-                      to="/admin"
-                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-                    >
-                      Manage Books
-                    </Link>
-                    <Link
-                      to="/admin/purchases"
-                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 bg-white text-black"
-                    >
-                      Razorpay Payments
-                    </Link>
-                    <Link
-                      to="/admin"
-                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-                    >
-                      Authors
-                    </Link>
-                    <Link
-                      to="/admin?tab=newsletter"
-                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-                    >
-                      Free Stories
-                    </Link>
-                    <Link
-                      to="/admin/users"
-                      className="rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 text-white/60 hover:text-white"
-                    >
-                      Manage Users
-                    </Link>
-                  </div>
-
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500/20 hover:border-red-500/30 transition shrink-0 w-full sm:w-auto"
-                  >
-                    <LogOut size={14} /> Log Out
-                  </button>
-                </div>
+              {/* Title Section */}
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold text-white flex flex-wrap items-center gap-3">
+                  Razorpay Payment History
+                  <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-extrabold uppercase text-cyan-300">
+                    100% Automated
+                  </span>
+                </h1>
+                <p className="mt-1 text-sm text-white/55">
+                  Review verified automated Razorpay reader transactions, edit or delete records &amp; manage physical shipment tracking.
+                </p>
               </div>
 
               {/* Metrics Stat Cards */}
