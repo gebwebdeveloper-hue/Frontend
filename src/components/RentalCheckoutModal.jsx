@@ -130,6 +130,29 @@ export default function RentalCheckoutModal({ book, directCardMode = false, isOp
             } else {
               setStep("card_step");
             }
+          } else if (data.user?.email) {
+            // Check if user has Club Membership Card
+            fetch(`${API_BASE}/club/check-status?email=${encodeURIComponent(data.user.email)}`)
+              .then((r) => r.json())
+              .then((clubData) => {
+                if (clubData?.success && clubData.isMember && clubData.member) {
+                  const clubCard = { cardId: clubData.member.memberId, isClubCard: true };
+                  setUserLibraryCard(clubCard);
+                  setLibraryCardId(clubData.member.memberId);
+                  if (!directCardMode && book) {
+                    setStep("rent_details");
+                  } else {
+                    setStep("card_step");
+                  }
+                } else {
+                  setUserLibraryCard(null);
+                  setStep("card_step");
+                }
+              })
+              .catch(() => {
+                setUserLibraryCard(null);
+                setStep("card_step");
+              });
           } else {
             setUserLibraryCard(null);
             setStep("card_step");
@@ -151,7 +174,10 @@ export default function RentalCheckoutModal({ book, directCardMode = false, isOp
 
   if (!isOpen || (!book && !directCardMode)) return null;
 
-  const rentalPrice = book?.rentalPrice || 50;
+  const hasMemberCard = !!userLibraryCard;
+  const baseRentalPrice = book?.rentalPrice || 50;
+  const discountAmount = hasMemberCard ? Number((baseRentalPrice * 0.05).toFixed(2)) : 0;
+  const rentalPrice = hasMemberCard ? Number((baseRentalPrice * 0.95).toFixed(2)) : baseRentalPrice;
   const rentalDuration = book?.rentalDurationDays || 15;
   const finePerDay = book?.finePerDay || 5;
 
@@ -1027,8 +1053,17 @@ export default function RentalCheckoutModal({ book, directCardMode = false, isOp
               <div className="rounded-2xl border border-emerald-400/30 bg-emerald-950/30 p-5 space-y-3 shadow-lg">
                 <div className="flex items-center justify-between border-b border-white/10 pb-3">
                   <span className="text-xs text-white/70">Base Rental Fee ({rentalDuration} Days):</span>
-                  <span className="text-sm font-bold text-white">₹{rentalPrice.toFixed(2)}</span>
+                  <span className="text-sm font-bold text-white">₹{baseRentalPrice.toFixed(2)}</span>
                 </div>
+
+                {hasMemberCard && (
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3 text-xs">
+                    <span className="text-emerald-300 font-bold flex items-center gap-1">
+                      <ShieldCheck size={13} /> 5% Member Card Discount:
+                    </span>
+                    <span className="font-bold text-emerald-300">- ₹{discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between border-b border-white/10 pb-3">
                   <span className="text-xs text-white/70">18% GST Tax:</span>
@@ -1037,7 +1072,7 @@ export default function RentalCheckoutModal({ book, directCardMode = false, isOp
 
                 {libraryCardId && (
                   <div className="flex items-center justify-between border-b border-white/10 pb-3 text-xs">
-                    <span className="text-white/70">Library Card ID:</span>
+                    <span className="text-white/70">Member / Library Card ID:</span>
                     <span className="font-bold text-emerald-300">{libraryCardId}</span>
                   </div>
                 )}

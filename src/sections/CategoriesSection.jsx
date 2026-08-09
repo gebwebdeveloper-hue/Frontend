@@ -1,18 +1,41 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Users, PenLine, CalendarDays, BookOpen, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-
 import { useGsapReveal } from "../hooks/useGsapReveal.js";
-
-const stats = [
-  { icon: Users, value: "5", label: "Members" },
-  { icon: PenLine, value: "7", label: "Writers" },
-  { icon: CalendarDays, value: "2", label: "Events" },
-  { icon: BookOpen, value: "5", label: "Books" },
-];
+import { API_BASE } from "../config.js";
 
 export default function CategoriesSection() {
   const scope = useGsapReveal({ stagger: 0.06, y: 24 });
+  const [statsData, setStatsData] = useState({
+    members: 4,
+    writers: 4,
+    events: 2,
+    books: 50,
+  });
+
+  useEffect(() => {
+    fetch(`${API_BASE}/club/stats`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.stats) {
+          setStatsData({
+            members: data.stats.members ?? 4,
+            writers: data.stats.writers ?? 4,
+            events: data.stats.events ?? 2,
+            books: data.stats.books ?? 50,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const stats = [
+    { icon: Users, value: String(statsData.members), label: "MEMBERS" },
+    { icon: PenLine, value: String(statsData.writers), label: "WRITERS" },
+    { icon: CalendarDays, value: String(statsData.events), label: "EVENTS" },
+    { icon: BookOpen, value: String(statsData.books), label: "BOOKS" },
+  ];
 
   return (
     <section ref={scope} className="section-shell relative overflow-hidden !pt-8 md:!pt-12 !pb-8 md:!pb-12">
@@ -45,7 +68,7 @@ export default function CategoriesSection() {
               <motion.div key={item.label} data-reveal whileHover={{ y: -6 }} className="rounded-lg border border-white/10 bg-black/25 p-6 text-center backdrop-blur-xl">
                 <Icon className="mx-auto mb-4 h-7 w-7 text-cyan-300" />
                 <div className="text-3xl font-black text-white">{item.value}</div>
-                <div className="mt-2 text-sm text-white/55">{item.label}</div>
+                <div className="mt-2 text-sm font-bold uppercase tracking-wider text-white/55">{item.label}</div>
               </motion.div>
             );
           })}

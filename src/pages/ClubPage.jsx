@@ -44,7 +44,7 @@ const memberBenefits = [
 ];
 
 const activities = [
-  { icon: BookMarked,     label: "Club Diary"                  },
+  { icon: IdCard,         label: "Author Visiting Card"        },
   { icon: Network,        label: "Book Promotion Strategy"     },
   { icon: Mic2,           label: "Discussion Forum"            },
   { icon: FileText,       label: "Literary Review & Critiques" },
@@ -106,19 +106,36 @@ export default function ClubPage() {
   const countdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Load active membership from localStorage or backend query
+  // Verify active membership strictly via authenticated session
   useEffect(() => {
-    const saved = localStorage.getItem("lekhok_club_member");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.email) {
-          setActiveMembership(parsed);
+    fetch(`${API_BASE}/auth/me`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.user?.email) {
+          fetch(`${API_BASE}/club/check-status?email=${encodeURIComponent(d.user.email)}`)
+            .then((r) => r.json())
+            .then((statusData) => {
+              if (statusData.isMember && statusData.member) {
+                setActiveMembership(statusData.member);
+                localStorage.setItem("lekhok_club_member", JSON.stringify(statusData.member));
+              } else {
+                setActiveMembership(null);
+                localStorage.removeItem("lekhok_club_member");
+              }
+            })
+            .catch(() => {
+              setActiveMembership(null);
+              localStorage.removeItem("lekhok_club_member");
+            });
+        } else {
+          setActiveMembership(null);
+          localStorage.removeItem("lekhok_club_member");
         }
-      } catch {
-        // ignore parse error
-      }
-    }
+      })
+      .catch(() => {
+        setActiveMembership(null);
+        localStorage.removeItem("lekhok_club_member");
+      });
   }, []);
 
   // Auto-dismiss countdown after fresh payment
@@ -337,36 +354,81 @@ export default function ClubPage() {
                 Be a part of a growing literary movement in Tripura.
               </p>
 
-              {/* Price & Membership tag */}
+              {/* Price & Membership tag / Active Member Badge */}
               <div className="mt-7 flex flex-wrap items-center gap-4">
-                <div className="inline-flex items-center gap-3.5 rounded-2xl border border-amber-400/40 bg-zinc-950/85 px-5 py-3 backdrop-blur-md shadow-xl shadow-black/40">
-                  <span className="text-[11px] font-black uppercase tracking-widest text-amber-300">
-                    Lifetime Membership
-                  </span>
-                  <div className="h-4 w-px bg-white/20" />
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl sm:text-3xl font-black text-white">₹999</span>
-                    <span className="text-[10px] font-bold text-amber-300">+ 18% GST</span>
+                {activeMembership ? (
+                  <div className="inline-flex items-center gap-3.5 rounded-2xl border border-emerald-400/50 bg-emerald-950/85 px-5 py-3 backdrop-blur-md shadow-xl shadow-emerald-950/40">
+                    <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-300">
+                      <ShieldCheck size={16} /> Active Digital Club Member
+                    </span>
+                    {activeMembership.memberId && (
+                      <span className="font-mono text-xs font-bold text-amber-300 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/30">
+                        {activeMembership.memberId}
+                      </span>
+                    )}
                   </div>
-                </div>
+                ) : (
+                  <div className="inline-flex items-center gap-3.5 rounded-2xl border border-emerald-400/40 bg-zinc-950/85 px-5 py-3 backdrop-blur-md shadow-xl shadow-black/40">
+                    <span className="text-[11px] font-black uppercase tracking-widest text-emerald-300">
+                      Lifetime Membership
+                    </span>
+                    <div className="h-4 w-px bg-white/20" />
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl sm:text-3xl font-black text-white">₹1</span>
+                      <span className="text-[10px] font-bold text-emerald-300">(Test Fee)</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <button
-                  type="button"
-                  onClick={scrollToJoin}
-                  className="rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 px-8 py-4 text-xs sm:text-sm font-black uppercase tracking-wider text-black shadow-[0_0_40px_rgba(6,182,212,0.45)] transition hover:scale-105 hover:shadow-[0_0_55px_rgba(6,182,212,0.6)] active:scale-100 cursor-pointer"
-                >
-                  Become a Member
-                </button>
-                <button
-                  type="button"
-                  onClick={scrollToMembers}
-                  className="rounded-2xl border border-white/25 bg-zinc-950/75 px-7 py-4 text-xs sm:text-sm font-bold text-white backdrop-blur-md shadow-lg transition hover:bg-white/20 hover:border-white/40 cursor-pointer"
-                >
-                  Check Our Members
-                </button>
+              <div className="mt-8 flex flex-wrap items-center gap-3.5">
+                {activeMembership ? (
+                  <>
+                    <a
+                      href={`${API_BASE}/club/download/card?memberId=${encodeURIComponent(activeMembership?.memberId || "")}&email=${encodeURIComponent(activeMembership?.email || "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 px-8 py-4 text-xs sm:text-sm font-black uppercase tracking-wider text-black shadow-[0_0_40px_rgba(16,185,129,0.45)] transition hover:scale-105 hover:shadow-[0_0_55px_rgba(16,185,129,0.6)] active:scale-100 cursor-pointer"
+                    >
+                      <Eye size={16} />
+                      <span>View My Membership Card</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={scrollToMembers}
+                      className="rounded-2xl border border-white/25 bg-zinc-950/75 px-6 py-4 text-xs sm:text-sm font-bold text-white backdrop-blur-md shadow-lg transition hover:bg-white/20 hover:border-white/40 cursor-pointer"
+                    >
+                      Check Our Members
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={scrollToJoin}
+                      className="rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 px-8 py-4 text-xs sm:text-sm font-black uppercase tracking-wider text-black shadow-[0_0_40px_rgba(6,182,212,0.45)] transition hover:scale-105 hover:shadow-[0_0_55px_rgba(6,182,212,0.6)] active:scale-100 cursor-pointer"
+                    >
+                      Become a Member
+                    </button>
+                    <button
+                      type="button"
+                      onClick={scrollToMembers}
+                      className="rounded-2xl border border-white/25 bg-zinc-950/75 px-6 py-4 text-xs sm:text-sm font-bold text-white backdrop-blur-md shadow-lg transition hover:bg-white/20 hover:border-white/40 cursor-pointer"
+                    >
+                      Check Our Members
+                    </button>
+                    <a
+                      href={`${API_BASE}/club/download/demo`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-emerald-400/40 bg-emerald-950/60 px-6 py-4 text-xs sm:text-sm font-bold text-emerald-300 backdrop-blur-md shadow-lg transition hover:bg-emerald-900/80 hover:border-emerald-400/60 cursor-pointer"
+                    >
+                      <Eye size={16} />
+                      <span>View Demo Card</span>
+                    </a>
+                  </>
+                )}
               </div>
             </motion.div>
           </div>
@@ -837,10 +899,10 @@ export default function ClubPage() {
                 className="mt-8 rounded-2xl border border-white/10 bg-white/[0.055] p-6 shadow-card backdrop-blur-xl md:p-8"
               >
                 {/* GST Pricing Summary Card */}
-                <div className="mb-8 overflow-hidden rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/60 via-zinc-950 to-indigo-950/60 p-5 shadow-xl">
+                <div className="mb-8 overflow-hidden rounded-2xl border border-emerald-400/30 bg-gradient-to-r from-emerald-950/60 via-zinc-950 to-teal-950/60 p-5 shadow-xl">
                   <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4 mb-4">
                     <div>
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-400/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-cyan-300">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-emerald-300">
                         <Award size={12} /> Lifetime Club Membership Fee
                       </span>
                       <p className="mt-1 text-xs text-white/65">
@@ -849,23 +911,23 @@ export default function ClubPage() {
                     </div>
 
                     <div className="text-right">
-                      <div className="text-2xl font-black text-emerald-300">₹1,178.82</div>
-                      <div className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">₹999 + 18% GST</div>
+                      <div className="text-2xl font-black text-emerald-300">₹1</div>
+                      <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Test Purchase Fee</div>
                     </div>
                   </div>
 
                   <div className="grid gap-2 text-xs text-white/70 sm:grid-cols-3">
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2">
                       <span>Base Membership:</span>
-                      <strong className="text-white">₹999.00</strong>
+                      <strong className="text-white">₹1.00</strong>
                     </div>
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2">
-                      <span>GST (18%):</span>
-                      <strong className="text-white">₹179.82</strong>
+                      <span>GST (0% Test):</span>
+                      <strong className="text-white">₹0.00</strong>
                     </div>
                     <div className="flex items-center justify-between sm:justify-start sm:gap-2">
                       <span className="text-cyan-300 font-bold">Total Payable:</span>
-                      <strong className="text-emerald-300 font-black text-sm">₹1,178.82</strong>
+                      <strong className="text-emerald-300 font-black text-sm">₹1.00</strong>
                     </div>
                   </div>
                 </div>

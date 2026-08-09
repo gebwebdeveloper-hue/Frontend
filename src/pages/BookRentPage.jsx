@@ -52,7 +52,7 @@ export default function BookRentPage() {
     }
   };
 
-  const checkUserLibraryCard = async () => {
+  const checkUserLibraryCard = async (targetUser) => {
     try {
       const res = await fetch(`${API_BASE}/library-card/my-card`, { credentials: "include" });
       if (res.ok) {
@@ -62,6 +62,24 @@ export default function BookRentPage() {
           return data.libraryCard;
         }
       }
+
+      // Check Club Membership as alternate active card
+      const emailToCheck = targetUser?.email || user?.email;
+      if (emailToCheck) {
+        const clubRes = await fetch(`${API_BASE}/club/check-status?email=${encodeURIComponent(emailToCheck)}`);
+        const clubData = await clubRes.json();
+        if (clubData?.success && clubData.isMember && clubData.member) {
+          const clubCardObj = {
+            cardId: clubData.member.memberId,
+            fullName: clubData.member.fullName,
+            email: clubData.member.email,
+            isClubCard: true,
+          };
+          setUserLibraryCard(clubCardObj);
+          return clubCardObj;
+        }
+      }
+
       setUserLibraryCard(null);
       return null;
     } catch {
@@ -72,8 +90,9 @@ export default function BookRentPage() {
 
   useEffect(() => {
     fetchRentalCatalog();
-    checkUserSession();
-    checkUserLibraryCard();
+    checkUserSession().then((u) => {
+      checkUserLibraryCard(u);
+    });
   }, []);
 
   const handleOpenRental = async (book) => {
@@ -457,12 +476,29 @@ export default function BookRentPage() {
                           </div>
 
                           <div className="mt-3">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                              Rent Fee
+                            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
+                              <span>Rent Fee</span>
+                              {userLibraryCard && (
+                                <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-[9px] font-bold text-emerald-300 border border-emerald-400/30">
+                                  5% Card Discount
+                                </span>
+                              )}
                             </p>
-                            <p className="text-xl font-black text-white">
-                              ₹{book.rentalPrice || 50} <span className="text-xs font-normal text-white/50">/ 15 Days</span>
-                            </p>
+                            <div className="flex items-baseline gap-1.5 mt-0.5">
+                              {userLibraryCard ? (
+                                <>
+                                  <span className="text-xl font-black text-emerald-300">
+                                    ₹{Math.round((book.rentalPrice || 50) * 0.95 * 100) / 100}
+                                  </span>
+                                  <span className="text-xs line-through text-white/40">₹{book.rentalPrice || 50}</span>
+                                </>
+                              ) : (
+                                <span className="text-xl font-black text-white">
+                                  ₹{book.rentalPrice || 50}
+                                </span>
+                              )}
+                              <span className="text-xs font-normal text-white/50">/ {book.rentalDurationDays || 15} Days</span>
+                            </div>
                           </div>
                         </div>
                       </div>
