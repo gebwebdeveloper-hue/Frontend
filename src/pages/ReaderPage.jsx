@@ -31,7 +31,6 @@ const publishingPlans = [
       "Meesho Listing",
       "Listing on the Lekhok Tripura Publishers Website (Paperback & E-book)",
       "Certificate of Publishing",
-      "Free Lekhok Tripura Club Membership",
       "2 Promotional Posters",
       "2 Complimentary Author Copies",
       "Total Print Run: 10 Copies",

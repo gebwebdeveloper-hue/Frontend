@@ -106,13 +106,23 @@ export default function ClubPage() {
   const countdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Verify active membership strictly via authenticated session
+  // Verify active membership via session user or saved email
   useEffect(() => {
+    const saved = localStorage.getItem("lekhok_club_member");
+    let savedEmail = "";
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed?.email) savedEmail = parsed.email;
+      } catch {}
+    }
+
     fetch(`${API_BASE}/auth/me`, { credentials: "include" })
       .then((r) => r.json())
       .then((d) => {
-        if (d.success && d.user?.email) {
-          fetch(`${API_BASE}/club/check-status?email=${encodeURIComponent(d.user.email)}`)
+        const targetEmail = d.user?.email || savedEmail;
+        if (targetEmail) {
+          fetch(`${API_BASE}/club/check-status?email=${encodeURIComponent(targetEmail)}`)
             .then((r) => r.json())
             .then((statusData) => {
               if (statusData.isMember && statusData.member) {
@@ -123,18 +133,22 @@ export default function ClubPage() {
                 localStorage.removeItem("lekhok_club_member");
               }
             })
-            .catch(() => {
-              setActiveMembership(null);
-              localStorage.removeItem("lekhok_club_member");
-            });
+            .catch(() => {});
         } else {
           setActiveMembership(null);
-          localStorage.removeItem("lekhok_club_member");
         }
       })
       .catch(() => {
-        setActiveMembership(null);
-        localStorage.removeItem("lekhok_club_member");
+        if (savedEmail) {
+          fetch(`${API_BASE}/club/check-status?email=${encodeURIComponent(savedEmail)}`)
+            .then((r) => r.json())
+            .then((statusData) => {
+              if (statusData.isMember && statusData.member) {
+                setActiveMembership(statusData.member);
+              }
+            })
+            .catch(() => {});
+        }
       });
   }, []);
 
@@ -346,108 +360,192 @@ export default function ClubPage() {
 
         {/* Hero Content Container */}
         <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl">
-            <motion.div data-reveal>
-              {/* Eyebrow badge */}
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-zinc-950/80 px-4 py-1.5 backdrop-blur-md shadow-lg">
-                <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-cyan-300">
-                  Readers &amp; Writers Club &nbsp;·&nbsp; Est. 2025
-                </span>
-              </div>
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Left Column: Text & CTAs */}
+            <div className="lg:col-span-7 max-w-2xl">
+              <motion.div data-reveal>
+                {/* Eyebrow badge */}
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-zinc-950/80 px-4 py-1.5 backdrop-blur-md shadow-lg">
+                  <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.4em] text-cyan-300">
+                    Readers &amp; Writers Club &nbsp;·&nbsp; Est. 2025
+                  </span>
+                </div>
 
-              {/* Main Headline */}
-              <h1 className="text-4xl font-black uppercase leading-[1.06] text-white sm:text-5xl md:text-6xl lg:text-[5rem]">
-                Join<br />
-                <span className="bg-gradient-to-r from-cyan-300 via-teal-200 to-fuchsia-300 bg-clip-text text-transparent drop-shadow">
-                  Lekhok
-                </span><br />
-                Tripura Club
-              </h1>
+                {/* Main Headline */}
+                <h1 className="text-4xl font-black uppercase leading-[1.06] text-white sm:text-5xl md:text-6xl lg:text-[4.5rem]">
+                  Join<br />
+                  <span className="bg-gradient-to-r from-cyan-300 via-teal-200 to-fuchsia-300 bg-clip-text text-transparent drop-shadow">
+                    Lekhok
+                  </span><br />
+                  Tripura Club
+                </h1>
 
-              {/* Subtitle */}
-              <p className="mt-3.5 max-w-xl text-sm leading-relaxed text-white/85 drop-shadow sm:text-base md:text-lg">
-                A community of writers, by writers, for literature.
-                Be a part of a growing literary movement in Tripura.
-              </p>
+                {/* Subtitle */}
+                <p className="mt-3.5 max-w-xl text-sm leading-relaxed text-white/85 drop-shadow sm:text-base md:text-lg">
+                  A community of writers, by writers, for literature.
+                  Be a part of a growing literary movement in Tripura.
+                </p>
 
-              {/* Price & Membership tag / Active Member Badge */}
-              <div className="mt-7 flex flex-wrap items-center gap-4">
-                {activeMembership ? (
-                  <div className="inline-flex items-center gap-3.5 rounded-2xl border border-emerald-400/50 bg-emerald-950/85 px-5 py-3 backdrop-blur-md shadow-xl shadow-emerald-950/40">
-                    <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-300">
-                      <ShieldCheck size={16} /> Active Digital Club Member
-                    </span>
-                    {activeMembership.memberId && (
-                      <span className="font-mono text-xs font-bold text-amber-300 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/30">
-                        {activeMembership.memberId}
+                {/* Price & Membership tag / Active Member Badge */}
+                <div className="mt-7 flex flex-wrap items-center gap-4">
+                  {activeMembership ? (
+                    <div className="inline-flex items-center gap-3.5 rounded-2xl border border-emerald-400/50 bg-emerald-950/85 px-5 py-3 backdrop-blur-md shadow-xl shadow-emerald-950/40">
+                      <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-300">
+                        <ShieldCheck size={16} /> Active Digital Club Member
                       </span>
-                    )}
-                  </div>
-                ) : (
-                  <div className="inline-flex items-center gap-3.5 rounded-2xl border border-amber-400/40 bg-zinc-950/85 px-5 py-3 backdrop-blur-md shadow-xl shadow-black/40">
-                    <span className="text-[11px] font-black uppercase tracking-widest text-amber-300">
-                      Lifetime Membership
-                    </span>
-                    <div className="h-4 w-px bg-white/20" />
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl sm:text-3xl font-black text-white">₹999</span>
-                      <span className="text-[10px] font-bold text-amber-300">+ 18% GST</span>
+                      {activeMembership.memberId && (
+                        <span className="font-mono text-xs font-bold text-amber-300 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/30">
+                          {activeMembership.memberId}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center gap-3.5 rounded-2xl border border-amber-400/40 bg-zinc-950/85 px-5 py-3 backdrop-blur-md shadow-xl shadow-black/40">
+                      <span className="text-[11px] font-black uppercase tracking-widest text-amber-300">
+                        Lifetime Membership
+                      </span>
+                      <div className="h-4 w-px bg-white/20" />
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl sm:text-3xl font-black text-white">₹999</span>
+                        <span className="text-[10px] font-bold text-amber-300">+ 18% GST</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="mt-8 flex flex-wrap items-center gap-3.5">
+                  <button
+                    type="button"
+                    onClick={scrollToJoin}
+                    className="rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 px-8 py-4 text-xs sm:text-sm font-black uppercase tracking-wider text-black shadow-[0_0_40px_rgba(6,182,212,0.45)] transition hover:scale-105 hover:shadow-[0_0_55px_rgba(6,182,212,0.6)] active:scale-100 cursor-pointer"
+                  >
+                    {activeMembership ? "Scroll To Benefits" : "Become a Member"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={scrollToMembers}
+                    className="rounded-2xl border border-white/25 bg-zinc-950/75 px-6 py-4 text-xs sm:text-sm font-bold text-white backdrop-blur-md shadow-lg transition hover:bg-white/20 hover:border-white/40 cursor-pointer"
+                  >
+                    Check Our Members
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Right Column: Dynamic Digital Membership Card Graphic */}
+            <div className="lg:col-span-5 w-full mt-6 lg:mt-0">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="relative mx-auto max-w-md overflow-hidden rounded-3xl border border-emerald-400/40 bg-gradient-to-br from-emerald-950/90 via-zinc-950 to-teal-950/90 p-6 md:p-7 shadow-[0_0_60px_rgba(16,185,129,0.25)] backdrop-blur-2xl transition hover:border-emerald-400/70"
+              >
+                {/* Decorative background glow */}
+                <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-emerald-500/20 blur-3xl" />
+                <div className="absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-teal-500/20 blur-3xl" />
+
+                {/* Card Header */}
+                <div className="relative z-10 flex items-center justify-between border-b border-white/10 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl border border-emerald-400/40 bg-emerald-400/15 text-emerald-300">
+                      <IdCard size={22} />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-white text-sm tracking-wider uppercase">Lekhok Tripura Club</h3>
+                      <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Digital Membership Card</p>
                     </div>
                   </div>
-                )}
-              </div>
+                  {activeMembership ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/50 bg-emerald-400/15 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-300">
+                      <CheckCircle2 size={10} /> Active
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/50 bg-amber-400/15 px-2 py-0.5 text-[9px] font-black uppercase text-amber-300">
+                      Preview
+                    </span>
+                  )}
+                </div>
 
-              {/* Action Buttons */}
-              <div className="mt-8 flex flex-wrap items-center gap-3.5">
-                {activeMembership ? (
-                  <>
+                {/* Card Body */}
+                <div className="relative z-10 mt-5 space-y-4">
+                  {/* Member ID display */}
+                  <div className="rounded-2xl border border-amber-400/30 bg-black/50 p-3.5 flex items-center justify-between">
+                    <div>
+                      <span className="block text-[9px] font-black uppercase tracking-[0.25em] text-amber-400/80">Member ID</span>
+                      <span className="font-mono text-lg font-black text-white tracking-widest">
+                        {activeMembership?.memberId || "LTCLUB-XXXX"}
+                      </span>
+                    </div>
+                    <span className="rounded-lg bg-amber-400/10 px-2 py-1 text-[10px] font-mono font-bold text-amber-300 border border-amber-400/20">
+                      {activeMembership ? "VERIFIED" : "UNISSUED"}
+                    </span>
+                  </div>
+
+                  {/* Member Fields Grid */}
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <span className="block text-[9px] font-bold uppercase text-white/50">Full Name</span>
+                      <span className="font-bold text-white truncate block mt-0.5">
+                        {activeMembership?.fullName || "Your Name Here"}
+                      </span>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <span className="block text-[9px] font-bold uppercase text-white/50">Role</span>
+                      <span className="font-bold text-emerald-300 truncate block mt-0.5">
+                        {activeMembership?.role || "Lifetime Club Member"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs">
+                    <span className="block text-[9px] font-bold uppercase text-white/50">Registered Email</span>
+                    <span className="font-bold text-white/90 truncate block mt-0.5">
+                      {activeMembership?.email || "your.email@example.com"}
+                    </span>
+                  </div>
+
+                  {/* Scannable Verification Box */}
+                  <div className="flex items-center justify-between rounded-xl border border-emerald-400/20 bg-emerald-950/40 p-3">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck size={16} className="text-emerald-400" />
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-emerald-300">Validity: Lifetime</p>
+                        <p className="text-[9px] text-white/60">Official Author &amp; Reader Card</p>
+                      </div>
+                    </div>
+                    <div className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-400/20 text-emerald-300 font-mono text-[9px] font-black border border-emerald-400/40">
+                      QR
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Action Button */}
+                <div className="relative z-10 mt-5 pt-3 border-t border-white/10">
+                  {activeMembership ? (
                     <a
-                      href={`${API_BASE}/club/download/card?memberId=${encodeURIComponent(activeMembership?.memberId || "")}&email=${encodeURIComponent(activeMembership?.email || "")}`}
+                      href={`${API_BASE}/club/download/card?memberId=${encodeURIComponent(activeMembership.memberId || "")}&email=${encodeURIComponent(activeMembership.email || "")}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 px-8 py-4 text-xs sm:text-sm font-black uppercase tracking-wider text-black shadow-[0_0_40px_rgba(16,185,129,0.45)] transition hover:scale-105 hover:shadow-[0_0_55px_rgba(16,185,129,0.6)] active:scale-100 cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 py-3.5 text-xs font-black uppercase tracking-wider text-black shadow-lg shadow-emerald-400/25 transition hover:scale-[1.02] cursor-pointer"
                     >
-                      <Eye size={16} />
-                      <span>View My Membership Card</span>
+                      <Eye size={15} />
+                      <span>Download Digital Card (PDF)</span>
                     </a>
-                    <button
-                      type="button"
-                      onClick={scrollToMembers}
-                      className="rounded-2xl border border-white/25 bg-zinc-950/75 px-6 py-4 text-xs sm:text-sm font-bold text-white backdrop-blur-md shadow-lg transition hover:bg-white/20 hover:border-white/40 cursor-pointer"
-                    >
-                      Check Our Members
-                    </button>
-                  </>
-                ) : (
-                  <>
+                  ) : (
                     <button
                       type="button"
                       onClick={scrollToJoin}
-                      className="rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 px-8 py-4 text-xs sm:text-sm font-black uppercase tracking-wider text-black shadow-[0_0_40px_rgba(6,182,212,0.45)] transition hover:scale-105 hover:shadow-[0_0_55px_rgba(6,182,212,0.6)] active:scale-100 cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 py-3.5 text-xs font-black uppercase tracking-wider text-black shadow-lg shadow-cyan-400/25 transition hover:scale-[1.02] cursor-pointer"
                     >
-                      Become a Member
+                      <Sparkles size={15} />
+                      <span>Apply Now for Membership</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={scrollToMembers}
-                      className="rounded-2xl border border-white/25 bg-zinc-950/75 px-6 py-4 text-xs sm:text-sm font-bold text-white backdrop-blur-md shadow-lg transition hover:bg-white/20 hover:border-white/40 cursor-pointer"
-                    >
-                      Check Our Members
-                    </button>
-                    <a
-                      href={`${API_BASE}/club/download/demo`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-2xl border border-emerald-400/40 bg-emerald-950/60 px-6 py-4 text-xs sm:text-sm font-bold text-emerald-300 backdrop-blur-md shadow-lg transition hover:bg-emerald-900/80 hover:border-emerald-400/60 cursor-pointer"
-                    >
-                      <Eye size={16} />
-                      <span>View Demo Card</span>
-                    </a>
-                  </>
-                )}
-              </div>
-            </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            </div>
           </div>
         </div>
 
