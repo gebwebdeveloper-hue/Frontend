@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Check, Clock, Coffee, Bell, UtensilsCrossed,
   CheckCircle2, Sparkles, AlertCircle, ShoppingBag, Loader2,
-  History, ArrowRight, ChevronRight, RefreshCw,
+  History, ArrowRight, ChevronRight, RefreshCw, FileText, Download,
 } from "lucide-react";
 import { API_BASE } from "../../config.js";
 
@@ -269,6 +269,17 @@ export default function CafeOrderTrackerModal({ isOpen, onClose, order: initialO
                     <div className="mt-3 flex justify-between border-t border-[#D4A85A]/20 pt-2 text-sm font-black text-[#2C1810]">
                       <span>Total Paid:</span>
                       <span className="text-[#6B3F2A]">₹{selectedOrder.totalAmount}</span>
+                    </div>
+
+                    <div className="mt-4 pt-2 border-t border-dashed border-[#D4A85A]/30">
+                      <a
+                        href={`${API_BASE}/cafe/orders/${selectedOrder._id}/invoice-pdf`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#6B3F2A] to-[#A0522D] px-4 py-2.5 text-xs font-black text-white shadow-md hover:scale-[1.02] transition"
+                      >
+                        <FileText size={15} /> Download PDF Bill Receipt
+                      </a>
                     </div>
                   </div>
                 </>
