@@ -25,8 +25,7 @@ const publishingPlans = [
       "ISBN Allocation",
       "Basic Book Cover Design",
       "Book Formatting",
-      "Paperback Edition",
-      "E-book Edition",
+      { label: "E-book Edition", highlight: true },
       "Listing on the Lekhok Tripura Publishers Website (E-book)",
       "Certificate of Publishing",
     ],
@@ -629,12 +628,24 @@ export default function ReaderPage() {
                     )}
 
                     <ul className="mt-3 space-y-1.5 flex-1">
-                      {plan.features.map((f) => (
-                        <li key={f} className="flex items-start gap-2 text-xs text-white/75">
-                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400 mt-0.5" />
-                          <span>{f}</span>
-                        </li>
-                      ))}
+                      {plan.features.map((f) => {
+                        const isHighlight = typeof f === "object" && f.highlight;
+                        const label = typeof f === "object" ? f.label : f;
+                        return isHighlight ? (
+                          <li key={label} className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/50 bg-amber-400/10 px-2.5 py-1 text-xs font-black text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.15)]">
+                              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-amber-400" />
+                              {label}
+                              <span className="rounded-full bg-amber-400/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-300">Included</span>
+                            </span>
+                          </li>
+                        ) : (
+                          <li key={label} className="flex items-start gap-2 text-xs text-white/75">
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400 mt-0.5" />
+                            <span>{label}</span>
+                          </li>
+                        );
+                      })}
                     </ul>
 
                     <button
