@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Loader2, Search, Trash2, Edit3, Plus, ArrowLeft,
   RefreshCw, CheckCircle2, Shield, Phone, Mail, MapPin, Calendar,
-  MessageSquare, UserCheck, Clock, X, AlertCircle, RotateCcw, Copy
+  MessageSquare, UserCheck, Clock, X, AlertCircle, RotateCcw, Copy, Receipt
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
@@ -327,6 +327,12 @@ export default function AdminClubPage() {
               >
                 <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
               </button>
+              <Link
+                to="/admin/club/transactions"
+                className="inline-flex items-center gap-2 rounded-2xl border border-indigo-400/30 bg-indigo-400/10 px-5 py-3 text-xs font-bold text-indigo-300 transition hover:bg-indigo-400/20 hover:border-indigo-400/50"
+              >
+                <Receipt size={15} /> Transactions &amp; Forms
+              </Link>
               <button
                 onClick={handleOpenAdd}
                 className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 px-6 py-3 text-xs font-black uppercase tracking-wider text-black shadow-[0_0_30px_rgba(6,182,212,0.3)] transition hover:scale-105 cursor-pointer"

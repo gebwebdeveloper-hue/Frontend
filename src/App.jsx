@@ -28,6 +28,7 @@ import AboutPage from "./pages/AboutPage.jsx";
 import AdminClubPage from "./pages/AdminClubPage.jsx";
 import AdminRentalsPage from "./pages/AdminRentalsPage.jsx";
 import AdminLibraryCardsPage from "./pages/AdminLibraryCardsPage.jsx";
+import AdminClubTransactionsPage from "./pages/AdminClubTransactionsPage.jsx";
 import BookRentPage from "./pages/BookRentPage.jsx";
 
 
@@ -87,6 +88,7 @@ export default function App() {
           <Route path="/admin/purchases" element={<AdminPurchasesPage />} />
           <Route path="/admin/news" element={<AdminNewsPage />} />
           <Route path="/admin/club" element={<AdminClubPage />} />
+          <Route path="/admin/club/transactions" element={<AdminClubTransactionsPage />} />
           <Route path="/admin/rentals" element={<AdminRentalsPage />} />
           <Route path="/admin/library-cards" element={<AdminLibraryCardsPage />} />
           <Route path="/news" element={<NewsPage />} />
