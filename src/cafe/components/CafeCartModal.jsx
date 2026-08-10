@@ -7,7 +7,6 @@ import {
 import { getCafeCart, updateCafeCartQty, removeFromCafeCart, clearCafeCart } from "../utils/cafeCart.js";
 import { API_BASE } from "../../config.js";
 
-// Helper to load Razorpay script dynamically
 function loadRazorpayScript() {
   return new Promise((resolve) => {
     if (window.Razorpay) {
@@ -61,7 +60,6 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
         throw new Error("Razorpay SDK failed to load. Please check your internet connection.");
       }
 
-      // 1. Create Razorpay order on backend
       const res = await fetch(`${API_BASE}/cafe/orders/create-razorpay-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,7 +75,6 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
         throw new Error(data.message || "Failed to create order.");
       }
 
-      // 2. Open Razorpay Checkout Modal
       const options = {
         key: data.keyId,
         amount: data.amount,
@@ -96,7 +93,6 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
         },
         handler: async function (response) {
           try {
-            // 3. Verify Payment
             const verifyRes = await fetch(`${API_BASE}/cafe/orders/verify-payment`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -153,7 +149,7 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm"
         />
 
         {/* Drawer */}
@@ -162,32 +158,32 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="relative z-10 flex h-full w-full max-w-md flex-col bg-[#FAF5EB] shadow-2xl overflow-hidden"
+          className="relative z-10 flex h-full w-full max-w-md flex-col bg-[#140803] text-[#FAF5EB] shadow-2xl overflow-hidden border-l border-[#D4A85A]/25"
           data-lenis-prevent
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[#D4A85A]/25 p-5 bg-[#FFF8F0]">
+          <div className="flex items-center justify-between border-b border-[#D4A85A]/25 p-5 bg-[#23120A]">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#6B3F2A] text-white shadow-md">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#D4A85A] text-[#140803] font-black shadow-md">
                 <ShoppingBag size={18} />
               </div>
               <div>
-                <h3 className="font-bold text-[#2C1810] text-base">Your Cafe Order</h3>
+                <h3 className="font-black text-[#FAF5EB] text-base">Your Cafe Order</h3>
                 <p className="text-[11px] text-[#D4A85A] font-semibold">{cart.length} item{cart.length !== 1 ? "s" : ""}</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="grid h-9 w-9 place-items-center rounded-full border border-[#6B3F2A]/20 text-[#6B3F2A] hover:bg-[#6B3F2A]/10 transition"
+              className="grid h-9 w-9 place-items-center rounded-full border border-white/20 text-white hover:bg-white/10 transition"
             >
               <X size={18} />
             </button>
           </div>
 
           {/* Cart Items List */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-3" data-lenis-prevent>
+          <div className="flex-1 overflow-y-auto p-5 space-y-3 custom-scrollbar" data-lenis-prevent>
             {error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600">
+              <div className="rounded-xl border border-red-500/30 bg-red-900/40 p-3 text-xs font-semibold text-red-200">
                 {error}
               </div>
             )}
@@ -195,8 +191,8 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
             {cart.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Coffee size={48} className="mb-3 text-[#D4A85A]/40" />
-                <p className="font-bold text-[#2C1810] text-base mb-1">Your cart is empty</p>
-                <p className="text-xs text-[#2C1810]/50 max-w-xs">Explore our menu and add your favorite drinks and snacks!</p>
+                <p className="font-bold text-[#FAF5EB] text-base mb-1">Your cart is empty</p>
+                <p className="text-xs text-white/50 max-w-xs">Explore our menu and add your favorite drinks and snacks!</p>
               </div>
             ) : (
               cart.map((item) => {
@@ -204,36 +200,36 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
                 return (
                   <div
                     key={itemId}
-                    className="flex items-center gap-3 rounded-2xl border border-[#D4A85A]/20 bg-white p-3 shadow-sm"
+                    className="flex items-center gap-3 rounded-2xl border border-[#D4A85A]/20 bg-[#23120A] p-3 shadow-sm"
                   >
                     {/* Item Image */}
-                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#FAF5EB] flex items-center justify-center border border-[#D4A85A]/15">
+                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#140803] flex items-center justify-center border border-[#D4A85A]/15">
                       {item.imageUrl ? (
                         <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
                       ) : (
-                        <Coffee size={20} className="text-[#6B3F2A]/40" />
+                        <Coffee size={20} className="text-[#D4A85A]/50" />
                       )}
                     </div>
 
                     {/* Name & Category */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-[#2C1810] truncate">{item.name}</p>
+                      <p className="text-xs font-bold text-[#FAF5EB] truncate">{item.name}</p>
                       <p className="text-[10px] text-[#D4A85A] font-semibold uppercase tracking-wider">{item.category}</p>
-                      <p className="text-xs font-black text-[#6B3F2A] mt-0.5">₹{item.price * item.quantity}</p>
+                      <p className="text-xs font-black text-[#D4A85A] mt-0.5">₹{item.price * item.quantity}</p>
                     </div>
 
                     {/* Quantity Controls */}
-                    <div className="flex items-center gap-1.5 rounded-xl border border-[#6B3F2A]/15 bg-[#FAF5EB] p-1">
+                    <div className="flex items-center gap-1.5 rounded-xl border border-[#D4A85A]/30 bg-[#140803] p-1">
                       <button
                         onClick={() => updateCafeCartQty(itemId, item.quantity - 1)}
-                        className="grid h-6 w-6 place-items-center rounded-lg text-[#6B3F2A] hover:bg-[#6B3F2A]/10 transition"
+                        className="grid h-6 w-6 place-items-center rounded-lg text-white hover:bg-white/10 transition"
                       >
                         <Minus size={12} />
                       </button>
-                      <span className="w-5 text-center text-xs font-bold text-[#2C1810]">{item.quantity}</span>
+                      <span className="w-5 text-center text-xs font-bold text-[#D4A85A]">{item.quantity}</span>
                       <button
                         onClick={() => updateCafeCartQty(itemId, item.quantity + 1)}
-                        className="grid h-6 w-6 place-items-center rounded-lg text-[#6B3F2A] hover:bg-[#6B3F2A]/10 transition"
+                        className="grid h-6 w-6 place-items-center rounded-lg text-white hover:bg-white/10 transition"
                       >
                         <Plus size={12} />
                       </button>
@@ -242,7 +238,7 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
                     {/* Delete */}
                     <button
                       onClick={() => removeFromCafeCart(itemId)}
-                      className="text-red-400 hover:text-red-600 transition p-1"
+                      className="text-red-400 hover:text-red-300 transition p-1"
                       title="Remove"
                     >
                       <Trash2 size={15} />
@@ -255,10 +251,9 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
 
           {/* Footer Checkout Box */}
           {cart.length > 0 && (
-            <div className="border-t border-[#D4A85A]/25 bg-[#FFF8F0] p-5 space-y-3">
-              {/* Phone input for notification */}
+            <div className="border-t border-[#D4A85A]/25 bg-[#23120A] p-5 space-y-3">
               <div>
-                <label className="mb-1 flex items-center gap-1 text-[11px] font-bold text-[#6B3F2A] uppercase tracking-wide">
+                <label className="mb-1 flex items-center gap-1 text-[11px] font-bold text-[#D4A85A] uppercase tracking-wide">
                   <Phone size={11} /> Contact Phone Number (for order pickup updates)
                 </label>
                 <input
@@ -266,21 +261,19 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
                   placeholder="Enter 10-digit mobile number"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full rounded-xl border border-[#D4A85A]/30 bg-white px-3 py-2 text-xs text-[#2C1810] outline-none focus:border-[#6B3F2A]"
+                  className="w-full rounded-xl border border-[#D4A85A]/30 bg-[#140803] px-3 py-2 text-xs text-[#FAF5EB] outline-none focus:border-[#D4A85A]"
                 />
               </div>
 
-              {/* Total Row */}
               <div className="flex items-center justify-between pt-1">
-                <span className="text-xs font-bold text-[#2C1810]/70">Total Amount:</span>
-                <span className="text-xl font-black text-[#6B3F2A]">₹{totalAmount}</span>
+                <span className="text-xs font-bold text-white/70">Total Amount:</span>
+                <span className="text-xl font-black text-[#D4A85A]">₹{totalAmount}</span>
               </div>
 
-              {/* Pay with Razorpay CTA */}
               <button
                 onClick={handleCheckout}
                 disabled={processing}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#6B3F2A] to-[#A0522D] py-3.5 text-sm font-bold text-white shadow-lg transition hover:scale-[1.02] hover:shadow-xl disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D4A85A] to-[#A0522D] py-3.5 text-sm font-black text-[#140803] shadow-lg transition hover:scale-[1.02] hover:shadow-xl disabled:opacity-60"
               >
                 {processing ? (
                   <>
@@ -293,8 +286,8 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
                 )}
               </button>
 
-              <p className="text-[10px] text-center text-[#2C1810]/40 flex items-center justify-center gap-1">
-                <ShieldCheck size={12} className="text-[#4A7C59]" /> 256-Bit Secure Razorpay Payment
+              <p className="text-[10px] text-center text-white/40 flex items-center justify-center gap-1">
+                <ShieldCheck size={12} className="text-emerald-400" /> 256-Bit Secure Razorpay Payment
               </p>
             </div>
           )}

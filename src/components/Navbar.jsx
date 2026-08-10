@@ -241,43 +241,20 @@ export default function Navbar() {
                 )}
               </NavLink>
 
-              {/* Social Media Icons */}
-              <div className="flex items-center gap-3 border-l border-white/10 pl-4 mr-2">
-                <a
-                  href="https://www.facebook.com/share/1DLfEnitkJ/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/65 hover:text-cyan-400 transition hover:scale-110"
-                  title="Facebook"
-                >
-                  <Facebook size={16} />
-                </a>
-                <a
-                  href="https://www.instagram.com/lekhok_tripura_publishers?igsh=MTJmMTZjcnVwM3NyeQ=="
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/65 hover:text-fuchsia-400 transition hover:scale-110"
-                  title="Instagram"
-                >
-                  <Instagram size={16} />
-                </a>
-                <a
-                  href="https://youtube.com/@lekhoktripura?si=1dc97jaclcr8Gzs2"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/65 hover:text-red-500 transition hover:scale-110"
-                  title="YouTube"
-                >
-                  <Youtube size={16} />
-                </a>
-                <Link
-                  to="/cafe"
-                  className="flex items-center gap-1 text-white/65 hover:text-amber-400 transition hover:scale-110"
-                  title="Lekhok Tripura Cafe"
-                >
-                  <Coffee size={16} />
-                </Link>
-              </div>
+              <NavLink to="/cafe">
+                {({ isActive }) => (
+                  <div
+                    className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs xl:text-sm font-semibold transition-all duration-300 ${
+                      isActive
+                        ? "border-amber-400/50 bg-amber-400/10 text-amber-300"
+                        : "border-amber-500/25 bg-amber-500/10 text-amber-200 hover:border-amber-400/40 hover:bg-amber-500/20"
+                    }`}
+                  >
+                    <Coffee size={14} className="text-amber-400" />
+                    <span>Cafe</span>
+                  </div>
+                )}
+              </NavLink>
 
               {/* Shopping Cart Button (Only for logged in users) */}
               {authUser && (
@@ -558,39 +535,7 @@ export default function Navbar() {
                 </motion.div>
               )}
 
-              {/* Mobile Social Links */}
-              <motion.div
-                variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-                className="mt-4 flex items-center justify-center gap-6"
-              >
-                <a
-                  href="https://www.facebook.com/share/1DLfEnitkJ/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/65 hover:text-cyan-400 transition hover:scale-110"
-                  title="Facebook"
-                >
-                  <Facebook size={22} />
-                </a>
-                <a
-                  href="https://www.instagram.com/lekhok_tripura_publishers?igsh=MTJmMTZjcnVwM3NyeQ=="
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/65 hover:text-fuchsia-400 transition hover:scale-110"
-                  title="Instagram"
-                >
-                  <Instagram size={22} />
-                </a>
-                <a
-                  href="https://youtube.com/@lekhoktripura?si=1dc97jaclcr8Gzs2"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/65 hover:text-red-500 transition hover:scale-110"
-                  title="YouTube"
-                >
-                  <Youtube size={22} />
-                </a>
-              </motion.div>
+              {/* Mobile Social Links removed */}
             </motion.div>
           </motion.div>
         )}

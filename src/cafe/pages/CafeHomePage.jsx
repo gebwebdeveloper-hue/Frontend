@@ -146,7 +146,7 @@ export default function CafeHomePage() {
   }, [activeCat]);
 
   return (
-    <div className="overflow-x-hidden" style={{ fontFamily: "'Lato', 'Georgia', sans-serif", background: "#FAF5EB" }}>
+    <div className="overflow-x-hidden text-[#FAF5EB]" style={{ fontFamily: "'Lato', 'Georgia', sans-serif", background: "#140803" }}>
 
       {/* ── HERO ────────────────────────────────────────────────── */}
       <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 text-center" style={{ background: "#1a0a00" }}>
@@ -310,28 +310,28 @@ export default function CafeHomePage() {
       </section>
 
       {/* ── HIGHLIGHTS ──────────────────────────────────────────── */}
-      <section className="relative px-4 -mt-2" style={{ zIndex: 10 }}>
-        {/* Wavy top edge matching reference */}
-        <div className="relative" style={{ marginTop: "-1px" }}>
+      <section className="relative w-full -mt-2" style={{ zIndex: 10 }}>
+        {/* Wavy top edge */}
+        <div className="relative w-full" style={{ marginTop: "-1px" }}>
           <svg viewBox="0 0 1440 60" className="w-full" style={{ display: "block", marginBottom: "-2px" }} preserveAspectRatio="none">
             <path
               d="M0,40 C180,70 360,10 540,40 C720,70 900,10 1080,40 C1260,70 1380,20 1440,35 L1440,60 L0,60 Z"
-              fill="#FFF8F0"
+              fill="#1F0E07"
             />
           </svg>
         </div>
 
         <div
           className="relative overflow-hidden"
-          style={{ background: "#FFF8F0", borderBottom: "1px solid rgba(212,168,90,0.15)" }}
+          style={{ background: "#1F0E07", borderBottom: "1px solid rgba(212,168,90,0.15)" }}
         >
           {/* Decorative coffee beans (right side) */}
-          <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 opacity-[0.07] hidden lg:block">
+          <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 opacity-[0.12] hidden lg:block">
             <svg width="110" height="110" viewBox="0 0 110 110" fill="none">
-              <ellipse cx="38" cy="30" rx="18" ry="26" transform="rotate(-20 38 30)" fill="#6B3F2A" />
-              <path d="M38 10 Q55 30 38 50" stroke="#FAF5EB" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-              <ellipse cx="72" cy="72" rx="15" ry="22" transform="rotate(25 72 72)" fill="#6B3F2A" />
-              <path d="M72 54 Q86 72 72 90" stroke="#FAF5EB" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+              <ellipse cx="38" cy="30" rx="18" ry="26" transform="rotate(-20 38 30)" fill="#D4A85A" />
+              <path d="M38 10 Q55 30 38 50" stroke="#1F0E07" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+              <ellipse cx="72" cy="72" rx="15" ry="22" transform="rotate(25 72 72)" fill="#D4A85A" />
+              <path d="M72 54 Q86 72 72 90" stroke="#1F0E07" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
             </svg>
           </div>
 
@@ -342,7 +342,7 @@ export default function CafeHomePage() {
                   <div
                     className="group relative flex flex-col items-center gap-3 px-6 py-8 text-center transition-all duration-400"
                     style={{
-                      borderRight: i < highlights.length - 1 ? "1px solid rgba(212,168,90,0.25)" : "none",
+                      borderRight: i < highlights.length - 1 ? "1px solid rgba(212,168,90,0.15)" : "none",
                     }}
                   >
                     {/* Hover background bloom */}
@@ -355,33 +355,28 @@ export default function CafeHomePage() {
                     <div
                       className="relative flex h-14 w-14 items-center justify-center rounded-2xl shadow-md transition-all duration-400 group-hover:scale-110 group-hover:shadow-lg"
                       style={{
-                        background: `linear-gradient(135deg, ${h.color}18 0%, ${h.color}30 100%)`,
+                        background: `linear-gradient(135deg, ${h.color}25 0%, ${h.color}45 100%)`,
                         boxShadow: `0 4px 18px ${h.glow}`,
                       }}
                     >
                       <h.icon
                         size={26}
-                        style={{ color: h.color }}
+                        style={{ color: "#D4A85A" }}
                         strokeWidth={1.7}
-                      />
-                      {/* Subtle inner glow ring on hover */}
-                      <div
-                        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-400"
-                        style={{ boxShadow: `inset 0 0 12px ${h.color}40` }}
                       />
                     </div>
 
                     {/* Text */}
                     <div className="relative">
                       <h3
-                        className="text-sm font-black tracking-wide transition-colors duration-300 group-hover:text-[#6B3F2A]"
-                        style={{ color: "#2C1810" }}
+                        className="text-sm font-black tracking-wide transition-colors duration-300 group-hover:text-[#D4A85A]"
+                        style={{ color: "#FAF5EB" }}
                       >
                         {h.title}
                       </h3>
                       <p
                         className="mt-1 text-xs leading-relaxed"
-                        style={{ color: "#2C1810", opacity: 0.52 }}
+                        style={{ color: "#D4A85A", opacity: 0.7 }}
                       >
                         {h.desc}
                       </p>
@@ -390,7 +385,7 @@ export default function CafeHomePage() {
                     {/* Bottom accent line on hover */}
                     <div
                       className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-0 rounded-full transition-all duration-500 group-hover:w-12"
-                      style={{ background: `linear-gradient(90deg, transparent, ${h.color}, transparent)` }}
+                      style={{ background: "linear-gradient(90deg, transparent, #D4A85A, transparent)" }}
                     />
                   </div>
                 </FadeIn>
@@ -401,13 +396,13 @@ export default function CafeHomePage() {
       </section>
 
       {/* ── FEATURED MENU ───────────────────────────────────────── */}
-      <section className="py-20 px-4" style={{ background: "linear-gradient(180deg, #FAF5EB 0%, #FFF1DC 100%)" }}>
+      <section id="menu" className="py-20 px-4" style={{ background: "linear-gradient(180deg, #140803 0%, #1A0C06 100%)" }}>
         <div className="mx-auto max-w-6xl">
           <FadeIn className="mb-4 text-center">
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-[#D4A85A]">Our Specialties</p>
             <h2
               className="text-3xl sm:text-4xl font-black"
-              style={{ color: "#2C1810", fontFamily: "'Playfair Display', Georgia, serif" }}
+              style={{ color: "#FAF5EB", fontFamily: "'Playfair Display', Georgia, serif" }}
             >
               Featured on the Menu
             </h2>
@@ -424,8 +419,8 @@ export default function CafeHomePage() {
                   className="flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-bold transition-all duration-300 hover:scale-105"
                   style={
                     isActive
-                      ? { borderColor: c.color, color: "#FAF5EB", background: c.color, boxShadow: `0 4px 14px ${c.color}40` }
-                      : { borderColor: `${c.color}30`, color: c.color, background: `${c.color}0A` }
+                      ? { borderColor: "#D4A85A", color: "#140803", background: "#D4A85A", boxShadow: "0 4px 14px rgba(212,168,90,0.3)" }
+                      : { borderColor: "rgba(212,168,90,0.3)", color: "#FAF5EB", background: "rgba(255,255,255,0.05)" }
                   }
                 >
                   <c.icon size={12} />
@@ -445,14 +440,14 @@ export default function CafeHomePage() {
           ) : (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {featuredItems.slice(0, 6).map((item, i) => {
-                const color = CATEGORY_COLORS[item.category] || "#6B3F2A";
+                const color = CATEGORY_COLORS[item.category] || "#D4A85A";
                 return (
                   <FadeIn key={item._id} delay={i * 0.07}>
-                    <div className="group relative overflow-hidden rounded-3xl border border-[#D4A85A]/20 bg-white shadow-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#6B3F2A]/10">
+                    <div className="group relative overflow-hidden rounded-3xl border border-[#D4A85A]/25 bg-[#23120A] shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#D4A85A]/10">
                       {/* Image / placeholder */}
                       <div
                         className="relative h-44 overflow-hidden"
-                        style={{ background: `linear-gradient(135deg, ${color}18 0%, ${color}30 100%)` }}
+                        style={{ background: `linear-gradient(135deg, ${color}20 0%, ${color}40 100%)` }}
                       >
                         {item.imageUrl ? (
                           <img
@@ -462,13 +457,13 @@ export default function CafeHomePage() {
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center">
-                            <Coffee size={48} style={{ color, opacity: 0.35 }} />
+                            <Coffee size={48} style={{ color: "#D4A85A", opacity: 0.35 }} />
                           </div>
                         )}
                         {/* Category badge */}
                         <span
-                          className="absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-white"
-                          style={{ background: color }}
+                          className="absolute left-3 top-3 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#140803]"
+                          style={{ background: "#D4A85A" }}
                         >
                           {item.category}
                         </span>
@@ -477,18 +472,18 @@ export default function CafeHomePage() {
                       {/* Details */}
                       <div className="p-5">
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-base font-black leading-snug" style={{ color: "#2C1810" }}>
+                          <h3 className="text-base font-black leading-snug" style={{ color: "#FAF5EB" }}>
                             {item.name}
                           </h3>
                           <span
-                            className="shrink-0 rounded-full px-3 py-1 text-sm font-black"
-                            style={{ background: `${color}15`, color }}
+                            className="shrink-0 rounded-full px-3 py-1 text-sm font-black text-[#D4A85A]"
+                            style={{ background: "rgba(212,168,90,0.15)" }}
                           >
                             ₹{item.price}
                           </span>
                         </div>
                         {item.description && (
-                          <p className="mt-1.5 mb-4 text-xs leading-relaxed line-clamp-2" style={{ color: "#2C1810", opacity: 0.55 }}>
+                          <p className="mt-1.5 mb-4 text-xs leading-relaxed line-clamp-2" style={{ color: "#FAF5EB", opacity: 0.65 }}>
                             {item.description}
                           </p>
                         )}
@@ -496,8 +491,8 @@ export default function CafeHomePage() {
                         {/* Add to Cart CTA */}
                         <button
                           onClick={() => addToCafeCart(item)}
-                          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold text-white shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
-                          style={{ background: `linear-gradient(135deg, ${color}, #2C1810)` }}
+                          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-black text-[#140803] shadow-md transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+                          style={{ background: "linear-gradient(135deg, #D4A85A, #A0522D)" }}
                         >
                           <ShoppingBag size={14} /> Add to Cart
                         </button>
@@ -512,7 +507,7 @@ export default function CafeHomePage() {
           <FadeIn className="mt-10 text-center">
             <Link
               to="/cafe/menu"
-              className="group inline-flex items-center gap-2 rounded-full border-2 border-[#6B3F2A]/25 bg-white px-8 py-3.5 text-sm font-bold text-[#6B3F2A] transition-all duration-300 hover:border-[#6B3F2A] hover:shadow-lg hover:scale-105"
+              className="group inline-flex items-center gap-2 rounded-full border-2 border-[#D4A85A]/40 bg-[#23120A] px-8 py-3.5 text-sm font-bold text-[#FAF5EB] transition-all duration-300 hover:border-[#D4A85A] hover:bg-[#D4A85A] hover:text-[#140803] hover:shadow-lg hover:scale-105"
             >
               View Full Menu
               <ChevronRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
@@ -522,7 +517,7 @@ export default function CafeHomePage() {
       </section>
 
       {/* ── WHY VISIT ────────────────────────────────────────────── */}
-      <section className="py-20 px-4" style={{ background: "#FAF5EB" }}>
+      <section className="py-20 px-4" style={{ background: "#140803" }}>
         <div className="mx-auto max-w-6xl">
 
           {/* Header */}
@@ -530,19 +525,19 @@ export default function CafeHomePage() {
             {/* Book icon */}
             <div className="mb-4 flex justify-center">
               <div
-                className="flex h-14 w-14 items-center justify-center rounded-2xl shadow-md"
-                style={{ background: "linear-gradient(135deg, #6B3F2A18, #D4A85A28)" }}
+                className="flex h-14 w-14 items-center justify-center rounded-2xl shadow-md border border-[#D4A85A]/30"
+                style={{ background: "linear-gradient(135deg, rgba(212,168,90,0.15), rgba(160,82,45,0.25))" }}
               >
-                <BookOpen size={28} style={{ color: "#6B3F2A" }} strokeWidth={1.6} />
+                <BookOpen size={28} style={{ color: "#D4A85A" }} strokeWidth={1.6} />
               </div>
             </div>
             <h2
               className="mb-2 text-3xl sm:text-4xl md:text-5xl font-black italic leading-snug"
-              style={{ color: "#2C1810", fontFamily: "'Playfair Display', Georgia, serif" }}
+              style={{ color: "#FAF5EB", fontFamily: "'Playfair Display', Georgia, serif" }}
             >
               Why Visit Lekhok Tripura Café&nbsp;?
             </h2>
-            <p className="text-sm sm:text-base font-medium" style={{ color: "#6B3F2A", opacity: 0.75 }}>
+            <p className="text-sm sm:text-base font-medium" style={{ color: "#D4A85A" }}>
               A Perfect Blend of Coffee, Books &amp; Community
             </p>
           </FadeIn>
@@ -568,51 +563,34 @@ export default function CafeHomePage() {
               },
             ].map((card, i) => (
               <FadeIn key={card.label} delay={i * 0.1}>
-                <div className="group relative overflow-hidden rounded-3xl shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#6B3F2A]/20" style={{ aspectRatio: "3/4" }}>
+                <div className="group relative overflow-hidden rounded-3xl shadow-xl border border-[#D4A85A]/25 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#D4A85A]/20" style={{ aspectRatio: "3/4" }}>
                   {/* Photo */}
                   <img
                     src={card.img}
                     alt={card.label.replace("\n", " ")}
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-108"
-                    style={{ transform: "scale(1)" }}
-                    onMouseEnter={e => e.currentTarget.style.transform = "scale(1.08)"}
-                    onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                   />
 
-                  {/* Persistent gradient overlay — stronger at bottom */}
+                  {/* Persistent gradient overlay */}
                   <div
                     className="absolute inset-0"
                     style={{
-                      background: "linear-gradient(to bottom, rgba(20,8,0,0.05) 0%, rgba(20,8,0,0.10) 50%, rgba(20,8,0,0.72) 100%)",
+                      background: "linear-gradient(to bottom, rgba(20,8,0,0.15) 0%, rgba(20,8,0,0.30) 50%, rgba(20,8,0,0.85) 100%)",
                     }}
-                  />
-
-                  {/* Hover shimmer */}
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{ background: "linear-gradient(135deg, rgba(212,168,90,0.12) 0%, transparent 60%)" }}
                   />
 
                   {/* Caption */}
                   <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 pt-10">
-                    {/* Gold accent line */}
                     <div
                       className="mb-2.5 h-[2px] w-8 rounded-full transition-all duration-500 group-hover:w-14"
                       style={{ background: "linear-gradient(90deg, #D4A85A, transparent)" }}
                     />
                     <p
                       className="text-sm font-bold leading-snug text-white drop-shadow-md whitespace-pre-line"
-                      style={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
                     >
                       {card.label}
                     </p>
                   </div>
-
-                  {/* Subtle border glow on hover */}
-                  <div
-                    className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                    style={{ boxShadow: "inset 0 0 0 1.5px rgba(212,168,90,0.45)" }}
-                  />
                 </div>
               </FadeIn>
             ))}
@@ -622,23 +600,13 @@ export default function CafeHomePage() {
 
       {/* ── ATMOSPHERE STRIP ────────────────────────────────────── */}
       <section
-        className="relative overflow-hidden py-24 px-4"
-        style={{ background: "linear-gradient(135deg, #2C1810 0%, #6B3F2A 50%, #A0522D 100%)" }}
+        className="relative overflow-hidden py-24 px-4 border-y border-[#D4A85A]/20"
+        style={{ background: "linear-gradient(135deg, #1A0C06 0%, #23120A 50%, #1E0E07 100%)" }}
       >
-        {/* Decorative blobs */}
-        <div
-          className="pointer-events-none absolute -top-20 -right-20 h-72 w-72 rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, #D4A85A 0%, transparent 70%)" }}
-        />
-        <div
-          className="pointer-events-none absolute -bottom-20 -left-20 h-72 w-72 rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #FAF5EB 0%, transparent 70%)" }}
-        />
-
         <div className="relative mx-auto max-w-3xl text-center">
           <FadeIn>
             <div className="mb-6 flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[#D4A85A]/30 bg-[#D4A85A]/10">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[#D4A85A]/40 bg-[#D4A85A]/15">
                 <Coffee size={28} className="text-[#D4A85A]" />
               </div>
             </div>
@@ -649,21 +617,21 @@ export default function CafeHomePage() {
               A Space Made for<br />
               <span className="text-[#D4A85A]">Book Lovers</span>
             </h2>
-            <p className="mb-8 text-base leading-relaxed text-[#FAF5EB]/65">
+            <p className="mb-8 text-base leading-relaxed text-[#FAF5EB]/80">
               Every corner of Lekhok Tripura Cafe is designed to inspire — shelves of stories, warm lighting, the scent of freshly brewed coffee, and the quiet company of fellow readers.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 to="/cafe/reserve"
-                className="flex items-center gap-2 rounded-full bg-[#D4A85A] px-7 py-3.5 text-sm font-bold text-[#2C1810] transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#D4A85A]/30"
+                className="flex items-center gap-2 rounded-full bg-[#D4A85A] px-7 py-3.5 text-sm font-black text-[#140803] transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#D4A85A]/30"
               >
-                <MapPin size={15} /> Book a Table
+                <MapPin size={15} /> Reserve Space Slot
               </Link>
               <Link
-                to="/cafe/about"
-                className="flex items-center gap-2 rounded-full border border-[#FAF5EB]/25 bg-transparent px-7 py-3.5 text-sm font-bold text-[#FAF5EB] transition-all duration-300 hover:bg-[#FAF5EB]/10 hover:border-[#FAF5EB]/50"
+                to="/cafe/menu"
+                className="flex items-center gap-2 rounded-full border border-[#FAF5EB]/30 bg-white/5 px-7 py-3.5 text-sm font-bold text-[#FAF5EB] transition-all duration-300 hover:bg-white/10 hover:border-[#D4A85A]"
               >
-                Learn More <ArrowRight size={14} />
+                Full Menu <ArrowRight size={14} />
               </Link>
             </div>
           </FadeIn>
@@ -671,19 +639,19 @@ export default function CafeHomePage() {
       </section>
 
       {/* ── TESTIMONIALS ────────────────────────────────────────── */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4" style={{ background: "#140803" }}>
         <div className="mx-auto max-w-4xl">
           <FadeIn className="mb-14 text-center">
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-[#D4A85A]">Guest Reviews</p>
             <h2
               className="text-3xl sm:text-4xl font-black"
-              style={{ color: "#2C1810", fontFamily: "'Playfair Display', Georgia, serif" }}
+              style={{ color: "#FAF5EB", fontFamily: "'Playfair Display', Georgia, serif" }}
             >
               Loved by Our Guests
             </h2>
           </FadeIn>
 
-          <div className="relative overflow-hidden rounded-3xl border border-[#D4A85A]/20 bg-white/70 p-8 sm:p-12 shadow-sm">
+          <div className="relative overflow-hidden rounded-3xl border border-[#D4A85A]/30 bg-[#23120A] p-8 sm:p-12 shadow-xl">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTestimonial}
@@ -701,23 +669,23 @@ export default function CafeHomePage() {
                 </div>
                 {/* Quote */}
                 <blockquote
-                  className="mb-7 text-xl sm:text-2xl font-semibold leading-relaxed italic"
-                  style={{ color: "#2C1810", fontFamily: "'Playfair Display', Georgia, serif" }}
+                  className="mb-7 text-xl sm:text-2xl font-semibold leading-relaxed italic text-[#FAF5EB]"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                 >
                   "{testimonials[activeTestimonial].text}"
                 </blockquote>
                 {/* Author */}
                 <div className="flex flex-col items-center gap-1">
                   <div
-                    className="h-12 w-12 rounded-full flex items-center justify-center text-lg font-black text-white"
-                    style={{ background: "linear-gradient(135deg, #6B3F2A, #D4A85A)" }}
+                    className="h-12 w-12 rounded-full flex items-center justify-center text-lg font-black text-[#140803]"
+                    style={{ background: "linear-gradient(135deg, #D4A85A, #A0522D)" }}
                   >
                     {testimonials[activeTestimonial].name.charAt(0)}
                   </div>
-                  <p className="mt-2 font-bold text-sm" style={{ color: "#2C1810" }}>
+                  <p className="mt-2 font-bold text-sm text-[#FAF5EB]">
                     {testimonials[activeTestimonial].name}
                   </p>
-                  <p className="text-xs" style={{ color: "#2C1810", opacity: 0.5 }}>
+                  <p className="text-xs text-[#D4A85A]">
                     {testimonials[activeTestimonial].role}
                   </p>
                 </div>
@@ -733,7 +701,7 @@ export default function CafeHomePage() {
                   className="h-2 rounded-full transition-all duration-300"
                   style={{
                     width: i === activeTestimonial ? "24px" : "8px",
-                    background: i === activeTestimonial ? "#6B3F2A" : "#D4A85A40",
+                    background: i === activeTestimonial ? "#D4A85A" : "rgba(212,168,90,0.3)",
                   }}
                 />
               ))}
@@ -742,18 +710,18 @@ export default function CafeHomePage() {
         </div>
       </section>
 
-      {/* ── VISIT INFO + MAP PLACEHOLDER ────────────────────────── */}
+      {/* ── VISIT INFO ────────────────────────────────────────────── */}
       <section
-        className="py-20 px-4"
-        style={{ background: "linear-gradient(180deg, #FFF1DC 0%, #FAF5EB 100%)" }}
+        className="py-20 px-4 border-t border-[#D4A85A]/20"
+        style={{ background: "linear-gradient(180deg, #1A0C06 0%, #140803 100%)" }}
       >
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-10 lg:grid-cols-2 items-center">
             <FadeIn direction="left">
               <p className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-[#D4A85A]">Find Us</p>
               <h2
-                className="mb-6 text-3xl sm:text-4xl font-black leading-snug"
-                style={{ color: "#2C1810", fontFamily: "'Playfair Display', Georgia, serif" }}
+                className="mb-6 text-3xl sm:text-4xl font-black leading-snug text-[#FAF5EB]"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
               >
                 Visit Lekhok<br />Tripura Cafe
               </h2>
@@ -766,14 +734,14 @@ export default function CafeHomePage() {
                 ].map((info) => (
                   <div key={info.label} className="flex items-start gap-4">
                     <div
-                      className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                      style={{ background: "#6B3F2A15" }}
+                      className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#D4A85A]/30"
+                      style={{ background: "rgba(212,168,90,0.15)" }}
                     >
-                      <info.icon size={18} style={{ color: "#6B3F2A" }} />
+                      <info.icon size={18} style={{ color: "#D4A85A" }} />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "#D4A85A" }}>{info.label}</p>
-                      <p className="text-sm font-medium" style={{ color: "#2C1810", opacity: 0.8 }}>{info.value}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#D4A85A]">{info.label}</p>
+                      <p className="text-sm font-medium text-[#FAF5EB]">{info.value}</p>
                     </div>
                   </div>
                 ))}
@@ -781,12 +749,12 @@ export default function CafeHomePage() {
 
               {/* Social */}
               <div className="mt-8 flex items-center gap-4">
-                <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#2C1810", opacity: 0.4 }}>Follow</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-[#FAF5EB]/50">Follow</p>
                 <a
                   href="https://www.instagram.com/lekhok_tripura_publishers"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#6B3F2A]/20 text-[#6B3F2A] transition hover:bg-[#6B3F2A] hover:text-white hover:border-[#6B3F2A] hover:scale-110"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#D4A85A]/30 text-[#D4A85A] transition hover:bg-[#D4A85A] hover:text-[#140803] hover:scale-110"
                 >
                   <Instagram size={16} />
                 </a>
@@ -794,7 +762,7 @@ export default function CafeHomePage() {
                   href="https://www.facebook.com/share/1DLfEnitkJ/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#6B3F2A]/20 text-[#6B3F2A] transition hover:bg-[#6B3F2A] hover:text-white hover:border-[#6B3F2A] hover:scale-110"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#D4A85A]/30 text-[#D4A85A] transition hover:bg-[#D4A85A] hover:text-[#140803] hover:scale-110"
                 >
                   <Facebook size={16} />
                 </a>
@@ -804,39 +772,30 @@ export default function CafeHomePage() {
             {/* Map card */}
             <FadeIn direction="right">
               <div
-                className="relative overflow-hidden rounded-3xl border border-[#D4A85A]/25 shadow-xl"
-                style={{ height: "360px", background: "linear-gradient(135deg, #6B3F2A10 0%, #D4A85A20 100%)" }}
+                className="relative overflow-hidden rounded-3xl border border-[#D4A85A]/30 shadow-xl bg-[#23120A]"
+                style={{ height: "360px" }}
               >
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-center">
                   <div
-                    className="flex h-16 w-16 items-center justify-center rounded-full shadow-lg"
-                    style={{ background: "linear-gradient(135deg, #6B3F2A, #A0522D)" }}
+                    className="flex h-16 w-16 items-center justify-center rounded-full shadow-lg border border-[#D4A85A]/40"
+                    style={{ background: "linear-gradient(135deg, #D4A85A, #A0522D)" }}
                   >
-                    <MapPin size={28} className="text-[#FAF5EB]" />
+                    <MapPin size={28} className="text-[#140803]" />
                   </div>
                   <div>
-                    <p className="font-black text-lg" style={{ color: "#2C1810" }}>Lekhok Tripura Cafe</p>
-                    <p className="text-sm mt-1" style={{ color: "#2C1810", opacity: 0.55 }}>Agartala, Tripura</p>
+                    <p className="font-black text-lg text-[#FAF5EB]">Lekhok Tripura Cafe</p>
+                    <p className="text-sm mt-1 text-[#D4A85A]">Agartala, Tripura</p>
                   </div>
                   <a
                     href="https://maps.google.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-[#FAF5EB] transition hover:scale-105"
-                    style={{ background: "linear-gradient(135deg, #6B3F2A, #A0522D)" }}
+                    className="flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-black text-[#140803] transition hover:scale-105 shadow-md"
+                    style={{ background: "linear-gradient(135deg, #D4A85A, #A0522D)" }}
                   >
                     Open in Maps <ArrowRight size={14} />
                   </a>
                 </div>
-                {/* Grid overlay */}
-                <svg className="absolute inset-0 h-full w-full opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
-                      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#6B3F2A" strokeWidth="0.8" />
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#grid)" />
-                </svg>
               </div>
             </FadeIn>
           </div>
@@ -845,26 +804,26 @@ export default function CafeHomePage() {
 
       {/* ── FOOTER ──────────────────────────────────────────────── */}
       <footer
-        className="py-10 px-4 text-center border-t border-[#D4A85A]/20"
-        style={{ background: "#FAF5EB" }}
+        className="py-12 px-4 text-center border-t border-[#D4A85A]/20"
+        style={{ background: "#0D0502" }}
       >
         <div className="mx-auto max-w-4xl">
           <div className="mb-4 flex items-center justify-center gap-2">
-            <Coffee size={18} style={{ color: "#6B3F2A" }} />
-            <span className="text-sm font-black uppercase tracking-widest" style={{ color: "#6B3F2A" }}>
+            <Coffee size={18} style={{ color: "#D4A85A" }} />
+            <span className="text-sm font-black uppercase tracking-widest text-[#FAF5EB]">
               Lekhok Tripura Cafe
             </span>
           </div>
-          <p className="mb-4 text-xs" style={{ color: "#2C1810", opacity: 0.4 }}>
-            A space crafted with love for readers, writers, and dreamers.
+          <p className="mb-4 text-xs text-[#FAF5EB]/60">
+            A space crafted with love for readers, writers, and dreamers in Tripura.
           </p>
-          <div className="flex items-center justify-center gap-6 text-xs font-medium" style={{ color: "#2C1810", opacity: 0.45 }}>
-            <Link to="/cafe" className="hover:opacity-80 transition">Home</Link>
-            <Link to="/cafe/menu" className="hover:opacity-80 transition">Menu</Link>
-            <Link to="/cafe/reserve" className="hover:opacity-80 transition">Reservations</Link>
-            <Link to="/" className="hover:opacity-80 transition">← Main Site</Link>
+          <div className="flex items-center justify-center gap-6 text-xs font-semibold text-[#D4A85A]">
+            <Link to="/cafe" className="hover:text-white transition">Home</Link>
+            <Link to="/cafe/menu" className="hover:text-white transition">Menu</Link>
+            <Link to="/cafe/reserve" className="hover:text-white transition">Readers &amp; Writers Space</Link>
+            <Link to="/" className="hover:text-white transition">← Main Site</Link>
           </div>
-          <p className="mt-6 text-[11px]" style={{ color: "#2C1810", opacity: 0.3 }}>
+          <p className="mt-6 text-[11px] text-white/30">
             © {new Date().getFullYear()} Lekhok Tripura. All rights reserved.
           </p>
         </div>

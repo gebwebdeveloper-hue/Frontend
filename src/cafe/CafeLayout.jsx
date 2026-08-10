@@ -3,11 +3,11 @@ import CafeNavbar from "./CafeNavbar.jsx";
 
 /**
  * CafeLayout — wraps customer-facing /cafe pages.
- * Renders the CafeNavbar at the top.
+ * Theme: Dark Espresso Brown background with warm white & gold text.
  */
 export default function CafeLayout() {
   return (
-    <div className="min-h-screen" style={{ background: "#FAF5EB", color: "#2C1810" }}>
+    <div className="min-h-screen text-[#FAF5EB]" style={{ background: "#140803" }}>
       <CafeNavbar />
       <main>
         <Outlet />

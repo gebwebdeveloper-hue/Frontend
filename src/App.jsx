@@ -33,6 +33,9 @@ import BookRentPage from "./pages/BookRentPage.jsx";
 import CafeLayout from "./cafe/CafeLayout.jsx";
 import CafeHomePage from "./cafe/pages/CafeHomePage.jsx";
 import CafeAdminPage from "./cafe/pages/CafeAdminPage.jsx";
+import CafeSpacePage from "./cafe/pages/CafeSpacePage.jsx";
+import CafeMenuPage from "./cafe/pages/CafeMenuPage.jsx";
+import CafeArtistSpacePage from "./cafe/pages/CafeArtistSpacePage.jsx";
 
 
 // Helper component to normalize URLs (strip trailing slashes, decode spaces/encoded URIs)
@@ -131,9 +134,11 @@ export default function App() {
           <Route path="/cafe/admin" element={<CafeAdminPage />} />
           <Route path="/cafe" element={<CafeLayout />}>
             <Route index element={<CafeHomePage />} />
-            {/* Future cafe pages: */}
-            {/* <Route path="menu" element={<CafeMenuPage />} /> */}
-            {/* <Route path="reserve" element={<CafeReservationPage />} /> */}
+            <Route path="menu" element={<CafeMenuPage />} />
+            <Route path="reserve" element={<CafeSpacePage />} />
+            <Route path="space" element={<CafeSpacePage />} />
+            <Route path="artist-space" element={<CafeArtistSpacePage />} />
+            <Route path="artist" element={<CafeArtistSpacePage />} />
           </Route>
 
           {/* Catch-All Fallback Route */}

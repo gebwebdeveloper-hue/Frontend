@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Menu, X, Coffee, ShieldCheck, LogOut, User, Sparkles, ShoppingBag, Clock, Bell } from "lucide-react";
+import { Menu, X, Coffee, ShieldCheck, LogOut, User, Sparkles, ShoppingBag, Clock, Bell, BookOpen, Palette } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { API_BASE } from "../config.js";
 import { clearCart } from "../utils/cart.js";
@@ -10,8 +10,8 @@ import CafeOrderTrackerModal from "./components/CafeOrderTrackerModal.jsx";
 
 const cafeLinks = [
   { label: "Menu", to: "/cafe/menu" },
-  { label: "About Cafe", to: "/cafe/about" },
-  { label: "Reserve a Table", to: "/cafe/reserve" },
+  { label: "Readers & Writers Space", to: "/cafe/reserve" },
+  { label: "Artist Space", to: "/cafe/artist-space" },
 ];
 
 export default function CafeNavbar() {
@@ -106,8 +106,8 @@ export default function CafeNavbar() {
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className={`w-full transition-all duration-500 ${
             scrolled
-              ? "bg-[#FFF8F0]/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(107,63,42,0.12)] border-b border-[#D4A85A]/20"
-              : "bg-[#FFF8F0]/80 backdrop-blur-md"
+              ? "bg-[#1A0C06]/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.5)] border-b border-[#D4A85A]/25"
+              : "bg-[#1A0C06]/80 backdrop-blur-md border-b border-white/5"
           }`}
         >
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 md:px-10 md:py-4">
@@ -117,10 +117,10 @@ export default function CafeNavbar() {
               <img
                 src="/Web.jpeg"
                 alt="Lekhok Tripura Cafe Logo"
-                className="h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full object-cover shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-[#6B3F2A]/40"
+                className="h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full object-cover shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-[#D4A85A]/40"
               />
               <div className="shrink-0">
-                <h1 className="whitespace-nowrap text-[11px] sm:text-sm font-bold uppercase tracking-[0.18em] text-[#2C1810]">
+                <h1 className="whitespace-nowrap text-[11px] sm:text-sm font-black uppercase tracking-[0.18em] text-[#FAF5EB]">
                   Lekhok Tripura
                 </h1>
                 <p className="text-[10px] sm:text-xs font-semibold tracking-widest text-[#D4A85A]">
@@ -131,50 +131,96 @@ export default function CafeNavbar() {
 
             {/* Desktop Nav Links */}
             <div className="hidden items-center gap-1 lg:flex">
-              {cafeLinks.map((link) => (
-                <NavLink key={link.to} to={link.to}>
-                  {({ isActive }) => (
-                    <div
-                      className={`relative rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-300 ${
-                        isActive
-                          ? "text-[#6B3F2A]"
-                          : "text-[#2C1810]/60 hover:text-[#6B3F2A]"
-                      }`}
-                    >
-                      {link.label}
-                      {isActive && (
-                        <motion.div
-                          layoutId="cafe-nav-pill"
-                          className="absolute inset-0 -z-10 rounded-full bg-[#6B3F2A]/10"
-                          transition={{ type: "spring", stiffness: 350, damping: 28 }}
-                        />
-                      )}
-                    </div>
-                  )}
-                </NavLink>
-              ))}
+              {/* Menu Link */}
+              <NavLink to="/cafe/menu">
+                {({ isActive }) => (
+                  <div
+                    className={`relative flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold transition-all duration-300 ${
+                      isActive
+                        ? "text-[#D4A85A]"
+                        : "text-white/80 hover:text-[#D4A85A]"
+                    }`}
+                  >
+                    <span>Menu</span>
+                    <Coffee size={15} className="text-[#D4A85A]" />
+                    {isActive && (
+                      <motion.div
+                        layoutId="cafe-nav-pill"
+                        className="absolute inset-0 -z-10 rounded-full bg-[#D4A85A]/15 border border-[#D4A85A]/30"
+                        transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                      />
+                    )}
+                  </div>
+                )}
+              </NavLink>
+
+              {/* Readers & Writers Space Link */}
+              <NavLink to="/cafe/reserve">
+                {({ isActive }) => (
+                  <div
+                    className={`relative flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold transition-all duration-300 ${
+                      isActive
+                        ? "text-[#D4A85A]"
+                        : "text-white/80 hover:text-[#D4A85A]"
+                    }`}
+                  >
+                    <span>Readers &amp; Writers Space</span>
+                    <BookOpen size={16} className="text-[#D4A85A]" />
+                    {isActive && (
+                      <motion.div
+                        layoutId="cafe-nav-pill"
+                        className="absolute inset-0 -z-10 rounded-full bg-[#D4A85A]/15 border border-[#D4A85A]/30"
+                        transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                      />
+                    )}
+                  </div>
+                )}
+              </NavLink>
+
+              {/* Artist Space Link */}
+              <NavLink to="/cafe/artist-space">
+                {({ isActive }) => (
+                  <div
+                    className={`relative flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold transition-all duration-300 ${
+                      isActive
+                        ? "text-[#D4A85A]"
+                        : "text-white/80 hover:text-[#D4A85A]"
+                    }`}
+                  >
+                    <span>Artist Space</span>
+                    <Palette size={16} className="text-[#D4A85A]" />
+                    {isActive && (
+                      <motion.div
+                        layoutId="cafe-nav-pill"
+                        className="absolute inset-0 -z-10 rounded-full bg-[#D4A85A]/15 border border-[#D4A85A]/30"
+                        transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                      />
+                    )}
+                  </div>
+                )}
+              </NavLink>
 
               {/* Cart Button */}
               <button
                 onClick={() => setCartOpen(true)}
-                className="relative flex items-center gap-2 rounded-full border border-[#6B3F2A]/30 bg-gradient-to-r from-[#6B3F2A] to-[#A0522D] px-4 py-2 text-xs font-bold text-white shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                className="group relative flex shrink-0 whitespace-nowrap items-center gap-2 rounded-full border border-[#D4A85A]/40 bg-[#23120A] px-5 py-2 text-xs font-black text-[#FAF5EB] shadow-md transition-all duration-300 hover:scale-105 hover:bg-[#D4A85A] hover:text-[#140803] hover:shadow-lg"
               >
-                <ShoppingBag size={15} />
+                <ShoppingBag size={15} className="shrink-0 text-[#D4A85A] group-hover:text-[#140803] transition-colors" />
                 <span>Cart</span>
                 {cartCount > 0 && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#D4A85A] text-[10px] font-black text-[#2C1810] shadow-sm">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#D4A85A] text-[10px] font-black text-[#140803] shadow-sm group-hover:bg-[#140803] group-hover:text-[#D4A85A]">
                     {cartCount}
                   </span>
                 )}
               </button>
 
               {/* Separator */}
-              <div className="mx-2 h-5 w-px bg-[#6B3F2A]/20" />
+              <div className="mx-2 h-5 w-px bg-white/15" />
 
               {/* Back to Main Site */}
               <Link
                 to="/"
-                className="rounded-full border border-[#6B3F2A]/20 bg-[#6B3F2A]/5 px-4 py-2 text-xs font-semibold text-[#6B3F2A] hover:bg-[#6B3F2A]/10 transition-all duration-300"
+                className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold text-white/80 hover:bg-white/10 hover:text-white transition-all duration-300"
               >
                 ← Main Site
               </Link>
@@ -184,7 +230,7 @@ export default function CafeNavbar() {
                 <div className="relative ml-2" ref={profileRef}>
                   <button
                     onClick={() => setProfileOpen((p) => !p)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#D4A85A]/50 bg-gradient-to-br from-[#D4A85A] to-[#6B3F2A] font-bold text-white text-base shadow-md hover:scale-110 transition-transform duration-200 overflow-hidden select-none relative"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#D4A85A]/60 bg-gradient-to-br from-[#D4A85A] to-[#6B3F2A] font-bold text-white text-base shadow-md hover:scale-110 transition-transform duration-200 overflow-hidden select-none relative"
                     title={authUser.name || authUser.email}
                   >
                     {authUser.avatarUrl ? (
@@ -206,11 +252,11 @@ export default function CafeNavbar() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 8, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-13 mt-2 w-56 rounded-2xl border border-[#D4A85A]/30 bg-[#FFF8F0] shadow-2xl shadow-[#6B3F2A]/15 p-3"
+                        className="absolute right-0 top-13 mt-2 w-56 rounded-2xl border border-[#D4A85A]/30 bg-[#23120A] shadow-2xl p-3 text-[#FAF5EB]"
                       >
-                        <div className="mb-3 border-b border-[#D4A85A]/20 pb-3">
-                          <p className="text-xs font-semibold text-[#2C1810] truncate">{authUser.name || "Guest"}</p>
-                          <p className="text-[10px] text-[#2C1810]/40 truncate mt-0.5">{authUser.email}</p>
+                        <div className="mb-3 border-b border-white/10 pb-3">
+                          <p className="text-xs font-black text-[#FAF5EB] truncate">{authUser.name || "Guest"}</p>
+                          <p className="text-[10px] text-[#D4A85A] truncate mt-0.5">{authUser.email}</p>
                         </div>
                         {/* My Orders Button */}
                         <button
@@ -229,31 +275,31 @@ export default function CafeNavbar() {
                               setCartOpen(true);
                             }
                           }}
-                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-[#6B3F2A] hover:bg-[#6B3F2A]/10 transition mb-1"
+                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-[#FAF5EB] hover:text-[#D4A85A] hover:bg-white/10 transition mb-1"
                         >
-                          <Clock size={14} /> My Orders &amp; Live Status
+                          <Clock size={14} className="text-[#D4A85A]" /> My Orders &amp; Live Status
                         </button>
                         {authUser.role === "admin" && (
                           <Link
                             to="/cafe/admin"
                             onClick={() => setProfileOpen(false)}
-                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-[#6B3F2A] hover:bg-[#6B3F2A]/10 transition mb-1"
+                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-[#FAF5EB] hover:text-[#D4A85A] hover:bg-white/10 transition mb-1"
                           >
-                            <ShieldCheck size={14} /> Cafe Admin Panel
+                            <ShieldCheck size={14} className="text-[#D4A85A]" /> Cafe Admin Panel
                           </Link>
                         )}
                         {authUser.role === "admin" && (
                           <Link
                             to="/admin"
                             onClick={() => setProfileOpen(false)}
-                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-[#6B3F2A] hover:bg-[#6B3F2A]/10 transition mb-1"
+                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-[#FAF5EB] hover:text-[#D4A85A] hover:bg-white/10 transition mb-1"
                           >
-                            <ShieldCheck size={14} /> Admin Dashboard
+                            <ShieldCheck size={14} className="text-[#D4A85A]" /> Admin Dashboard
                           </Link>
                         )}
                         <button
                           onClick={handleLogout}
-                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-medium text-red-500 hover:bg-red-50 transition"
+                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-bold text-red-400 hover:bg-red-900/30 hover:text-red-300 transition"
                         >
                           <LogOut size={14} /> Sign Out
                         </button>
@@ -282,7 +328,7 @@ export default function CafeNavbar() {
             {/* Mobile Hamburger */}
             <button
               onClick={() => setOpen(true)}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#6B3F2A]/20 bg-[#6B3F2A]/5 text-[#6B3F2A] transition hover:bg-[#6B3F2A]/10 lg:hidden"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#D4A85A]/30 bg-white/5 text-[#FAF5EB] transition hover:bg-white/10 lg:hidden"
               aria-label="Open menu"
             >
               <Menu size={20} />
@@ -295,12 +341,12 @@ export default function CafeNavbar() {
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-[100] overflow-y-auto bg-[#FAF5EB]/98 px-4 py-4 backdrop-blur-2xl lg:hidden"
+            className="fixed inset-0 z-[100] overflow-y-auto bg-[#140803]/98 px-4 py-4 backdrop-blur-2xl text-[#FAF5EB] lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="flex items-center justify-between rounded-2xl border border-[#D4A85A]/30 bg-white/60 p-4">
+            <div className="flex items-center justify-between rounded-2xl border border-[#D4A85A]/30 bg-[#23120A] p-4">
               <div className="flex items-center gap-3">
                 <img
                   src="/Web.jpeg"
@@ -308,13 +354,13 @@ export default function CafeNavbar() {
                   className="h-10 w-10 shrink-0 rounded-full object-cover shadow-md"
                 />
                 <div>
-                  <span className="text-sm font-bold tracking-widest text-[#2C1810]">CAFE</span>
+                  <span className="text-sm font-black tracking-widest text-[#FAF5EB]">CAFE</span>
                   <p className="text-[10px] text-[#D4A85A] font-semibold tracking-wider">Lekhok Tripura</p>
                 </div>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="grid h-10 w-10 place-items-center rounded-full border border-[#6B3F2A]/20 text-[#6B3F2A] hover:bg-[#6B3F2A]/10 transition"
+                className="grid h-10 w-10 place-items-center rounded-full border border-white/20 text-white hover:bg-white/10 transition"
               >
                 <X size={20} />
               </button>
@@ -326,7 +372,7 @@ export default function CafeNavbar() {
               animate="visible"
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}
             >
-              {[{ label: "Home", to: "/cafe" }, ...cafeLinks, { label: "← Back to Main Site", to: "/" }].map((item) => (
+              {[{ label: "Home", to: "/cafe" }, { label: "Menu", to: "/cafe/menu" }, { label: "Readers & Writers Space 📚", to: "/cafe/reserve" }, { label: "← Back to Main Site", to: "/" }].map((item) => (
                 <motion.div
                   key={item.to}
                   variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
@@ -334,7 +380,7 @@ export default function CafeNavbar() {
                   <Link
                     to={item.to}
                     onClick={() => setOpen(false)}
-                    className="block rounded-2xl border border-[#D4A85A]/25 bg-white/60 px-5 py-3.5 text-center text-xl font-bold text-[#2C1810] transition hover:border-[#6B3F2A]/40 hover:bg-[#6B3F2A]/5 hover:text-[#6B3F2A]"
+                    className="block rounded-2xl border border-[#D4A85A]/25 bg-[#23120A] px-5 py-3.5 text-center text-xl font-black text-[#FAF5EB] transition hover:border-[#D4A85A] hover:bg-[#D4A85A] hover:text-[#140803]"
                   >
                     {item.label}
                   </Link>
@@ -345,7 +391,7 @@ export default function CafeNavbar() {
               {authUser ? (
                 <motion.div
                   variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
-                  className="flex flex-col gap-2.5 rounded-2xl border border-[#D4A85A]/30 bg-white/60 p-4 mt-2"
+                  className="flex flex-col gap-2.5 rounded-2xl border border-[#D4A85A]/30 bg-[#23120A] p-4 mt-2"
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-11 w-11 overflow-hidden rounded-full border-2 border-[#D4A85A]/50 bg-gradient-to-br from-[#D4A85A] to-[#6B3F2A] flex items-center justify-center text-white font-bold text-base shrink-0 relative">
@@ -354,13 +400,13 @@ export default function CafeNavbar() {
                       ) : userInitial}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-[#2C1810]">{authUser.name || "Guest"}</p>
-                      <p className="text-[10px] text-[#2C1810]/45 truncate">{authUser.email}</p>
+                      <p className="text-sm font-bold text-[#FAF5EB]">{authUser.name || "Guest"}</p>
+                      <p className="text-[10px] text-white/50 truncate">{authUser.email}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => { handleLogout(); setOpen(false); }}
-                    className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-100 transition"
+                    className="flex items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-900/40 px-4 py-2.5 text-xs font-semibold text-red-200 hover:bg-red-900/60 transition"
                   >
                     <LogOut size={14} /> Sign Out
                   </button>
@@ -372,13 +418,13 @@ export default function CafeNavbar() {
                 >
                   <button
                     onClick={() => { setShowAuthModal(true); setOpen(false); }}
-                    className="flex-1 rounded-xl border border-[#6B3F2A]/25 py-3 text-sm font-semibold text-[#6B3F2A] hover:bg-[#6B3F2A]/5 transition"
+                    className="flex-1 rounded-xl border border-[#D4A85A]/30 bg-[#23120A] py-3 text-sm font-bold text-[#D4A85A] hover:bg-white/5 transition"
                   >
                     Login
                   </button>
                   <button
                     onClick={() => { setShowAuthModal(true); setOpen(false); }}
-                    className="flex-1 rounded-xl bg-[#6B3F2A] py-3 text-sm font-semibold text-[#FAF5EB] hover:bg-[#A0522D] transition"
+                    className="flex-1 rounded-xl bg-[#D4A85A] py-3 text-sm font-black text-[#140803] hover:bg-white transition"
                   >
                     Sign Up
                   </button>

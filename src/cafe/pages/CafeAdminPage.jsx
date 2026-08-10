@@ -76,11 +76,14 @@ export default function CafeAdminPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const [mainTab, setMainTab] = useState("menu"); // "menu" | "orders"
+  const [mainTab, setMainTab] = useState("menu"); // "menu" | "orders" | "space"
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
+
+  const [spaceBookings, setSpaceBookings] = useState([]);
+  const [spaceLoading, setSpaceLoading] = useState(false);
 
   const [deleteConfirm, setDeleteConfirm] = useState(null); // item to delete
   const [deleting, setDeleting] = useState(false);
@@ -188,6 +191,20 @@ export default function CafeAdminPage() {
       setUpdatingOrderId(null);
     }
   };
+
+  /* ── Fetch space bookings ───────────────────────────────────── */
+  const fetchAdminSpaceBookings = useCallback(async () => {
+    setSpaceLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/cafe/space/admin/all`, { credentials: "include" });
+      const data = await res.json();
+      if (data.success) setSpaceBookings(data.bookings);
+    } catch {
+      showToast("Failed to fetch space bookings", "error");
+    } finally {
+      setSpaceLoading(false);
+    }
+  }, []);
 
   /* ── Toast ──────────────────────────────────────────────────── */
   const showToast = (msg, type = "success") => {
@@ -417,7 +434,17 @@ export default function CafeAdminPage() {
             )}
           </button>
 
-          <SidebarItem icon={Tag} label="Reservations" disabled />
+          <button
+            onClick={() => { setMainTab("space"); fetchAdminSpaceBookings(); }}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition w-full text-left ${
+              mainTab === "space"
+                ? "bg-[#D4A85A]/15 text-[#D4A85A]"
+                : "text-white/50 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <Tag size={16} />
+            <span>Space Reservations</span>
+          </button>
         </nav>
 
         {/* Bottom user strip */}
@@ -455,12 +482,18 @@ export default function CafeAdminPage() {
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[#D4A85A]/20 bg-white/90 backdrop-blur-md px-8 py-4 shadow-sm">
           <div>
             <h1 className="text-lg font-black" style={{ color: "#2C1810" }}>
-              {mainTab === "menu" ? "Menu Management" : "Orders & Status Management"}
+              {mainTab === "menu"
+                ? "Menu Management"
+                : mainTab === "orders"
+                ? "Orders & Status Management"
+                : "Readers & Writers Space Reservations"}
             </h1>
             <p className="text-xs" style={{ color: "#2C1810", opacity: 0.45 }}>
               {mainTab === "menu"
                 ? "Add, edit, and manage all café menu items"
-                : "Real-time order lifecycle & customer counter pickup management"}
+                : mainTab === "orders"
+                ? "Real-time order lifecycle & customer counter pickup management"
+                : "Manage reserved reader seating & writer desk slots"}
             </p>
           </div>
           {mainTab === "menu" ? (
@@ -471,7 +504,7 @@ export default function CafeAdminPage() {
             >
               <Plus size={16} /> Add Item
             </button>
-          ) : (
+          ) : mainTab === "orders" ? (
             <button
               onClick={fetchAdminOrders}
               disabled={ordersLoading}
@@ -479,10 +512,74 @@ export default function CafeAdminPage() {
             >
               <RefreshCw size={14} className={ordersLoading ? "animate-spin" : ""} /> Refresh Orders
             </button>
+          ) : (
+            <button
+              onClick={fetchAdminSpaceBookings}
+              disabled={spaceLoading}
+              className="flex items-center gap-2 rounded-xl border border-[#6B3F2A]/30 bg-white px-4 py-2.5 text-xs font-bold text-[#6B3F2A] shadow-sm hover:bg-[#6B3F2A]/5 transition"
+            >
+              <RefreshCw size={14} className={spaceLoading ? "animate-spin" : ""} /> Refresh Bookings
+            </button>
           )}
         </header>
 
-        {mainTab === "orders" ? (
+        {mainTab === "space" ? (
+          /* ── SPACE RESERVATIONS TAB ──────────────────────────────────── */
+          <div className="flex-1 px-8 py-7">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-base font-black text-[#2C1810]">All Space Bookings ({spaceBookings.length})</h2>
+              <button
+                onClick={fetchAdminSpaceBookings}
+                disabled={spaceLoading}
+                className="flex items-center gap-2 rounded-xl border border-[#6B3F2A]/30 bg-white px-4 py-2 text-xs font-bold text-[#6B3F2A] hover:bg-[#6B3F2A]/5 transition"
+              >
+                <RefreshCw size={14} className={spaceLoading ? "animate-spin" : ""} /> Refresh Bookings
+              </button>
+            </div>
+
+            {spaceLoading && spaceBookings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24">
+                <Loader2 size={32} className="animate-spin text-[#6B3F2A]" />
+              </div>
+            ) : spaceBookings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <Tag size={48} className="mb-3 text-[#D4A85A]/40" />
+                <p className="text-base font-bold text-[#2C1810]/50">No space bookings found</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {spaceBookings.map((b) => (
+                  <div key={b._id} className="rounded-2xl border border-[#D4A85A]/25 bg-white p-5 shadow-sm">
+                    <div className="flex justify-between items-center border-b border-[#D4A85A]/15 pb-3 mb-3">
+                      <div>
+                        <span className="text-sm font-black text-[#6B3F2A]">#{b.bookingNumber}</span>
+                        <span className="ml-3 text-xs font-semibold text-[#2C1810]/60">{b.customerName} ({b.customerEmail || b.customerPhone || "Guest"})</span>
+                      </div>
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-800">
+                        {b.status} (Paid ₹{b.totalAmount})
+                      </span>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-3 text-xs">
+                      <div>
+                        <p className="text-[#2C1810]/50 font-semibold uppercase text-[10px]">Space Type:</p>
+                        <p className="font-bold text-[#2C1810] text-sm mt-0.5">{b.spaceType}</p>
+                      </div>
+                      <div>
+                        <p className="text-[#2C1810]/50 font-semibold uppercase text-[10px]">Date &amp; Time Slot:</p>
+                        <p className="font-bold text-[#6B3F2A] mt-0.5">{b.bookingDate} ({b.timeSlot})</p>
+                      </div>
+                      <div>
+                        <p className="text-[#2C1810]/50 font-semibold uppercase text-[10px]">Purpose &amp; Guests:</p>
+                        <p className="font-bold text-[#2C1810] mt-0.5">{b.purpose} ({b.guestsCount} Guests)</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : mainTab === "orders" ? (
           /* ── ORDERS TAB CONTENT ────────────────────────────────────────── */
           <div className="flex-1 px-8 py-7">
             {/* Order Status Filters */}
