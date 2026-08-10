@@ -196,10 +196,10 @@ export default function CafeHomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="mb-6 flex items-center gap-2 rounded-full border border-[#D4A85A]/40 bg-[#D4A85A]/10 px-5 py-2"
+            className="mb-6 flex items-center gap-2.5 rounded-full border border-[#D4A85A]/60 bg-black/40 backdrop-blur-md px-5 py-2 shadow-lg"
           >
             <Coffee size={14} className="text-[#D4A85A]" />
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#6B3F2A]">
+            <span className="text-xs font-black uppercase tracking-[0.25em] text-[#FAF5EB]">
               Now Open in Tripura
             </span>
           </motion.div>
