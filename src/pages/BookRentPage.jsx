@@ -274,10 +274,10 @@ export default function BookRentPage() {
                     <CreditCard size={14} /> DIGITAL LIBRARY CARD REQUIRED FOR RENTALS
                   </div>
                   <h2 className="text-xl sm:text-2xl font-black text-white">
-                    Buy Digital Library Card for <span className="text-amber-300">₹1</span>
+                    Buy Digital Library Card for <span className="text-amber-300">₹116.82</span>
                   </h2>
                   <p className="text-xs sm:text-sm text-white/75 max-w-2xl leading-relaxed">
-                    A valid Digital Library Card is required to rent books. Get instant lifetime valid digital membership card with unique Card ID &amp; scannable QR code.
+                    A valid Digital Library Card is required to rent books. Get instant lifetime valid digital membership card with unique Card ID &amp; scannable QR code. <span className="text-white/50">(₹99 + 18% GST)</span>
                   </p>
                 </div>
 
@@ -296,7 +296,7 @@ export default function BookRentPage() {
                     onClick={handleBuyCardDirectly}
                     className="rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 px-7 py-4 text-xs font-black uppercase tracking-wider text-black shadow-xl shadow-emerald-400/25 transition hover:scale-105 cursor-pointer flex items-center gap-2"
                   >
-                    <CreditCard size={16} /> Buy Library Card Now (₹1)
+                    <CreditCard size={16} /> Buy Library Card Now (₹116.82)
                   </button>
                 </div>
               </div>
