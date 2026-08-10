@@ -10,40 +10,34 @@ import { API_BASE } from "../../config.js";
 
 const SPACES = [
   {
-    id: "Quiet Reading Nook",
-    title: "Quiet Reading Nook",
-    desc: "Plush leather armchair, ambient reading lamp, and noise-controlled reading corner.",
+    id: "Book Reader's Corner",
+    title: "Book Reader's Corner",
+    desc: "Plush leather armchair, ambient reading lamp, and noise-controlled corner. ₹200 non-refundable fee — 100% adjusted with your cafe food & snacks order!",
     icon: BookOpen,
-    pricePerHour: 49,
-    image: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=600&auto=format&fit=crop&q=80",
-    features: ["Noise-controlled Zone", "Ambient Reading Lamp", "Free High-Speed Wi-Fi", "Unlimited Book Access"],
+    price: 200,
+    badge: "₹200 (Adjustable against Order)",
+    image: "/ChatGPT Image Aug 10, 2026, 11_00_13 PM.png",
+    features: [
+      "100% Amount Adjusted with Food & Drinks",
+      "No Hourly Time Limit (Stay & Read freely)",
+      "Noise-Controlled Reading Zone",
+      "Free High-Speed Wi-Fi & Power Outlets"
+    ],
   },
   {
-    id: "Writer's Desk",
-    title: "Writer's Desk",
-    desc: "Ergonomic chair, spacious wooden desk, power outlets, and dedicated writer's quiet zone.",
+    id: "Book Writer's Corner",
+    title: "Book Writer's Corner",
+    desc: "Spacious wooden desk & ergonomic chair for focus writing and laptop drafting. ₹200 non-refundable fee — 100% adjusted with your cafe food & snacks order!",
     icon: Feather,
-    pricePerHour: 75,
-    image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600&auto=format&fit=crop&q=80",
-    features: ["Ergonomic Seating", "Power Outlets & USB", "High-Speed Wi-Fi", "Writing Notepad Included"],
-  },
-  {
-    id: "Private Creative Pod",
-    title: "Private Creative Pod",
-    desc: "Sound-dampened acoustic booth designed for deep focus writing, drafting, and intense study.",
-    icon: Laptop,
-    pricePerHour: 99,
-    image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&auto=format&fit=crop&q=80",
-    features: ["Acoustic Isolation", "Private Desk Space", "Beverage Service", "Power & Fast Wi-Fi"],
-  },
-  {
-    id: "Group Discussion Pod",
-    title: "Group Discussion Pod",
-    desc: "Collaborative table for readers club, writing circles, and group creative discussions.",
-    icon: Users,
-    pricePerHour: 149,
-    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&auto=format&fit=crop&q=80",
-    features: ["Seating for 4-6", "Sharing Screen Available", "Whiteboard", "Group Drinks Discount"],
+    price: 200,
+    badge: "₹200 (Adjustable against Order)",
+    image: "/ChatGPT Image Aug 10, 2026, 11_02_34 PM.png",
+    features: [
+      "100% Amount Adjusted with Food & Drinks",
+      "No Hourly Time Limit (Stay & Write freely)",
+      "Ergonomic Seating & Writing Desk",
+      "Free High-Speed Wi-Fi & Quiet Zone"
+    ],
   },
 ];
 
@@ -209,7 +203,7 @@ export default function CafeSpacePage() {
           </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 max-w-4xl mx-auto">
           {SPACES.map((space) => {
             const isSelected = selectedSpace.id === space.id;
             const Icon = space.icon;
@@ -223,11 +217,11 @@ export default function CafeSpacePage() {
                     : "border-[#D4A85A]/20 bg-[#1E0E07] hover:border-[#D4A85A]/50"
                 }`}
               >
-                <div className="relative h-40 overflow-hidden">
+                <div className="relative h-56 overflow-hidden">
                   <img src={space.image} alt={space.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#140803] via-transparent to-transparent" />
-                  <span className="absolute left-3 top-3 rounded-full bg-[#D4A85A] px-3 py-1 text-[10px] font-black text-[#140803] shadow-md">
-                    ₹{space.pricePerHour * 2} / 2 Hours
+                  <span className="absolute left-3 top-3 rounded-full bg-[#D4A85A] px-3.5 py-1 text-[11px] font-black text-[#140803] shadow-md">
+                    {space.badge}
                   </span>
                   {isSelected && (
                     <span className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-[#D4A85A] text-[#140803] shadow-md font-black">
@@ -369,7 +363,7 @@ export default function CafeSpacePage() {
                 {selectedSpace.title} — <span className="text-[#D4A85A]">{selectedDate} ({selectedSlot})</span>
               </p>
               <p className="text-xs text-white/70 mt-1">
-                Duration: <strong>2 Hours</strong> • Total Price: <strong className="text-[#D4A85A]">₹{selectedSpace.pricePerHour * 2}</strong>
+                Booking Fee: <strong className="text-[#D4A85A]">₹200 (Non-Refundable • 100% Adjusted against Cafe Order)</strong>
               </p>
             </div>
 

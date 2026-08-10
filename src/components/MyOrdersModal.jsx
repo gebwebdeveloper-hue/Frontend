@@ -28,7 +28,7 @@ function ShipmentTracker({ purchase }) {
   };
 
   const currentLoc = purchase.currentLocation || "Main Warehouse";
-  const courier = purchase.courierService || "Standard Logistics";
+  const courier = purchase.courierService || (purchase.shiprocketOrderId ? "Shiprocket Logistics" : "Standard Logistics");
   const statusLabel = (purchase.shipmentStatus || "processing").toUpperCase().replace(/_/g, " ");
 
   return (
@@ -78,15 +78,15 @@ function ShipmentTracker({ purchase }) {
                   className={`grid h-7 w-7 place-items-center rounded-full text-xs font-black transition-all ${
                     isDone
                       ? isCurrent
-                        ? "bg-cyan-400 text-black ring-4 ring-cyan-400/30 scale-110 shadow-lg"
-                        : "bg-emerald-500 text-black"
-                      : "bg-zinc-800 text-white/40 border border-white/10"
+                        ? "bg-cyan-400 text-black shadow-lg shadow-cyan-400/30 scale-110"
+                        : "bg-cyan-500/30 text-cyan-300 border border-cyan-400/40"
+                      : "bg-white/5 text-white/30 border border-white/10"
                   }`}
                 >
                   <IconComp size={13} />
                 </div>
                 <span
-                  className={`text-[9px] font-extrabold uppercase tracking-tight hidden sm:block ${
+                  className={`text-[9px] font-bold uppercase tracking-wider ${
                     isDone ? (isCurrent ? "text-cyan-300" : "text-white/80") : "text-white/30"
                   }`}
                 >
@@ -103,6 +103,11 @@ function ShipmentTracker({ purchase }) {
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-white/40 block">Logistics / Courier Partner</span>
           <span className="font-extrabold text-white">{courier}</span>
+          {purchase.shiprocketOrderId && (
+            <span className="text-[10px] font-mono text-cyan-400 block mt-0.5">
+              Shiprocket Ref: #{purchase.shiprocketOrderId}
+            </span>
+          )}
         </div>
 
         <div>

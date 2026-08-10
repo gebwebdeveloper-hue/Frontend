@@ -35,6 +35,8 @@ export default function CafeMenuPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("grid");
   const [addedItemName, setAddedItemName] = useState(null);
+  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [selectedItemName, setSelectedItemName] = useState("");
 
   const fetchMenu = async () => {
     setLoading(true);
@@ -67,9 +69,8 @@ export default function CafeMenuPage() {
   }, [items, activeCategory, searchQuery]);
 
   const handleAddToCart = (item) => {
-    addToCafeCart(item);
-    setAddedItemName(item.name);
-    setTimeout(() => setAddedItemName(null), 2000);
+    setSelectedItemName(item.name);
+    setShowComingSoon(true);
   };
 
   return (
@@ -263,10 +264,10 @@ export default function CafeMenuPage() {
 
                       <button
                         onClick={() => handleAddToCart(item)}
-                        className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-[#140803] shadow-md transition hover:scale-105"
+                        className="flex shrink-0 whitespace-nowrap items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-[#140803] shadow-md transition hover:scale-105"
                         style={{ background: "linear-gradient(135deg, #D4A85A, #A0522D)" }}
                       >
-                        <ShoppingBag size={14} /> Add to Cart
+                        <Sparkles size={14} /> Coming Soon
                       </button>
                     </div>
                   </div>
@@ -308,9 +309,9 @@ export default function CafeMenuPage() {
                     <span className="text-base font-black text-[#D4A85A]">₹{item.price}</span>
                     <button
                       onClick={() => handleAddToCart(item)}
-                      className="flex items-center gap-1.5 rounded-xl bg-[#D4A85A] px-4 py-2 text-xs font-black text-[#140803] shadow-md hover:bg-white transition"
+                      className="flex shrink-0 whitespace-nowrap items-center gap-1.5 rounded-xl bg-[#D4A85A] px-4 py-2 text-xs font-black text-[#140803] shadow-md hover:bg-white transition"
                     >
-                      <ShoppingBag size={14} /> Add to Cart
+                      <Sparkles size={14} /> Coming Soon
                     </button>
                   </div>
                 </div>
@@ -320,23 +321,49 @@ export default function CafeMenuPage() {
         )}
       </section>
 
-      {/* ── TOAST NOTIFICATION FOR ADD TO CART ────────────────────────────── */}
+      {/* ── COMING SOON MODAL ────────────────────────────────────────────── */}
       <AnimatePresence>
-        {addedItemName && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-6 right-6 z-[100] flex items-center gap-3 rounded-2xl border border-[#D4A85A] bg-[#23120A] px-5 py-3 text-white shadow-2xl"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#D4A85A] text-[#140803] font-black">
-              ✓
-            </div>
-            <div>
-              <p className="text-xs font-bold text-[#D4A85A]">Added to Cart!</p>
-              <p className="text-xs text-white/90">{addedItemName}</p>
-            </div>
-          </motion.div>
+        {showComingSoon && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowComingSoon(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="relative z-10 w-full max-w-md rounded-3xl bg-[#23120A] p-6 text-center shadow-2xl border border-[#D4A85A]/40 text-white"
+            >
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#D4A85A]/20 text-[#D4A85A] border border-[#D4A85A]/40">
+                <Coffee size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-[#FAF5EB]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                Online Cart &amp; Ordering Coming Soon! 🚀
+              </h3>
+              <p className="text-xs text-white/80 mt-2 leading-relaxed">
+                Online food &amp; beverage ordering for counter pickup is launching very soon at Lekhok Tripura Cafe.
+              </p>
+
+              {selectedItemName && (
+                <div className="mt-4 rounded-2xl bg-[#140803] p-4 text-xs text-left border border-[#D4A85A]/25">
+                  <p className="font-bold text-[#D4A85A]">Selected Item:</p>
+                  <p className="text-sm font-black text-[#FAF5EB] mt-0.5">{selectedItemName}</p>
+                  <p className="text-white/60 mt-1">Order directly at the cafe counter during your visit!</p>
+                </div>
+              )}
+
+              <button
+                onClick={() => setShowComingSoon(false)}
+                className="mt-6 w-full rounded-2xl bg-[#D4A85A] py-3.5 text-xs font-black text-[#140803] shadow-lg hover:bg-white transition"
+              >
+                Got It
+              </button>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

@@ -12,6 +12,7 @@ const cafeLinks = [
   { label: "Menu", to: "/cafe/menu" },
   { label: "Readers & Writers Space", to: "/cafe/reserve" },
   { label: "Artist Space", to: "/cafe/artist-space" },
+  { label: "Updates 📢", to: "/cafe/updates" },
 ];
 
 export default function CafeNavbar() {
@@ -189,6 +190,29 @@ export default function CafeNavbar() {
                   >
                     <span>Artist Space</span>
                     <Palette size={16} className="text-[#D4A85A]" />
+                    {isActive && (
+                      <motion.div
+                        layoutId="cafe-nav-pill"
+                        className="absolute inset-0 -z-10 rounded-full bg-[#D4A85A]/15 border border-[#D4A85A]/30"
+                        transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                      />
+                    )}
+                  </div>
+                )}
+              </NavLink>
+
+              {/* Updates Link */}
+              <NavLink to="/cafe/updates">
+                {({ isActive }) => (
+                  <div
+                    className={`relative flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold transition-all duration-300 ${
+                      isActive
+                        ? "text-[#D4A85A]"
+                        : "text-white/80 hover:text-[#D4A85A]"
+                    }`}
+                  >
+                    <span>Updates</span>
+                    <Bell size={15} className="text-[#D4A85A]" />
                     {isActive && (
                       <motion.div
                         layoutId="cafe-nav-pill"

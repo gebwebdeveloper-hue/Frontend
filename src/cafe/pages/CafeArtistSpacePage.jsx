@@ -10,50 +10,27 @@ import { API_BASE } from "../../config.js";
 
 const ART_SPACES = [
   {
-    id: "Easel & Canvas Studio",
-    title: "Easel & Canvas Studio",
-    desc: "Adjustable solid wooden easel, palette tray, brush holder, and oil/acrylic painting setup.",
+    id: "Artist Corner",
+    title: "Artist Corner",
+    desc: "Dedicated quiet creative studio workstation equipped for drawing, painting, sketching, digital illustration, and sculpting.",
     icon: Palette,
-    pricePerHour: 79,
-    image: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=600&auto=format&fit=crop&q=80",
-    features: ["Solid Wooden Easel", "Canvas Holder", "Brush & Palette Tray", "Natural Studio Light Lamp"],
-  },
-  {
-    id: "Digital Art & Illustration Desk",
-    title: "Digital Art & Illustration Desk",
-    desc: "Tablet stand, USB-C multi-hub, color-calibrated warm desk lamp, fast charging, and ergonomic chair.",
-    icon: Layers,
-    pricePerHour: 89,
-    image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80",
-    features: ["iPad / Wacom Stand", "USB-C Power Outlets", "Ergonomic Mesh Chair", "High-Speed Wi-Fi"],
-  },
-  {
-    id: "Watercolor & Sketching Nook",
-    title: "Watercolor & Sketching Nook",
-    desc: "Spacious desk, water jar holder, fine-liner brush rests, and quiet ambient corner for illustration.",
-    icon: Brush,
-    pricePerHour: 59,
-    image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&auto=format&fit=crop&q=80",
-    features: ["Watercolor Paper Pad", "Water Jar & Blotting", "Peaceful Noise-Controlled", "Unlimited Book Inspiration"],
-  },
-  {
-    id: "Crafts, Clay & Sculpting Pod",
-    title: "Crafts, Clay & Sculpting Pod",
-    desc: "Heavy-duty wipeable tabletop, turntable sculpting wheel, and craft storage trays.",
-    icon: Sun,
-    pricePerHour: 99,
-    image: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=600&auto=format&fit=crop&q=80",
-    features: ["Sculpting Turntable", "Wipeable Heavy Duty Desk", "Craft Tool Tray", "Spacious Group Table"],
+    pricePackage: 200,
+    durationHours: 4,
+    pricePerHour: 50,
+    image: "/ChatGPT Image Aug 10, 2026, 10_55_50 PM.png",
+    features: [
+      "Solid Wooden Easel & Canvas Holder",
+      "Studio Lighting & Natural Sunlight Lamp",
+      "Free High-Speed Wi-Fi & Power Outlets",
+      "10% Discount on Cafe Beverages & Snacks"
+    ],
   },
 ];
 
 const TIME_SLOTS = [
-  "09:00 AM - 11:00 AM",
-  "11:00 AM - 01:00 PM",
-  "01:00 PM - 03:00 PM",
-  "03:00 PM - 05:00 PM",
-  "05:00 PM - 07:00 PM",
-  "07:00 PM - 09:00 PM",
+  "09:00 AM - 01:00 PM (Morning Session)",
+  "01:00 PM - 05:00 PM (Afternoon Session)",
+  "05:00 PM - 09:00 PM (Evening Session)"
 ];
 
 const ART_MEDIUMS = [
@@ -162,17 +139,17 @@ export default function CafeArtistSpacePage() {
       </section>
 
       {/* ── STEP 1: CHOOSE WORKSTATION TYPE ───────────────────────────────── */}
-      <section className="mx-auto max-w-6xl px-6 py-14">
+      <section className="mx-auto max-w-4xl px-6 py-14">
         <div className="mb-8 text-center">
           <h2 className="text-2xl sm:text-3xl font-black text-[#FAF5EB]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
             1. Select Your Artist Workstation
           </h2>
           <p className="text-xs sm:text-sm text-[#D4A85A] mt-1">
-            Choose the artwork studio setup tailored for your drawing, painting, or sculpting session.
+            Book your dedicated studio space for artwork, drawing, and painting.
           </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="max-w-xl mx-auto">
           {ART_SPACES.map((space) => {
             const isSelected = selectedSpace.id === space.id;
             const Icon = space.icon;
@@ -182,34 +159,34 @@ export default function CafeArtistSpacePage() {
                 onClick={() => setSelectedSpace(space)}
                 className={`group cursor-pointer overflow-hidden rounded-3xl border-2 transition-all duration-300 ${
                   isSelected
-                    ? "border-[#D4A85A] bg-[#23120A] shadow-2xl scale-[1.02]"
+                    ? "border-[#D4A85A] bg-[#23120A] shadow-2xl scale-[1.01]"
                     : "border-[#D4A85A]/20 bg-[#1E0E07] hover:border-[#D4A85A]/50"
                 }`}
               >
-                <div className="relative h-40 overflow-hidden">
+                <div className="relative h-64 sm:h-72 overflow-hidden">
                   <img src={space.image} alt={space.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#140803] via-transparent to-transparent" />
-                  <span className="absolute left-3 top-3 rounded-full bg-[#D4A85A] px-3 py-1 text-[10px] font-black text-[#140803] shadow-md">
-                    ₹{space.pricePerHour * 2} / 2 Hours
+                  <span className="absolute left-4 top-4 rounded-full bg-[#D4A85A] px-4 py-1.5 text-xs font-black text-[#140803] shadow-xl">
+                    ₹200 / 4 Hours
                   </span>
                   {isSelected && (
-                    <span className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-[#D4A85A] text-[#140803] shadow-md font-black">
-                      <Check size={16} />
+                    <span className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#D4A85A] text-[#140803] shadow-xl font-black">
+                      <Check size={18} />
                     </span>
                   )}
                 </div>
 
-                <div className="p-5">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Icon size={18} className="text-[#D4A85A]" />
-                    <h3 className="text-base font-black text-[#FAF5EB]">{space.title}</h3>
+                <div className="p-6 sm:p-8">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Icon size={24} className="text-[#D4A85A]" />
+                    <h3 className="text-xl font-black text-[#FAF5EB]">{space.title}</h3>
                   </div>
-                  <p className="text-xs text-[#FAF5EB]/65 leading-relaxed mb-4">{space.desc}</p>
+                  <p className="text-sm text-[#FAF5EB]/75 leading-relaxed mb-6">{space.desc}</p>
 
-                  <div className="space-y-1.5 border-t border-[#D4A85A]/15 pt-3 text-[11px] font-semibold text-white/80">
+                  <div className="grid gap-2.5 sm:grid-cols-2 border-t border-[#D4A85A]/20 pt-4 text-xs font-semibold text-white/90">
                     {space.features.map((feat, idx) => (
-                      <div key={idx} className="flex items-center gap-1.5">
-                        <CheckCircle2 size={12} className="text-emerald-400" /> {feat}
+                      <div key={idx} className="flex items-center gap-2">
+                        <CheckCircle2 size={14} className="text-emerald-400 shrink-0" /> {feat}
                       </div>
                     ))}
                   </div>
@@ -332,7 +309,7 @@ export default function CafeArtistSpacePage() {
                 {selectedSpace.title} — <span className="text-[#D4A85A]">{selectedDate} ({selectedSlot})</span>
               </p>
               <p className="text-xs text-white/70 mt-1">
-                Medium: <strong>{artMedium}</strong> • Duration: <strong>2 Hours</strong> • Price: <strong className="text-[#D4A85A]">₹{selectedSpace.pricePerHour * 2}</strong>
+                Medium: <strong>{artMedium}</strong> • Duration: <strong>4 Hours</strong> • Package Price: <strong className="text-[#D4A85A]">₹200</strong>
               </p>
             </div>
 

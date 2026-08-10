@@ -33,7 +33,7 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
   const getDeliveryCharge = (state) => {
     if (!state) return 120;
     const s = state.trim().toLowerCase();
-    if (s === "tripura") return 80;
+    if (s === "tripura") return 0;
     if (s === "west bengal") return 100;
     return 120;
   };

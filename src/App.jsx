@@ -36,6 +36,7 @@ import CafeAdminPage from "./cafe/pages/CafeAdminPage.jsx";
 import CafeSpacePage from "./cafe/pages/CafeSpacePage.jsx";
 import CafeMenuPage from "./cafe/pages/CafeMenuPage.jsx";
 import CafeArtistSpacePage from "./cafe/pages/CafeArtistSpacePage.jsx";
+import CafeUpdatesPage from "./cafe/pages/CafeUpdatesPage.jsx";
 
 
 // Helper component to normalize URLs (strip trailing slashes, decode spaces/encoded URIs)
@@ -139,6 +140,7 @@ export default function App() {
             <Route path="space" element={<CafeSpacePage />} />
             <Route path="artist-space" element={<CafeArtistSpacePage />} />
             <Route path="artist" element={<CafeArtistSpacePage />} />
+            <Route path="updates" element={<CafeUpdatesPage />} />
           </Route>
 
           {/* Catch-All Fallback Route */}

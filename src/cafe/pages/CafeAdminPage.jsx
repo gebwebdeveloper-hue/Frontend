@@ -7,7 +7,7 @@ import {
   ArrowLeft, Search, Filter, Image, Tag, DollarSign,
   Clock, FileText, ToggleLeft, ToggleRight, Loader2, ShieldAlert,
   UploadCloud, ShoppingBag, Bell, UtensilsCrossed, CheckCircle2,
-  UserCheck, RefreshCw, Phone, Mail,
+  UserCheck, RefreshCw, Phone, Mail, Crown,
 } from "lucide-react";
 import { API_BASE } from "../../config.js";
 
@@ -85,13 +85,35 @@ export default function CafeAdminPage() {
   const [spaceBookings, setSpaceBookings] = useState([]);
   const [spaceLoading, setSpaceLoading] = useState(false);
 
+  const [adminUpdates, setAdminUpdates] = useState([]);
+  const [updatesLoading, setUpdatesLoading] = useState(false);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [showUpdatePreview, setShowUpdatePreview] = useState(false);
+  const [editUpdateItem, setEditUpdateItem] = useState(null);
+  const [updateForm, setUpdateForm] = useState({
+    title: "",
+    content: "",
+    category: "Announcement",
+    imageUrl: "",
+    isPinned: false,
+    isPublished: true
+  });
+  const [savingUpdate, setSavingUpdate] = useState(false);
+  const [spotlightForm, setSpotlightForm] = useState({
+    month: new Date().toISOString().slice(0, 7),
+    memberName: "",
+    visitCount: 12,
+    customBadge: "Visitor of the Month",
+    message: ""
+  });
+
   const [deleteConfirm, setDeleteConfirm] = useState(null); // item to delete
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState(null);
 
   /* ── Lock body & Lenis scroll when modal or delete confirm is open ── */
   useEffect(() => {
-    if (modalOpen || deleteConfirm) {
+    if (modalOpen || deleteConfirm || updateModalOpen) {
       document.body.style.overflow = "hidden";
       if (window.lenis) window.lenis.stop();
     } else {
@@ -102,7 +124,7 @@ export default function CafeAdminPage() {
       document.body.style.overflow = "";
       if (window.lenis) window.lenis.start();
     };
-  }, [modalOpen, deleteConfirm]);
+  }, [modalOpen, deleteConfirm, updateModalOpen]);
 
   /* ── Auth check ─────────────────────────────────────────────── */
   useEffect(() => {
@@ -205,6 +227,105 @@ export default function CafeAdminPage() {
       setSpaceLoading(false);
     }
   }, []);
+
+  const fetchAdminUpdates = useCallback(async () => {
+    setUpdatesLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/cafe/updates/admin`, { credentials: "include" });
+      const data = await res.json();
+      if (data.success) setAdminUpdates(data.updates);
+    } catch {
+      showToast("Failed to fetch updates", "error");
+    } finally {
+      setUpdatesLoading(false);
+    }
+  }, []);
+
+  const openAddUpdate = () => {
+    setEditUpdateItem(null);
+    setUpdateForm({
+      title: "",
+      content: "",
+      category: "Announcement",
+      imageUrl: "",
+      isPinned: false,
+      isPublished: true
+    });
+    setShowUpdatePreview(false);
+    setUpdateModalOpen(true);
+  };
+
+  const openEditUpdate = (item) => {
+    setEditUpdateItem(item);
+    setUpdateForm({
+      title: item.title,
+      content: item.content,
+      category: item.category || "Announcement",
+      imageUrl: item.imageUrl || "",
+      isPinned: item.isPinned,
+      isPublished: item.isPublished
+    });
+    setShowUpdatePreview(false);
+    setUpdateModalOpen(true);
+  };
+
+  const handleSaveUpdate = async (e) => {
+    e.preventDefault();
+    setSavingUpdate(true);
+    try {
+      const url = editUpdateItem
+        ? `${API_BASE}/cafe/updates/${editUpdateItem._id}`
+        : `${API_BASE}/cafe/updates`;
+      const method = editUpdateItem ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(updateForm)
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      showToast(editUpdateItem ? "Update edited!" : "New update published!");
+      setUpdateModalOpen(false);
+      fetchAdminUpdates();
+    } catch (err) {
+      showToast(err.message || "Failed to save update", "error");
+    } finally {
+      setSavingUpdate(false);
+    }
+  };
+
+  const handleDeleteUpdatePost = async (id) => {
+    try {
+      const res = await fetch(`${API_BASE}/cafe/updates/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("Update post deleted");
+        fetchAdminUpdates();
+      }
+    } catch {
+      showToast("Failed to delete update", "error");
+    }
+  };
+
+  const handleSaveSpotlight = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_BASE}/cafe/updates/visitor-of-month`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(spotlightForm)
+      });
+      const data = await res.json();
+      if (data.success) showToast("Visitor of the Month spotlight updated!");
+    } catch {
+      showToast("Failed to update spotlight", "error");
+    }
+  };
 
   /* ── Toast ──────────────────────────────────────────────────── */
   const showToast = (msg, type = "success") => {
@@ -445,6 +566,18 @@ export default function CafeAdminPage() {
             <Tag size={16} />
             <span>Space Reservations</span>
           </button>
+
+          <button
+            onClick={() => { setMainTab("updates"); fetchAdminUpdates(); }}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition w-full text-left ${
+              mainTab === "updates"
+                ? "bg-[#D4A85A]/15 text-[#D4A85A]"
+                : "text-white/50 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <Bell size={16} />
+            <span>Updates &amp; Spotlight</span>
+          </button>
         </nav>
 
         {/* Bottom user strip */}
@@ -486,6 +619,8 @@ export default function CafeAdminPage() {
                 ? "Menu Management"
                 : mainTab === "orders"
                 ? "Orders & Status Management"
+                : mainTab === "updates"
+                ? "Updates & Visitor Spotlight Management"
                 : "Readers & Writers Space Reservations"}
             </h1>
             <p className="text-xs" style={{ color: "#2C1810", opacity: 0.45 }}>
@@ -493,6 +628,8 @@ export default function CafeAdminPage() {
                 ? "Add, edit, and manage all café menu items"
                 : mainTab === "orders"
                 ? "Real-time order lifecycle & customer counter pickup management"
+                : mainTab === "updates"
+                ? "Publish cafe announcements, offers & set Visitor of the Month"
                 : "Manage reserved reader seating & writer desk slots"}
             </p>
           </div>
@@ -503,6 +640,14 @@ export default function CafeAdminPage() {
               style={{ background: "linear-gradient(135deg, #6B3F2A, #A0522D)" }}
             >
               <Plus size={16} /> Add Item
+            </button>
+          ) : mainTab === "updates" ? (
+            <button
+              onClick={openAddUpdate}
+              className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:scale-105 hover:shadow-lg"
+              style={{ background: "linear-gradient(135deg, #6B3F2A, #A0522D)" }}
+            >
+              <Plus size={16} /> Post New Update
             </button>
           ) : mainTab === "orders" ? (
             <button
@@ -523,7 +668,118 @@ export default function CafeAdminPage() {
           )}
         </header>
 
-        {mainTab === "space" ? (
+        {mainTab === "updates" ? (
+          /* ── UPDATES & SPOTLIGHT TAB ──────────────────────────────────── */
+          <div className="flex-1 px-8 py-7 space-y-8">
+            {/* Spotlight Override Section */}
+            <div className="rounded-3xl border border-[#D4A85A]/30 bg-white p-6 shadow-sm">
+              <h2 className="text-base font-black text-[#2C1810] mb-1 flex items-center gap-2">
+                <Crown size={18} className="text-[#D4A85A]" /> Set Manual "Visitor of the Month" Spotlight
+              </h2>
+              <p className="text-xs text-[#2C1810]/60 mb-5">
+                Highlight a specific member or override the auto-calculated monthly visitor leaderboard.
+              </p>
+
+              <form onSubmit={handleSaveSpotlight} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-[#2C1810]/70 mb-1">Month (YYYY-MM)</label>
+                  <input
+                    type="month"
+                    value={spotlightForm.month}
+                    onChange={(e) => setSpotlightForm({ ...spotlightForm, month: e.target.value })}
+                    className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-bold text-[#2C1810]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-[#2C1810]/70 mb-1">Member / Visitor Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Kiran Samanta"
+                    value={spotlightForm.memberName}
+                    onChange={(e) => setSpotlightForm({ ...spotlightForm, memberName: e.target.value })}
+                    className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-bold text-[#2C1810]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-[#2C1810]/70 mb-1">Monthly Visit / Order Count</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 14"
+                    value={spotlightForm.visitCount}
+                    onChange={(e) => setSpotlightForm({ ...spotlightForm, visitCount: e.target.value })}
+                    className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-bold text-[#2C1810]"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    type="submit"
+                    className="w-full rounded-xl bg-[#6B3F2A] py-2.5 text-xs font-bold text-white hover:bg-[#523020] transition shadow"
+                  >
+                    Save Spotlight Recognition
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Updates Posts List */}
+            <div className="rounded-3xl border border-[#D4A85A]/30 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-base font-black text-[#2C1810]">Published Updates &amp; Notices ({adminUpdates.length})</h2>
+                  <p className="text-xs text-[#2C1810]/50">Official announcements visible on the updates page.</p>
+                </div>
+                <button
+                  onClick={openAddUpdate}
+                  className="flex items-center gap-2 rounded-xl bg-[#6B3F2A] px-4 py-2 text-xs font-bold text-white hover:bg-[#523020] transition"
+                >
+                  <Plus size={14} /> Add Post
+                </button>
+              </div>
+
+              {updatesLoading ? (
+                <div className="py-12 text-center text-xs text-gray-400">Loading updates...</div>
+              ) : adminUpdates.length === 0 ? (
+                <div className="py-12 text-center text-xs text-gray-400">No updates published yet. Click "Add Post" to create your first announcement!</div>
+              ) : (
+                <div className="space-y-3">
+                  {adminUpdates.map((post) => (
+                    <div key={post._id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="rounded-full bg-[#6B3F2A]/10 px-2.5 py-0.5 text-[10px] font-black text-[#6B3F2A]">
+                            {post.category}
+                          </span>
+                          {post.isPinned && (
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-800">
+                              Pinned
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="text-sm font-bold text-[#2C1810]">{post.title}</h4>
+                        <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{post.content}</p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openEditUpdate(post)}
+                          className="rounded-lg border border-gray-300 p-2 text-gray-600 hover:bg-gray-200 transition"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUpdatePost(post._id)}
+                          className="rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50 transition"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : mainTab === "space" ? (
           /* ── SPACE RESERVATIONS TAB ──────────────────────────────────── */
           <div className="flex-1 px-8 py-7">
             <div className="mb-6 flex items-center justify-between">
@@ -1098,6 +1354,171 @@ export default function CafeAdminPage() {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* ── UPDATE POST MODAL ───────────────────────────────────── */}
+      <AnimatePresence>
+        {updateModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto" data-lenis-prevent="true">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setUpdateModalOpen(false)}
+              className="fixed inset-0 bg-[#2C1810]/70 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              className="relative z-10 w-full max-w-xl rounded-3xl bg-white p-7 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-4 shrink-0">
+                <div>
+                  <h3 className="text-base font-black text-[#2C1810]">
+                    {editUpdateItem ? "Edit Update Post" : "Post New Cafe Update"}
+                  </h3>
+                  <p className="text-[11px] text-gray-400">Upload banner image &amp; preview live card layout</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowUpdatePreview(!showUpdatePreview)}
+                    className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                      showUpdatePreview
+                        ? "bg-[#6B3F2A] text-[#FAF5EB] shadow-sm"
+                        : "border border-[#6B3F2A]/30 text-[#6B3F2A] hover:bg-[#6B3F2A]/10"
+                    }`}
+                  >
+                    <Eye size={14} /> {showUpdatePreview ? "Hide Preview" : "Live Preview"}
+                  </button>
+                  <button onClick={() => setUpdateModalOpen(false)} className="rounded-full p-1 hover:bg-gray-100">
+                    <X size={18} className="text-gray-500" />
+                  </button>
+                </div>
+              </div>
+
+              {/* ── LIVE PREVIEW BOX ────────────────────────────────────────── */}
+              {showUpdatePreview && (
+                <div className="mb-4 rounded-2xl border border-[#D4A85A]/40 bg-[#1E0E07] p-4 text-[#FAF5EB] shadow-lg shrink-0">
+                  <p className="text-[10px] font-black uppercase text-[#D4A85A] tracking-wider mb-2 flex items-center gap-1">
+                    <Eye size={12} /> Live Card Preview (How it will look on /cafe/updates)
+                  </p>
+                  {updateForm.imageUrl && (
+                    <div className="relative h-36 w-full overflow-hidden rounded-xl mb-3">
+                      <img src={updateForm.imageUrl} alt="Preview" className="h-full w-full object-cover" />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="rounded-full bg-[#D4A85A] px-2.5 py-0.5 text-[10px] font-black text-[#140803] uppercase">
+                      {updateForm.category}
+                    </span>
+                    {updateForm.isPinned && (
+                      <span className="rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 text-[10px] font-black uppercase">
+                        Pinned
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="text-sm font-black text-[#FAF5EB] leading-tight">
+                    {updateForm.title || "Announcement Title..."}
+                  </h4>
+                  <p className="text-xs text-[#FAF5EB]/70 mt-1 line-clamp-2">
+                    {updateForm.content || "Post content details will render here..."}
+                  </p>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveUpdate} className="space-y-4 overflow-y-auto pr-1.5 custom-scrollbar flex-1 min-h-0" data-lenis-prevent="true">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-gray-500 mb-1">Title *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Update Title..."
+                    value={updateForm.title}
+                    onChange={(e) => setUpdateForm({ ...updateForm, title: e.target.value })}
+                    className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-bold text-[#2C1810]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-gray-500 mb-1">Category</label>
+                  <select
+                    value={updateForm.category}
+                    onChange={(e) => setUpdateForm({ ...updateForm, category: e.target.value })}
+                    className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-bold text-[#2C1810]"
+                  >
+                    <option value="Announcement">Announcement</option>
+                    <option value="Special Offer">Special Offer</option>
+                    <option value="New Arrival">New Arrival</option>
+                    <option value="Event">Event</option>
+                    <option value="Notice">Notice</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-gray-500 mb-1">Upload Featured Image (PNG, JPG, WEBP &lt; 2MB)</label>
+                  <ImageUploadField
+                    imageUrl={updateForm.imageUrl}
+                    onUploadSuccess={(url) => setUpdateForm({ ...updateForm, imageUrl: url })}
+                    onRemove={() => setUpdateForm({ ...updateForm, imageUrl: "" })}
+                    setFormError={() => {}}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-gray-500 mb-1">Content *</label>
+                  <textarea
+                    rows={4}
+                    required
+                    placeholder="Write announcement details..."
+                    value={updateForm.content}
+                    onChange={(e) => setUpdateForm({ ...updateForm, content: e.target.value })}
+                    className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-semibold text-[#2C1810]"
+                  />
+                </div>
+
+                <div className="flex items-center gap-6 pt-2">
+                  <label className="flex items-center gap-2 text-xs font-bold text-[#2C1810] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={updateForm.isPinned}
+                      onChange={(e) => setUpdateForm({ ...updateForm, isPinned: e.target.checked })}
+                      className="h-4 w-4 rounded accent-[#6B3F2A]"
+                    />
+                    Pin Announcement
+                  </label>
+                  <label className="flex items-center gap-2 text-xs font-bold text-[#2C1810] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={updateForm.isPublished}
+                      onChange={(e) => setUpdateForm({ ...updateForm, isPublished: e.target.checked })}
+                      className="h-4 w-4 rounded accent-[#6B3F2A]"
+                    />
+                    Publish Immediately
+                  </label>
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setUpdateModalOpen(false)}
+                    className="flex-1 rounded-xl border border-gray-200 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingUpdate}
+                    className="flex-1 rounded-xl bg-[#6B3F2A] py-2.5 text-xs font-bold text-white hover:bg-[#523020] transition disabled:opacity-50"
+                  >
+                    {savingUpdate ? "Saving Post..." : editUpdateItem ? "Update Post" : "Publish Update"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

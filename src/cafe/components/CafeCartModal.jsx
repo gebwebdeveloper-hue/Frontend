@@ -40,102 +40,8 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
 
   const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-  const handleCheckout = async () => {
-    if (!authUser) {
-      setError("Please login to place an order.");
-      return;
-    }
-
-    if (cart.length === 0) {
-      setError("Your cart is empty.");
-      return;
-    }
-
-    setProcessing(true);
-    setError("");
-
-    try {
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) {
-        throw new Error("Razorpay SDK failed to load. Please check your internet connection.");
-      }
-
-      const res = await fetch(`${API_BASE}/cafe/orders/create-razorpay-order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          items: cart,
-          customerPhone: phone,
-        }),
-      });
-
-      const data = await res.json();
-      if (!data.success) {
-        throw new Error(data.message || "Failed to create order.");
-      }
-
-      const options = {
-        key: data.keyId,
-        amount: data.amount,
-        currency: data.currency,
-        name: "Lekhok Tripura Cafe",
-        description: `Order #${data.orderNumber} (${cart.length} items)`,
-        image: "/Web.jpeg",
-        order_id: data.razorpayOrderId,
-        prefill: {
-          name: authUser.name || "Customer",
-          email: authUser.email || "",
-          contact: phone || authUser.phone || "",
-        },
-        theme: {
-          color: "#6B3F2A",
-        },
-        handler: async function (response) {
-          try {
-            const verifyRes = await fetch(`${API_BASE}/cafe/orders/verify-payment`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                orderId: data.orderId,
-              }),
-            });
-
-            const verifyData = await verifyRes.json();
-            if (verifyData.success) {
-              clearCafeCart();
-              onClose();
-              if (onOrderPlaced) onOrderPlaced(verifyData.order);
-            } else {
-              setError(verifyData.message || "Payment verification failed.");
-            }
-          } catch (e) {
-            setError(e.message || "Payment verification failed.");
-          } finally {
-            setProcessing(false);
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            setProcessing(false);
-          },
-        },
-      };
-
-      const paymentObject = new window.Razorpay(options);
-      paymentObject.on("payment.failed", function (response) {
-        setError(response.error?.description || "Payment failed.");
-        setProcessing(false);
-      });
-      paymentObject.open();
-    } catch (err) {
-      setError(err.message || "Something went wrong.");
-      setProcessing(false);
-    }
+  const handleCheckout = () => {
+    alert("Online food & beverage ordering for counter pickup is launching very soon! Please place your order directly at the Lekhok Tripura Cafe counter.");
   };
 
   if (!isOpen) return null;
@@ -272,18 +178,9 @@ export default function CafeCartModal({ isOpen, onClose, authUser, onOrderPlaced
 
               <button
                 onClick={handleCheckout}
-                disabled={processing}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D4A85A] to-[#A0522D] py-3.5 text-sm font-black text-[#140803] shadow-lg transition hover:scale-[1.02] hover:shadow-xl disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D4A85A] to-[#A0522D] py-3.5 text-sm font-black text-[#140803] shadow-lg transition hover:scale-[1.02] hover:shadow-xl"
               >
-                {processing ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" /> Processing Payment…
-                  </>
-                ) : (
-                  <>
-                    <CreditCard size={16} /> Pay ₹{totalAmount} via Razorpay <ArrowRight size={14} />
-                  </>
-                )}
+                <Sparkles size={16} /> Place Order (Coming Soon)
               </button>
 
               <p className="text-[10px] text-center text-white/40 flex items-center justify-center gap-1">
