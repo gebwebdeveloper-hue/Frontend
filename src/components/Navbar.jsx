@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube, ShieldCheck, ShoppingCart, PackageCheck, User } from "lucide-react";
+import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube, ShieldCheck, ShoppingCart, PackageCheck, User, Coffee } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import AuthModal from "./AuthModal.jsx";
 import CartModal from "./CartModal.jsx";
@@ -270,6 +270,13 @@ export default function Navbar() {
                 >
                   <Youtube size={16} />
                 </a>
+                <Link
+                  to="/cafe"
+                  className="flex items-center gap-1 text-white/65 hover:text-amber-400 transition hover:scale-110"
+                  title="Lekhok Tripura Cafe"
+                >
+                  <Coffee size={16} />
+                </Link>
               </div>
 
               {/* Shopping Cart Button (Only for logged in users) */}
@@ -438,7 +445,7 @@ export default function Navbar() {
               animate="visible"
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
             >
-              {[{ label: "Home", to: "/" }, ...navLinks, { label: "Join Club", to: "/club" }, { label: "Publish with us", to: "/reader" }].map((item) => (
+              {[{ label: "Home", to: "/" }, ...navLinks, { label: "Join Club", to: "/club" }, { label: "Publish with us", to: "/reader" }, { label: "☕ Cafe", to: "/cafe" }].map((item) => (
                 <motion.div
                   key={item.to}
                   variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}

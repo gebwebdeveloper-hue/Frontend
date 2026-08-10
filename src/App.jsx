@@ -30,6 +30,9 @@ import AdminRentalsPage from "./pages/AdminRentalsPage.jsx";
 import AdminLibraryCardsPage from "./pages/AdminLibraryCardsPage.jsx";
 import AdminClubTransactionsPage from "./pages/AdminClubTransactionsPage.jsx";
 import BookRentPage from "./pages/BookRentPage.jsx";
+import CafeLayout from "./cafe/CafeLayout.jsx";
+import CafeHomePage from "./cafe/pages/CafeHomePage.jsx";
+import CafeAdminPage from "./cafe/pages/CafeAdminPage.jsx";
 
 
 // Helper component to normalize URLs (strip trailing slashes, decode spaces/encoded URIs)
@@ -68,13 +71,16 @@ export default function App() {
   const location = useLocation();
   useLenis();
 
+  // Hide the global dark Navbar on all /cafe/* pages
+  const isCafePage = location.pathname.startsWith("/cafe");
+
   return (
     <>
       <RouteNormalizer />
       <ScrollToTop />
       <PageLoader />
       <ScrollProgress />
-      <Navbar />
+      {!isCafePage && <Navbar />}
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           {/* Main Pages */}
@@ -120,6 +126,15 @@ export default function App() {
           <Route path="/april-2022" element={<Navigate to="/news" replace />} />
           <Route path="/news-updates" element={<Navigate to="/news" replace />} />
           <Route path="/free-stories" element={<Navigate to="/short-stories" replace />} />
+
+          {/* ── CAFE SECTION ── */}
+          <Route path="/cafe/admin" element={<CafeAdminPage />} />
+          <Route path="/cafe" element={<CafeLayout />}>
+            <Route index element={<CafeHomePage />} />
+            {/* Future cafe pages: */}
+            {/* <Route path="menu" element={<CafeMenuPage />} /> */}
+            {/* <Route path="reserve" element={<CafeReservationPage />} /> */}
+          </Route>
 
           {/* Catch-All Fallback Route */}
           <Route path="*" element={<Navigate to="/" replace />} />
