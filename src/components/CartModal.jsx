@@ -30,13 +30,40 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
     nearbyLocation: ""
   });
 
-  const getDeliveryCharge = (state) => {
+  const [shiprocketRate, setShiprocketRate] = useState(null);
+  const [shiprocketCourier, setShiprocketCourier] = useState("");
+  const [checkingShiprocket, setCheckingShiprocket] = useState(false);
+
+  const getFallbackDeliveryCharge = (state) => {
     if (!state) return 120;
     const s = state.trim().toLowerCase();
-    if (s === "tripura") return 0;
+    if (s === "tripura") return 80;
     if (s === "west bengal") return 100;
     return 120;
   };
+
+  useEffect(() => {
+    if (deliveryForm.pin && deliveryForm.pin.length === 6 && /^\d+$/.test(deliveryForm.pin)) {
+      setCheckingShiprocket(true);
+      fetch(`${API_BASE}/purchase/check-pincode/${deliveryForm.pin}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.success && data?.minRate) {
+            setShiprocketRate(data.minRate);
+            if (data.couriers && data.couriers.length > 0) {
+              setShiprocketCourier(data.couriers[0].name);
+            }
+          } else {
+            setShiprocketRate(null);
+          }
+        })
+        .catch(() => setShiprocketRate(null))
+        .finally(() => setCheckingShiprocket(false));
+    } else {
+      setShiprocketRate(null);
+      setShiprocketCourier("");
+    }
+  }, [deliveryForm.pin]);
 
   // Districts available for the currently selected state
   const availableDistricts = deliveryForm.state ? (DISTRICTS_BY_STATE[deliveryForm.state] || []) : [];
@@ -98,7 +125,9 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
   const totalPrice = processedItems.reduce((acc, item) => acc + (Number(item.price) || 0), 0);
   const totalBasePrice = processedItems.reduce((acc, item) => acc + (Number(item.basePrice || item.price) || 0), 0);
   const totalGST = Math.round((totalPrice - totalBasePrice) * 100) / 100;
-  const deliveryCharge = hasPhysicalItems ? getDeliveryCharge(deliveryForm.state) : 0;
+  const deliveryCharge = hasPhysicalItems
+    ? (shiprocketRate !== null ? shiprocketRate : getFallbackDeliveryCharge(deliveryForm.state))
+    : 0;
   const grandTotal = totalPrice + deliveryCharge;
 
   const formatPrice = (price) => `₹${price}`;
@@ -501,10 +530,7 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                       </select>
                       {deliveryForm.state && (
                         <p className="mt-1 text-[10px] text-amber-300 font-semibold">
-                          Delivery charge: ₹{getDeliveryCharge(deliveryForm.state)}
-                          {deliveryForm.state === "Tripura" ? " (within Tripura)" :
-                           deliveryForm.state === "West Bengal" ? " (West Bengal)" :
-                           " (Other state)"}
+                          Delivery Charge: ₹{deliveryCharge}
                         </p>
                       )}
                     </div>
@@ -546,6 +572,15 @@ export default function CartModal({ isOpen, onClose, onOpenOrders }) {
                         placeholder="e.g. 799001"
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:border-cyan-400/50 focus:outline-none font-mono"
                       />
+                      {checkingShiprocket ? (
+                        <p className="mt-1 text-[10px] text-cyan-300 font-semibold flex items-center gap-1">
+                          <Loader2 size={11} className="animate-spin" /> Calculating delivery charge...
+                        </p>
+                      ) : shiprocketRate !== null ? (
+                        <p className="mt-1 text-[10px] text-emerald-400 font-bold">
+                          Delivery Charge: ₹{shiprocketRate}
+                        </p>
+                      ) : null}
                     </div>
                     <div>
                       <label className="block text-[10px] font-extrabold uppercase tracking-wider text-white/60 mb-1">Post Office</label>
