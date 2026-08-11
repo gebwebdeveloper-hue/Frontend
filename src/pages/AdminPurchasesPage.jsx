@@ -26,7 +26,8 @@ import {
   ArrowRight,
   Pencil,
   Trash2,
-  RotateCcw
+  RotateCcw,
+  RefreshCw
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
@@ -299,8 +300,62 @@ export default function AdminPurchasesPage() {
           alert(data.message || "Failed to update shipment status.");
         }
       })
-      .catch(() => alert("Error communicating with server."))
+      .catch(() => alert("Error updating shipment."))
       .finally(() => setUpdatingShipment(false));
+  };
+
+  const handlePushToShiprocket = async (purchaseId) => {
+    try {
+      const res = await fetch(`${API_BASE}/purchase/${purchaseId}/sync-shiprocket`, {
+        method: "POST",
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPopupMessage({
+          title: "Shiprocket Order Created! 🚀",
+          description: `Order successfully created in Shiprocket! Order ID: ${data.shiprocket?.orderId || "Synced"}`
+        });
+        setShowSuccessPopup(true);
+        fetchPurchases();
+      } else {
+        alert(data.message || "Failed to sync order to Shiprocket.");
+      }
+    } catch {
+      alert("Network error pushing order to Shiprocket.");
+    }
+  };
+
+  const handleAutoSyncTracking = async (purchaseId) => {
+    try {
+      const res = await fetch(`${API_BASE}/purchase/${purchaseId}/auto-sync-tracking`, {
+        method: "POST",
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (data.success && data.purchase) {
+        const p = data.purchase;
+        setShipmentForm({
+          shipmentStatus: p.shipmentStatus || "processing",
+          courierService: p.courierService || "",
+          trackingNumber: p.trackingNumber || "",
+          trackingUrl: p.trackingUrl || "",
+          currentLocation: p.currentLocation || "",
+          estimatedDeliveryDate: p.estimatedDeliveryDate ? new Date(p.estimatedDeliveryDate).toISOString().split("T")[0] : "",
+          note: ""
+        });
+        setPopupMessage({
+          title: "Tracking Auto-Synced! 🔄",
+          description: `Fetched live tracking from Shiprocket. Courier: ${p.courierService || "Synced"}, AWB: ${p.trackingNumber || "N/A"}`
+        });
+        setShowSuccessPopup(true);
+        fetchPurchases();
+      } else {
+        alert(data.message || "Failed to auto-sync tracking.");
+      }
+    } catch {
+      alert("Network error fetching live Shiprocket tracking.");
+    }
   };
 
   const handleOpenEditModal = (purchase) => {
@@ -881,6 +936,20 @@ export default function AdminPurchasesPage() {
                               >
                                 <Truck size={14} /> Update Tracking
                               </button>
+
+                              {purchase.shiprocketOrderId ? (
+                                <span className="flex items-center gap-1 rounded-xl bg-purple-500/20 border border-purple-500/30 px-3 py-1.5 text-xs font-bold text-purple-300">
+                                  🚀 Shiprocket #{purchase.shiprocketOrderId}
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handlePushToShiprocket(purchase._id)}
+                                  className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3.5 py-2 text-xs font-black text-white hover:opacity-90 transition shadow-md"
+                                >
+                                  <Truck size={14} /> Push to Shiprocket
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1028,6 +1097,22 @@ export default function AdminPurchasesPage() {
                     <X size={18} />
                   </button>
                 </div>
+
+                {selectedShipmentPurchase?.shiprocketOrderId && (
+                  <div className="mb-4 rounded-2xl border border-purple-500/30 bg-purple-500/10 p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-black text-purple-300">Shiprocket Order Linked</p>
+                      <p className="text-[11px] text-white/60">ID: #{selectedShipmentPurchase.shiprocketOrderId}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAutoSyncTracking(selectedShipmentPurchase._id)}
+                      className="flex items-center gap-1.5 rounded-xl bg-purple-500 px-3.5 py-1.5 text-xs font-black text-white hover:bg-purple-600 transition shadow-md"
+                    >
+                      <RefreshCw size={13} /> Auto-Fetch Live Tracking
+                    </button>
+                  </div>
+                )}
 
                 <form onSubmit={handleSaveShipment} className="space-y-4">
                   <div>
