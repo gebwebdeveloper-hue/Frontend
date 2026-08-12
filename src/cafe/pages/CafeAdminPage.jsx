@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -10,6 +10,56 @@ import {
   UserCheck, RefreshCw, Phone, Mail, Crown,
 } from "lucide-react";
 import { API_BASE } from "../../config.js";
+
+/* ── CatHeadingCard (needs local state per card, extracted to avoid hook-in-loop) */
+function CatHeadingCard({ cat, savingCatId, onSave }) {
+  const [localTitle, setLocalTitle] = useState(cat.title);
+  const [localSubtitle, setLocalSubtitle] = useState(cat.subtitle);
+  const isSaving = savingCatId === cat.categoryId;
+  return (
+    <div className="rounded-2xl border border-[#D4A85A]/25 bg-white p-5 shadow-sm">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="rounded-full bg-[#6B3F2A] px-3 py-0.5 text-[10px] font-black uppercase text-white tracking-wide">
+          {cat.categoryId}
+        </span>
+        {cat.title && (
+          <span className="text-xs font-semibold text-[#2C1810]/60 italic">→ "{cat.title}"</span>
+        )}
+      </div>
+      <div className="space-y-3">
+        <div>
+          <label className="block text-[11px] font-bold uppercase text-[#2C1810]/60 mb-1">Section Title</label>
+          <input
+            type="text"
+            value={localTitle}
+            onChange={(e) => setLocalTitle(e.target.value)}
+            placeholder="e.g. COFFEE COLLECTION"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm font-bold text-[#2C1810] focus:border-[#6B3F2A] outline-none transition"
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold uppercase text-[#2C1810]/60 mb-1">Subtitle / Tagline</label>
+          <input
+            type="text"
+            value={localSubtitle}
+            onChange={(e) => setLocalSubtitle(e.target.value)}
+            placeholder="e.g. RICH AROMA. PERFECT BREW. PURE INDULGENCE."
+            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs font-semibold text-[#2C1810] focus:border-[#6B3F2A] outline-none transition"
+          />
+        </div>
+        <button
+          onClick={() => onSave(cat.categoryId, localTitle, localSubtitle)}
+          disabled={isSaving}
+          className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:scale-105 disabled:opacity-60"
+          style={{ background: "linear-gradient(135deg, #6B3F2A, #A0522D)" }}
+        >
+          {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+          {isSaving ? "Saving…" : "Save Heading"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 /* ── Constants ─────────────────────────────────────────────────── */
 const CATEGORIES = [
@@ -31,6 +81,8 @@ const CAT_COLORS = {
 const EMPTY_FORM = {
   name: "", description: "", price: "", category: "coffee",
   imageUrl: "", available: true, featured: false, preparationTime: 10, tags: "",
+  ingredients: [], // [{ name: "", percent: "" }]
+  howItLooks: "",
 };
 
 /* ── Small helpers ─────────────────────────────────────────────── */
@@ -122,6 +174,11 @@ export default function CafeAdminPage() {
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState(null);
 
+  // Category headings management
+  const [catHeadings, setCatHeadings] = useState([]); // [{categoryId, title, subtitle, sortOrder}]
+  const [catHeadingsLoading, setCatHeadingsLoading] = useState(false);
+  const [savingCatId, setSavingCatId] = useState(null); // categoryId currently saving
+
   /* ── Lock body & Lenis scroll when modal or delete confirm is open ── */
   useEffect(() => {
     if (modalOpen || deleteConfirm || updateModalOpen) {
@@ -194,7 +251,43 @@ export default function CafeAdminPage() {
 
   useEffect(() => {
     fetchItems();
+    fetchCatHeadings();
   }, [fetchItems]);
+
+  /* ── Fetch category headings ─────────────────────────────────── */
+  const fetchCatHeadings = async () => {
+    setCatHeadingsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/cafe/categories`);
+      const data = await res.json();
+      if (data.success) setCatHeadings(data.categories);
+    } catch { /* ignore */ } finally {
+      setCatHeadingsLoading(false);
+    }
+  };
+
+  const saveCatHeading = async (categoryId, title, subtitle) => {
+    setSavingCatId(categoryId);
+    try {
+      const res = await fetch(`${API_BASE}/cafe/categories/${categoryId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title, subtitle }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Category heading updated!`);
+        fetchCatHeadings();
+      } else {
+        showToast(data.message || "Failed to update heading", "error");
+      }
+    } catch {
+      showToast("Failed to update heading", "error");
+    } finally {
+      setSavingCatId(null);
+    }
+  };
 
   useEffect(() => {
     if (mainTab === "orders") {
@@ -458,6 +551,8 @@ export default function CafeAdminPage() {
       featured: item.featured,
       preparationTime: item.preparationTime || 10,
       tags: (item.tags || []).join(", "),
+      ingredients: item.ingredients?.length ? item.ingredients.map(i => ({ name: i.name, percent: i.percent })) : [],
+      howItLooks: item.howItLooks || "",
     });
     setFormError("");
     setModalOpen(true);
@@ -494,6 +589,14 @@ export default function CafeAdminPage() {
       featured: form.featured,
       preparationTime: Number(form.preparationTime) || 10,
       tags: form.tags ? form.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+      ingredients: (form.ingredients || [])
+        .filter((i) => i.name?.trim())
+        .map((i) => {
+          const p = (i.percent || "").trim();
+          const formattedPercent = p ? (p.endsWith("%") || isNaN(p) ? p : `${p}%`) : "";
+          return { name: i.name.trim(), percent: formattedPercent };
+        }),
+      howItLooks: form.howItLooks?.trim() || "",
     };
 
     try {
@@ -668,6 +771,18 @@ export default function CafeAdminPage() {
             <Bell size={16} />
             <span>Updates &amp; Spotlight</span>
           </button>
+
+          <button
+            onClick={() => { setMainTab("cat-headings"); }}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition w-full text-left ${
+              mainTab === "cat-headings"
+                ? "bg-[#D4A85A]/15 text-[#D4A85A]"
+                : "text-white/50 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <LayoutGrid size={16} />
+            <span>Category Headings</span>
+          </button>
         </nav>
 
         {/* Bottom user strip */}
@@ -711,6 +826,8 @@ export default function CafeAdminPage() {
                 ? "Orders & Status Management"
                 : mainTab === "updates"
                 ? "Updates & Visitor Spotlight Management"
+                : mainTab === "cat-headings"
+                ? "Category Headings & Subtitles"
                 : "Readers & Writers Space Reservations"}
             </h1>
             <p className="text-xs" style={{ color: "#2C1810", opacity: 0.45 }}>
@@ -758,7 +875,28 @@ export default function CafeAdminPage() {
           )}
         </header>
 
-        {mainTab === "updates" ? (
+        {mainTab === "cat-headings" ? (
+          /* ── CATEGORY HEADINGS TAB ──────────────────────────────────────── */
+          <div className="flex-1 px-8 py-7">
+            <p className="text-xs text-[#2C1810]/60 mb-6 max-w-2xl">
+              Set the heading title and subtitle shown at the top of each category section on the public menu page. These appear in the <strong>"Coffee Collection"</strong>-style banner above each item grid.
+            </p>
+            {catHeadingsLoading ? (
+              <div className="flex items-center gap-2 py-10 text-[#6B3F2A]"><Loader2 size={22} className="animate-spin" /> Loading…</div>
+            ) : (
+              <div className="grid gap-5 sm:grid-cols-2">
+                {catHeadings.map((cat) => (
+                  <CatHeadingCard
+                    key={cat.categoryId}
+                    cat={cat}
+                    savingCatId={savingCatId}
+                    onSave={saveCatHeading}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ) : mainTab === "updates" ? (
           /* ── UPDATES & SPOTLIGHT TAB ──────────────────────────────────── */
           <div className="flex-1 px-8 py-7 space-y-8">
             {/* Spotlight Override Section */}
@@ -1560,6 +1698,74 @@ export default function CafeAdminPage() {
                   </FormField>
                 </div>
 
+                {/* Ingredients */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide" style={{ color: "#6B3F2A" }}>
+                      <UtensilsCrossed size={12} /> Ingredients (Approx.)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleFormChange("ingredients", [...(form.ingredients || []), { name: "", percent: "" }])}
+                      className="flex items-center gap-1 rounded-lg border border-[#6B3F2A]/30 px-2.5 py-1 text-[10px] font-bold text-[#6B3F2A] hover:bg-[#6B3F2A]/5 transition"
+                    >
+                      <Plus size={11} /> Add Row
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {(form.ingredients || []).map((ing, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="e.g. Coffee"
+                          value={ing.name}
+                          onChange={(e) => {
+                            const updated = [...form.ingredients];
+                            updated[idx] = { ...updated[idx], name: e.target.value };
+                            handleFormChange("ingredients", updated);
+                          }}
+                          className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-xs font-semibold text-[#2C1810] outline-none focus:border-[#6B3F2A] transition"
+                        />
+                        <input
+                          type="text"
+                          placeholder="100%"
+                          value={ing.percent}
+                          onChange={(e) => {
+                            const updated = [...form.ingredients];
+                            updated[idx] = { ...updated[idx], percent: e.target.value };
+                            handleFormChange("ingredients", updated);
+                          }}
+                          className="w-20 rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-[#2C1810] outline-none focus:border-[#6B3F2A] transition"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = form.ingredients.filter((_, i) => i !== idx);
+                            handleFormChange("ingredients", updated);
+                          }}
+                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-red-200 text-red-400 hover:bg-red-50 transition"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                    {(!form.ingredients || form.ingredients.length === 0) && (
+                      <p className="text-[10px] text-[#2C1810]/40 italic">No ingredients added yet. Click "Add Row" to add one.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* How It Looks */}
+                <FormField label="How It Looks" icon={Eye}>
+                  <input
+                    type="text"
+                    placeholder="e.g. Dark brown with thick golden crema on top"
+                    value={form.howItLooks || ""}
+                    onChange={(e) => handleFormChange("howItLooks", e.target.value)}
+                    className="field-input"
+                  />
+                </FormField>
+
                 {/* Toggles */}
                 <div className="grid grid-cols-2 gap-4">
                   <Toggle
@@ -1998,6 +2204,54 @@ function Toggle({ label, value, onChange, activeColor }) {
   );
 }
 
+/* ── HTML5 Canvas Auto-Resize Helper (Scales to 800 x 600 px) ─────── */
+function resizeImageToTarget(file, targetWidth = 800, targetHeight = 600) {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement("img");
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.src = e.target.result;
+    };
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext("2d");
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+
+      // Calculate scale & cover crop offsets
+      const scale = Math.max(targetWidth / img.width, targetHeight / img.height);
+      const x = (targetWidth - img.width * scale) / 2;
+      const y = (targetHeight - img.height * scale) / 2;
+
+      ctx.fillStyle = "#FAF5EB";
+      ctx.fillRect(0, 0, targetWidth, targetHeight);
+      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return reject(new Error("Canvas blob creation failed"));
+          const safeName = (file.name || "menu-item").replace(/\.[^/.]+$/, "").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+          const resizedFile = new File([blob], `${safeName}-800x600.webp`, {
+            type: "image/webp",
+            lastModified: Date.now(),
+          });
+          resolve(resizedFile);
+        },
+        "image/webp",
+        0.92
+      );
+    };
+
+    img.onerror = () => reject(new Error("Failed to load image for resizing"));
+    reader.readAsDataURL(file);
+  });
+}
+
 /* ── Image Upload Component ─────────────────────────────────────── */
 function ImageUploadField({ imageUrl, onUploadSuccess, onRemove, setFormError }) {
   const [uploading, setUploading] = useState(false);
@@ -2006,18 +2260,12 @@ function ImageUploadField({ imageUrl, onUploadSuccess, onRemove, setFormError })
   const fileInputRef = useRef(null);
 
   const handleFileSelect = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate size <= 2MB (2 * 1024 * 1024 bytes)
-    if (file.size > 2 * 1024 * 1024) {
-      setFormError?.("File size exceeds 2MB limit. Please select a smaller image.");
-      return;
-    }
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
 
     // Validate type (PNG, JPG, JPEG, WEBP)
     const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
-    if (!allowed.includes(file.type.toLowerCase())) {
+    if (!allowed.includes(rawFile.type.toLowerCase())) {
       setFormError?.("Invalid format. Please upload a PNG, JPG, JPEG, or WEBP image.");
       return;
     }
@@ -2026,8 +2274,16 @@ function ImageUploadField({ imageUrl, onUploadSuccess, onRemove, setFormError })
     setUploading(true);
 
     try {
+      // Auto-resize image to exact 800 x 600 px before uploading
+      let fileToUpload = rawFile;
+      try {
+        fileToUpload = await resizeImageToTarget(rawFile, 800, 600);
+      } catch (err) {
+        console.warn("Auto resize failed, uploading original:", err);
+      }
+
       const formData = new FormData();
-      formData.append("cafeImage", file);
+      formData.append("cafeImage", fileToUpload);
 
       const res = await fetch(`${API_BASE}/cafe/menu/upload-image`, {
         method: "POST",
@@ -2049,13 +2305,47 @@ function ImageUploadField({ imageUrl, onUploadSuccess, onRemove, setFormError })
     }
   };
 
+  const handleAutoResizeCurrentUrl = async () => {
+    if (!imageUrl) return;
+    setUploading(true);
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const rawFile = new File([blob], "cafe-item.jpg", { type: blob.type || "image/jpeg" });
+      const resizedFile = await resizeImageToTarget(rawFile, 800, 600);
+
+      const formData = new FormData();
+      formData.append("cafeImage", resizedFile);
+
+      const res = await fetch(`${API_BASE}/cafe/menu/upload-image`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success && data.url) {
+        onUploadSuccess(data.url);
+      }
+    } catch {
+      setFormError?.("Auto resize failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleImageLoad = (e) => {
     const w = e.target.naturalWidth;
     const h = e.target.naturalHeight;
+    const ratio = w / h;
+    const isExceeded = w > 1000 || h > 800;
+    const isOptimal = w <= 1000 && h <= 800 && ratio >= 0.95 && ratio <= 1.5;
     setImgDimensions({
       w,
       h,
-      isOptimalRatio: w / h >= 1.2 && w / h <= 1.5,
+      isExceeded,
+      isOptimal,
+      ratio,
     });
   };
 
@@ -2098,15 +2388,45 @@ function ImageUploadField({ imageUrl, onUploadSuccess, onRemove, setFormError })
               </span>
               {imgDimensions && (
                 <span
-                  className={`rounded-full px-2.5 py-0.5 text-[9px] font-bold text-white shadow-sm ${
-                    imgDimensions.isOptimalRatio ? "bg-[#4A7C59]" : "bg-[#6B3F2A]"
+                  className={`rounded-full px-2.5 py-0.5 text-[9px] font-bold text-white shadow-sm flex items-center gap-1 ${
+                    imgDimensions.isOptimal
+                      ? "bg-[#4A7C59]"
+                      : imgDimensions.isExceeded
+                      ? "bg-amber-600 font-black"
+                      : "bg-orange-700"
                   }`}
                 >
-                  {imgDimensions.w} × {imgDimensions.h} px {imgDimensions.isOptimalRatio ? "✓ Perfect Fit" : ""}
+                  {imgDimensions.isExceeded ? "⚠️" : imgDimensions.isOptimal ? "✓" : "ℹ️"}{" "}
+                  {imgDimensions.w} × {imgDimensions.h} px{" "}
+                  {imgDimensions.isOptimal
+                    ? "(Optimal Fit)"
+                    : imgDimensions.isExceeded
+                    ? "(Exceeds 800×600 px)"
+                    : "(Non-Standard Ratio)"}
                 </span>
               )}
             </div>
           </div>
+
+          {/* Dimension Warning Alert with Instant Auto-Resize Button */}
+          {imgDimensions && imgDimensions.isExceeded && (
+            <div className="mt-2.5 flex items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-[11px] font-semibold text-amber-900 shadow-sm">
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
+                <span>
+                  Image size (<strong>{imgDimensions.w} × {imgDimensions.h} px</strong>) exceeds 800×600 px.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleAutoResizeCurrentUrl}
+                disabled={uploading}
+                className="shrink-0 flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-amber-700 transition"
+              >
+                ⚡ Auto-Resize to 800×600
+              </button>
+            </div>
+          )}
 
           <div className="mt-2.5 flex items-center justify-between gap-2">
             <button
@@ -2159,7 +2479,7 @@ function ImageUploadField({ imageUrl, onUploadSuccess, onRemove, setFormError })
                 </div>
                 <div className="flex items-center justify-between">
                   <span>📁 Max File Size:</span>
-                  <span className="font-bold text-[#2C1810]">Max 2 MB</span>
+                  <span className="font-bold text-[#2C1810]">Max 5 MB</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>🎨 Allowed Formats:</span>

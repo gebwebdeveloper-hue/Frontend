@@ -488,13 +488,13 @@ export default function CafeHomePage() {
                           </p>
                         )}
 
-                        {/* Add to Cart CTA */}
+                        {/* View in Menu CTA */}
                         <Link
                           to="/cafe/menu"
                           className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-black text-[#140803] shadow-md transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
                           style={{ background: "linear-gradient(135deg, #D4A85A, #A0522D)" }}
                         >
-                          <Sparkles size={14} /> Add to Cart (Coming Soon)
+                          <Coffee size={14} /> View in Menu &amp; Order
                         </Link>
                       </div>
                     </div>

@@ -603,3 +603,18 @@ a {
   animation: textGradientShimmer 4s ease infinite;
 }
 
+.animate-gold-shimmer {
+  background: linear-gradient(
+    90deg,
+    #FAF5EB 0%,
+    #D4A85A 30%,
+    #FFF8E7 50%,
+    #E6B86A 70%,
+    #FAF5EB 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textGradientShimmer 4s ease infinite;
+}
+

@@ -167,7 +167,7 @@ export default function CafeArtistSpacePage() {
                   <img src={space.image} alt={space.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#140803] via-transparent to-transparent" />
                   <span className="absolute left-4 top-4 rounded-full bg-[#D4A85A] px-4 py-1.5 text-xs font-black text-[#140803] shadow-xl">
-                    ₹200 / 4 Hours
+                    Pre-Book the corner
                   </span>
                   {isSelected && (
                     <span className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#D4A85A] text-[#140803] shadow-xl font-black">
@@ -309,7 +309,7 @@ export default function CafeArtistSpacePage() {
                 {selectedSpace.title} — <span className="text-[#D4A85A]">{selectedDate} ({selectedSlot})</span>
               </p>
               <p className="text-xs text-white/70 mt-1">
-                Medium: <strong>{artMedium}</strong> • Duration: <strong>4 Hours</strong> • Package Price: <strong className="text-[#D4A85A]">₹200</strong>
+                Medium: <strong>{artMedium}</strong> • Fee: <strong className="text-[#D4A85A]">₹200 (Pre-Book the corner)</strong>
               </p>
             </div>
 

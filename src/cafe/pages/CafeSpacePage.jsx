@@ -15,7 +15,7 @@ const SPACES = [
     desc: "Plush leather armchair, ambient reading lamp, and noise-controlled corner. ₹200 non-refundable fee — 100% adjusted with your cafe food & snacks order!",
     icon: BookOpen,
     price: 200,
-    badge: "₹200 (Adjustable against Order)",
+    badge: "Pre-Book the corner",
     image: "/ChatGPT Image Aug 10, 2026, 11_00_13 PM.png",
     features: [
       "100% Amount Adjusted with Food & Drinks",
@@ -30,7 +30,7 @@ const SPACES = [
     desc: "Spacious wooden desk & ergonomic chair for focus writing and laptop drafting. ₹200 non-refundable fee — 100% adjusted with your cafe food & snacks order!",
     icon: Feather,
     price: 200,
-    badge: "₹200 (Adjustable against Order)",
+    badge: "Pre-Book the corner",
     image: "/ChatGPT Image Aug 10, 2026, 11_02_34 PM.png",
     features: [
       "100% Amount Adjusted with Food & Drinks",
