@@ -625,13 +625,13 @@ export default function CafeHomePage() {
                 to="/cafe/reserve"
                 className="flex items-center gap-2 rounded-full bg-[#D4A85A] px-7 py-3.5 text-sm font-black text-[#140803] transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#D4A85A]/30"
               >
-                <MapPin size={15} /> Reserve Space Slot
+                <BookOpen size={15} /> Reserve Creative Space
               </Link>
               <Link
-                to="/cafe/menu"
+                to="/cafe/books"
                 className="flex items-center gap-2 rounded-full border border-[#FAF5EB]/30 bg-white/5 px-7 py-3.5 text-sm font-bold text-[#FAF5EB] transition-all duration-300 hover:bg-white/10 hover:border-[#D4A85A]"
               >
-                Full Menu <ArrowRight size={14} />
+                Books in Cafe <ArrowRight size={14} />
               </Link>
             </div>
           </FadeIn>

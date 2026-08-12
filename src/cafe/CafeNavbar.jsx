@@ -10,8 +10,8 @@ import CafeOrderTrackerModal from "./components/CafeOrderTrackerModal.jsx";
 
 const cafeLinks = [
   { label: "Menu", to: "/cafe/menu" },
-  { label: "Readers & Writers Space", to: "/cafe/reserve" },
-  { label: "Artist Space", to: "/cafe/artist-space" },
+  { label: "Reserve Creative Space", to: "/cafe/reserve" },
+  { label: "Books in Cafe", to: "/cafe/books" },
   { label: "Updates 📢", to: "/cafe/updates" },
 ];
 
@@ -116,16 +116,16 @@ export default function CafeNavbar() {
             {/* Logo */}
             <Link to="/cafe" className="group flex shrink-0 items-center gap-3">
               <img
-                src="/Web.jpeg"
+                src="/Cafe_Logo.jpeg"
                 alt="Lekhok Tripura Cafe Logo"
-                className="h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-full object-cover shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-[#D4A85A]/40"
+                className="h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-xl object-contain bg-white p-1 shadow-lg border border-[#D4A85A]/50 transition-all duration-300 group-hover:scale-105 group-hover:shadow-[#D4A85A]/40"
               />
               <div className="shrink-0">
                 <h1 className="whitespace-nowrap text-[11px] sm:text-sm font-black uppercase tracking-[0.18em] text-[#FAF5EB]">
                   Lekhok Tripura
                 </h1>
                 <p className="text-[10px] sm:text-xs font-semibold tracking-widest text-[#D4A85A]">
-                  CAFE
+                  LIBRARY CAFÉ
                 </p>
               </div>
             </Link>
@@ -155,7 +155,7 @@ export default function CafeNavbar() {
                 )}
               </NavLink>
 
-              {/* Readers & Writers Space Link */}
+              {/* Reserve Creative Space Link */}
               <NavLink to="/cafe/reserve">
                 {({ isActive }) => (
                   <div
@@ -165,8 +165,8 @@ export default function CafeNavbar() {
                         : "text-white/80 hover:text-[#D4A85A]"
                     }`}
                   >
-                    <span>Readers &amp; Writers Space</span>
-                    <BookOpen size={16} className="text-[#D4A85A]" />
+                    <span>Reserve Creative Space</span>
+                    <Sparkles size={15} className="text-[#D4A85A]" />
                     {isActive && (
                       <motion.div
                         layoutId="cafe-nav-pill"
@@ -178,8 +178,8 @@ export default function CafeNavbar() {
                 )}
               </NavLink>
 
-              {/* Artist Space Link */}
-              <NavLink to="/cafe/artist-space">
+              {/* Books in Cafe Link */}
+              <NavLink to="/cafe/books">
                 {({ isActive }) => (
                   <div
                     className={`relative flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold transition-all duration-300 ${
@@ -188,8 +188,8 @@ export default function CafeNavbar() {
                         : "text-white/80 hover:text-[#D4A85A]"
                     }`}
                   >
-                    <span>Artist Space</span>
-                    <Palette size={16} className="text-[#D4A85A]" />
+                    <span>Books in Cafe</span>
+                    <BookOpen size={15} className="text-[#D4A85A]" />
                     {isActive && (
                       <motion.div
                         layoutId="cafe-nav-pill"
@@ -376,16 +376,16 @@ export default function CafeNavbar() {
               <div className="flex items-center justify-between rounded-3xl border border-[#D4A85A]/35 bg-[#1F0E07] p-3.5 shadow-2xl">
                 <Link to="/cafe" onClick={() => setOpen(false)} className="flex items-center gap-3">
                   <img
-                    src="/Web.jpeg"
+                    src="/Cafe_Logo.jpeg"
                     alt="Lekhok Tripura Cafe Logo"
-                    className="h-11 w-11 shrink-0 rounded-full object-cover border border-[#D4A85A]/50 shadow-md"
+                    className="h-11 w-11 shrink-0 rounded-xl object-contain bg-white p-1 border border-[#D4A85A]/50 shadow-md"
                   />
                   <div>
                     <span className="block text-sm font-black tracking-widest uppercase text-[#FAF5EB] leading-none" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
                       Lekhok Tripura
                     </span>
                     <span className="block text-[10px] font-black tracking-[0.25em] uppercase text-[#D4A85A] mt-1">
-                      Literary Cafe &amp; Studio
+                      Library Cafe &amp; Studio
                     </span>
                   </div>
                 </Link>
@@ -407,8 +407,8 @@ export default function CafeNavbar() {
                 {[
                   { label: "Home", to: "/cafe", icon: Coffee, subtitle: "Cafe Welcome Page" },
                   { label: "Full Cafe Menu", to: "/cafe/menu", icon: Sparkles, badge: "Order Online", subtitle: "Artisan Coffee & Gourmet Food" },
-                  { label: "Readers & Writers Space", to: "/cafe/reserve", icon: BookOpen, subtitle: "Quiet Reading & Focus Writing" },
-                  { label: "Artist Space", to: "/cafe/artist-space", icon: Palette, subtitle: "Creative Studio Workstations" },
+                  { label: "Reserve Creative Space", to: "/cafe/reserve", icon: BookOpen, subtitle: "Reader, Writer & Artist Corner" },
+                  { label: "Books in Cafe", to: "/cafe/books", icon: BookOpen, subtitle: "In-House Library Collection" },
                   { label: "Updates & Spotlight", to: "/cafe/updates", icon: Bell, subtitle: "Daily Announcements & Events" },
                   { label: "Back to Main Site", to: "/", icon: ExternalLink, subtitle: "E-Books, Bookstore & Rentals" },
                 ].map((item) => {

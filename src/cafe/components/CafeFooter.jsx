@@ -18,16 +18,16 @@ export default function CafeFooter() {
           <div className="lg:col-span-2 space-y-4">
             <Link to="/cafe" className="inline-flex items-center gap-3 group">
               <img
-                src="/Web.jpeg"
-                alt="Lekhok Tripura Cafe Logo"
-                className="h-11 w-11 shrink-0 rounded-full object-cover border border-[#D4A85A]/50 shadow-lg group-hover:scale-105 transition duration-300"
+                src="/Cafe_Logo.jpeg"
+                alt="Lekhok Tripura Library Cafe Logo"
+                className="h-11 w-11 shrink-0 rounded-xl object-contain bg-white p-1 border border-[#D4A85A]/50 shadow-lg group-hover:scale-105 transition duration-300"
               />
               <div>
                 <span className="block text-lg font-black tracking-wider uppercase text-[#FAF5EB] leading-none" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
                   Lekhok Tripura
                 </span>
                 <span className="block text-[10px] font-black tracking-[0.3em] uppercase text-[#D4A85A] mt-1">
-                  Literary Cafe &amp; Studio
+                  Library Cafe &amp; Studio
                 </span>
               </div>
             </Link>
@@ -75,12 +75,12 @@ export default function CafeFooter() {
               </li>
               <li>
                 <Link to="/cafe/reserve" className="hover:text-[#D4A85A] transition flex items-center gap-1.5">
-                  <BookOpen size={12} className="text-[#D4A85A]" /> Readers &amp; Writers Space
+                  <BookOpen size={12} className="text-[#D4A85A]" /> Reserve Creative Space
                 </Link>
               </li>
               <li>
-                <Link to="/cafe/artist" className="hover:text-[#D4A85A] transition flex items-center gap-1.5">
-                  <Palette size={12} className="text-[#D4A85A]" /> Artist Studio Space
+                <Link to="/cafe/books" className="hover:text-[#D4A85A] transition flex items-center gap-1.5">
+                  <BookOpen size={12} className="text-[#D4A85A]" /> Books in Cafe
                 </Link>
               </li>
               <li>
