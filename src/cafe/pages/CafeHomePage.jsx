@@ -446,7 +446,7 @@ export default function CafeHomePage() {
                     <div className="group relative overflow-hidden rounded-3xl border border-[#D4A85A]/25 bg-[#23120A] shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#D4A85A]/10">
                       {/* Image / placeholder */}
                       <div
-                        className="relative h-44 overflow-hidden"
+                        className="relative aspect-[4/3] overflow-hidden"
                         style={{ background: `linear-gradient(135deg, ${color}20 0%, ${color}40 100%)` }}
                       >
                         {item.imageUrl ? (

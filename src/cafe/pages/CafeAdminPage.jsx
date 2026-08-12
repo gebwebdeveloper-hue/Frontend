@@ -2255,6 +2255,7 @@ function resizeImageToTarget(file, targetWidth = 800, targetHeight = 600) {
 /* ── Image Upload Component ─────────────────────────────────────── */
 function ImageUploadField({ imageUrl, onUploadSuccess, onRemove, setFormError }) {
   const [uploading, setUploading] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [useUrlFallback, setUseUrlFallback] = useState(false);
   const [imgDimensions, setImgDimensions] = useState(null);
   const fileInputRef = useRef(null);
@@ -2305,14 +2306,18 @@ function ImageUploadField({ imageUrl, onUploadSuccess, onRemove, setFormError })
     }
   };
 
-  const handleAutoResizeCurrentUrl = async () => {
+  const [targetSizeText, setTargetSizeText] = useState("800 × 600");
+
+  const handleAutoResizeCurrentUrl = async (targetW = 800, targetH = 600) => {
     if (!imageUrl) return;
+    setTargetSizeText(`${targetW} × ${targetH}`);
+    setIsResizing(true);
     setUploading(true);
     try {
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       const rawFile = new File([blob], "cafe-item.jpg", { type: blob.type || "image/jpeg" });
-      const resizedFile = await resizeImageToTarget(rawFile, 800, 600);
+      const resizedFile = await resizeImageToTarget(rawFile, targetW, targetH);
 
       const formData = new FormData();
       formData.append("cafeImage", resizedFile);
@@ -2331,6 +2336,7 @@ function ImageUploadField({ imageUrl, onUploadSuccess, onRemove, setFormError })
       setFormError?.("Auto resize failed.");
     } finally {
       setUploading(false);
+      setIsResizing(false);
     }
   };
 
@@ -2382,6 +2388,19 @@ function ImageUploadField({ imageUrl, onUploadSuccess, onRemove, setFormError })
               onLoad={handleImageLoad}
               className="h-full w-full object-cover"
             />
+            {/* Processing / Resizing Overlay */}
+            {uploading && (
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-black/65 backdrop-blur-sm rounded-xl text-white">
+                <Loader2 size={32} className="animate-spin text-[#D4A85A]" />
+                <p className="text-xs font-black text-[#FAF5EB]">
+                  {isResizing ? `Auto-Resizing to ${targetSizeText} px…` : "Uploading Image to Cloudinary…"}
+                </p>
+                <p className="text-[10px] text-white/60">
+                  {isResizing ? "Cropping & optimizing image quality" : "Please wait a moment"}
+                </p>
+              </div>
+            )}
+
             <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
               <span className="rounded-full bg-black/75 backdrop-blur-md px-2.5 py-0.5 text-[9px] font-bold text-white shadow-sm flex items-center gap-1">
                 ☁️ Cloudinary Saved
@@ -2401,32 +2420,47 @@ function ImageUploadField({ imageUrl, onUploadSuccess, onRemove, setFormError })
                   {imgDimensions.isOptimal
                     ? "(Optimal Fit)"
                     : imgDimensions.isExceeded
-                    ? "(Exceeds 800×600 px)"
+                    ? "(Exceeds Recommended Size)"
                     : "(Non-Standard Ratio)"}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Dimension Warning Alert with Instant Auto-Resize Button */}
-          {imgDimensions && imgDimensions.isExceeded && (
-            <div className="mt-2.5 flex items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-[11px] font-semibold text-amber-900 shadow-sm">
-              <div className="flex items-start gap-2">
-                <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
-                <span>
-                  Image size (<strong>{imgDimensions.w} × {imgDimensions.h} px</strong>) exceeds 800×600 px.
-                </span>
-              </div>
+          {/* Quick Auto-Resize Controls Bar — ALWAYS available for all item images */}
+          <div className="mt-2.5 flex items-center justify-between gap-2 flex-wrap rounded-xl border border-[#D4A85A]/30 bg-[#FAF5EB] p-2.5 text-[11px] font-semibold text-[#2C1810] shadow-sm">
+            <span className="font-bold text-[#6B3F2A] shrink-0 flex items-center gap-1">
+              ⚡ Instant Auto-Resize:
+            </span>
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
-                onClick={handleAutoResizeCurrentUrl}
+                onClick={() => handleAutoResizeCurrentUrl(800, 600)}
                 disabled={uploading}
-                className="shrink-0 flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-amber-700 transition"
+                className="flex items-center gap-1 rounded-lg bg-[#D4A85A] px-3 py-1.5 text-xs font-black text-[#140803] shadow hover:bg-[#6B3F2A] hover:text-white disabled:opacity-50 transition"
+                title="Resize image to 800 x 600 px (4:3 ratio) for Menu Page"
               >
-                ⚡ Auto-Resize to 800×600
+                {isResizing && targetSizeText === "800 × 600" ? (
+                  <><Loader2 size={12} className="animate-spin" /> Resizing…</>
+                ) : (
+                  <>Menu (800×600)</>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAutoResizeCurrentUrl(800, 533)}
+                disabled={uploading}
+                className="flex items-center gap-1 rounded-lg bg-[#6B3F2A] px-3 py-1.5 text-xs font-black text-white shadow hover:bg-[#A0522D] disabled:opacity-50 transition"
+                title="Resize image to 800 x 533 px (3:2 ratio) for Home Page"
+              >
+                {isResizing && targetSizeText === "800 × 533" ? (
+                  <><Loader2 size={12} className="animate-spin" /> Resizing…</>
+                ) : (
+                  <>Home (800×533)</>
+                )}
               </button>
             </div>
-          )}
+          </div>
 
           <div className="mt-2.5 flex items-center justify-between gap-2">
             <button
