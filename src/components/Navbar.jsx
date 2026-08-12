@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube, ShieldCheck, ShoppingCart, PackageCheck, User, Coffee } from "lucide-react";
+import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube, ShieldCheck, ShoppingCart, PackageCheck, User, Coffee, BookOpen, ShoppingBag, Feather, Bell, Users, PenTool } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import AuthModal from "./AuthModal.jsx";
 import CartModal from "./CartModal.jsx";
@@ -416,127 +416,175 @@ export default function Navbar() {
               </button>
             </div>
 
-            <motion.div
-              className="mx-auto mt-6 flex max-w-sm flex-col items-stretch gap-3.5 pb-10 sm:mt-10 sm:max-w-md"
-              initial="hidden"
-              animate="visible"
-              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
-            >
-              {[{ label: "Home", to: "/" }, ...navLinks, { label: "Join Club", to: "/club" }, { label: "Publish with us", to: "/reader" }, { label: "☕ Cafe", to: "/cafe" }].map((item) => (
-                <motion.div
-                  key={item.to}
-                  variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-                >
-                  <Link
-                    to={item.to}
-                    onClick={() => setOpen(false)}
-                    className="block rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-3.5 text-center text-2xl sm:text-4xl font-black uppercase tracking-tight text-white transition hover:border-cyan-300/30 hover:bg-white/[0.07] hover:text-cyan-300"
-                  >
-                    {item.label}
-                  </Link>
-                </motion.div>
-              ))}
+            {/* Mobile Drawer Body */}
+            <div className="flex-1 overflow-y-auto pt-4 pb-8">
+              <motion.div
+                className="mx-auto flex max-w-sm flex-col gap-2.5"
+                initial="hidden"
+                animate="visible"
+                variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
+              >
+                {[
+                  { label: "Home", to: "/", icon: BookOpen, subtitle: "E-Books & Literature Hub" },
+                  { label: "Buy Books", to: "/library", icon: ShoppingBag, subtitle: "Digital & Physical Book Store" },
+                  { label: "Book Rental Club", to: "/rentals", icon: Sparkles, subtitle: "Unlimited Reading Memberships" },
+                  { label: "Read Stories", to: "/short-stories", icon: Feather, subtitle: "Free Short Stories & Articles" },
+                  { label: "News & Updates", to: "/news", icon: Bell, subtitle: "Literary News & Announcements" },
+                  { label: "Join VIP Club", to: "/club", icon: Users, subtitle: "Exclusive Membership Perks" },
+                  { label: "Publish With Us", to: "/reader", icon: PenTool, subtitle: "Author Portal & Book Publishing" },
+                  {
+                    label: "Lekhok Tripura Cafe",
+                    to: "/cafe",
+                    icon: Coffee,
+                    badge: "Literary Cafe",
+                    isCafe: true,
+                    subtitle: "Artisan Coffee, Food & Space Booking",
+                  },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <motion.div
+                      key={item.to}
+                      variants={{ hidden: { opacity: 0, x: -16 }, visible: { opacity: 1, x: 0 } }}
+                    >
+                      <NavLink
+                        to={item.to}
+                        end={item.to === "/"}
+                        onClick={() => setOpen(false)}
+                        className={({ isActive }) =>
+                          `group flex items-center justify-between rounded-2xl border px-4 py-3.5 transition-all duration-300 shadow-lg ${
+                            item.isCafe
+                              ? "border-[#D4A85A]/60 bg-gradient-to-r from-[#D4A85A]/20 via-[#23120A] to-[#1A0C06] text-[#FAF5EB] hover:border-[#D4A85A]"
+                              : isActive
+                              ? "border-cyan-400/50 bg-gradient-to-r from-cyan-500/20 via-zinc-900 to-zinc-950 text-white"
+                              : "border-white/10 bg-white/[0.03] text-white/80 hover:border-cyan-400/40 hover:bg-white/[0.07] hover:text-white"
+                          }`
+                        }
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div
+                            className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border ${
+                              item.isCafe
+                                ? "border-[#D4A85A]/40 bg-[#140803] text-[#D4A85A]"
+                                : "border-cyan-400/30 bg-cyan-500/10 text-cyan-300"
+                            }`}
+                          >
+                            <Icon size={18} />
+                          </div>
+                          <div className="text-left">
+                            <span className="block text-sm font-black tracking-wide text-white">
+                              {item.label}
+                            </span>
+                            <span className="block text-[10px] font-medium text-white/50">
+                              {item.subtitle}
+                            </span>
+                          </div>
+                        </div>
 
-              {authUser ? (
-                <motion.div
-                  variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-                  className="flex flex-col items-center gap-3.5 rounded-2xl border border-white/10 bg-white/[0.04] p-5"
+                        {item.badge && (
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider shadow-sm ${
+                              item.isCafe
+                                ? "bg-[#D4A85A] text-[#140803]"
+                                : "bg-cyan-400 text-black"
+                            }`}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                      </NavLink>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+
+              {/* Cart & Orders Quick Action */}
+              <div className="mt-5 mx-auto max-w-sm grid grid-cols-2 gap-2.5 pt-4 border-t border-white/10">
+                <button
+                  onClick={() => { setOpen(false); setCartOpen(true); }}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 py-3 text-xs font-black text-cyan-300 hover:bg-cyan-400/20 transition shadow-md"
                 >
-                  <div className="flex flex-col items-center text-center">
-                    <div className="relative mb-2 h-16 w-16 overflow-hidden rounded-full border-2 border-cyan-400/40 bg-gradient-to-br from-cyan-400 to-indigo-500 text-2xl font-black text-black shadow-lg select-none flex items-center justify-center">
-                      {authUser.avatarUrl ? (
-                        <img
-                          src={authUser.avatarUrl}
-                          alt={authUser.name || "User Avatar"}
-                          className="absolute inset-0 h-full w-full rounded-full object-cover"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        userInitial
+                  <ShoppingCart size={15} /> Cart ({cartCount})
+                </button>
+
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    if (authUser) {
+                      setOrdersOpen(true);
+                    } else {
+                      setAuthModalTab("login");
+                      setShowAuthModal(true);
+                    }
+                  }}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 py-3 text-xs font-black text-white hover:bg-white/10 transition shadow-md"
+                >
+                  <PackageCheck size={15} className="text-cyan-400" /> My Orders
+                </button>
+              </div>
+
+              {/* User Account / Auth Section */}
+              <div className="mt-6 mx-auto max-w-sm pt-4 border-t border-white/10">
+                {authUser ? (
+                  <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 shadow-xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-11 w-11 overflow-hidden rounded-full border-2 border-cyan-400/40 bg-gradient-to-br from-cyan-400 to-indigo-500 flex items-center justify-center text-black font-black text-base shrink-0 relative shadow-md">
+                          {authUser.avatarUrl ? (
+                            <img src={authUser.avatarUrl} alt={authUser.name || "User"} className="absolute inset-0 h-full w-full object-cover rounded-full" referrerPolicy="no-referrer" />
+                          ) : userInitial}
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-white">{authUser.name || "Reader"}</p>
+                          <p className="text-[10px] text-white/50 truncate max-w-[180px]">{authUser.email}</p>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => { handleLogout(); setOpen(false); }}
+                        className="grid h-9 w-9 place-items-center rounded-full border border-red-500/30 bg-red-950/40 text-red-300 hover:bg-red-900 transition"
+                        title="Sign Out"
+                      >
+                        <LogOut size={16} />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                      <button
+                        onClick={() => { setOpen(false); setShowEditProfile(true); }}
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/5 py-2 text-[11px] font-bold text-white/80 hover:bg-white/10"
+                      >
+                        <User size={13} className="text-cyan-400" /> Edit Profile
+                      </button>
+                      {authUser.role === "admin" && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setOpen(false)}
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 py-2 text-[11px] font-bold text-cyan-300"
+                        >
+                          <ShieldCheck size={13} /> Admin Panel
+                        </Link>
                       )}
                     </div>
-                    <p className="text-white font-bold text-base">{authUser.name || "Reader"}</p>
-                    <p className="text-white/45 text-xs truncate max-w-[240px]">{authUser.email}</p>
-                    {authUser.role === "admin" && (
-                      <span className="mt-1.5 rounded-md bg-cyan-400/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-cyan-300 border border-cyan-400/30">
-                        Admin
-                      </span>
-                    )}
                   </div>
-
-                  <div className="flex flex-col w-full gap-2.5 mt-1">
-                    {authUser.role === "admin" && (
-                      <Link
-                        to="/admin"
-                        onClick={() => setOpen(false)}
-                        className="flex items-center justify-center gap-2.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 text-xs font-extrabold text-cyan-300 hover:bg-cyan-400/20 transition"
-                      >
-                        <ShieldCheck size={16} /> Admin Dashboard
-                      </Link>
-                    )}
-
-                    <button
-                      onClick={() => {
-                        setOpen(false);
-                        setShowEditProfile(true);
-                      }}
-                      className="flex items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-semibold text-white/90 hover:bg-white/10 hover:text-white transition"
-                    >
-                      <User size={16} className="text-cyan-400" /> Edit Profile & Photo
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setOpen(false);
-                        setOrdersOpen(true);
-                      }}
-                      className="flex items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-semibold text-white/90 hover:bg-white/10 hover:text-white transition"
-                    >
-                      <PackageCheck size={16} className="text-cyan-400" /> My Orders & Status
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setOpen(false);
-                        setCartOpen(true);
-                      }}
-                      className="flex items-center justify-center gap-2.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 text-xs font-semibold text-cyan-300 hover:bg-cyan-400/20 transition"
-                    >
-                      <ShoppingCart size={16} /> View Cart ({cartCount})
-                    </button>
-
-                    <button
-                      onClick={() => { handleLogout(); setOpen(false); }}
-                      className="flex items-center justify-center gap-2.5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-400 hover:bg-red-500/20 transition mt-1"
-                    >
-                      <LogOut size={16} /> Sign Out
-                    </button>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-                  className="mt-2 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-5"
-                >
-                  <div className="flex gap-3 w-full">
+                ) : (
+                  <div className="flex gap-3">
                     <button
                       onClick={() => { setAuthModalTab("login"); setShowAuthModal(true); setOpen(false); }}
-                      className="flex-1 rounded-xl border border-white/15 bg-white/5 py-3 text-xs font-semibold text-white hover:bg-white/10 transition"
+                      className="flex-1 rounded-2xl border border-white/15 bg-white/5 py-3.5 text-xs font-black text-white hover:bg-white/10 transition shadow-lg"
                     >
-                      Login
+                      Login Account
                     </button>
                     <button
                       onClick={() => { setAuthModalTab("register"); setShowAuthModal(true); setOpen(false); }}
-                      className="flex-1 rounded-xl bg-white py-3 text-xs font-semibold text-black transition hover:scale-105"
+                      className="flex-1 rounded-2xl bg-white py-3.5 text-xs font-black text-black hover:bg-white/90 transition shadow-lg"
                     >
-                      Sign In
+                      Sign In Free
                     </button>
                   </div>
-                </motion.div>
-              )}
-
-              {/* Mobile Social Links removed */}
-            </motion.div>
+                )}
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

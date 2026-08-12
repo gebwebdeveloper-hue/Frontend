@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Menu, X, Coffee, ShieldCheck, LogOut, User, Sparkles, ShoppingBag, Clock, Bell, BookOpen, Palette } from "lucide-react";
+import { Menu, X, Coffee, ShieldCheck, LogOut, User, Sparkles, ShoppingBag, Clock, Bell, BookOpen, Palette, ExternalLink } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { API_BASE } from "../config.js";
 import { clearCart } from "../utils/cart.js";
@@ -365,96 +365,189 @@ export default function CafeNavbar() {
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-[100] overflow-y-auto bg-[#140803]/98 px-4 py-4 backdrop-blur-2xl text-[#FAF5EB] lg:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] overflow-y-auto bg-[#0D0502]/98 px-4 py-5 backdrop-blur-3xl text-[#FAF5EB] lg:hidden flex flex-col justify-between"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
           >
-            <div className="flex items-center justify-between rounded-2xl border border-[#D4A85A]/30 bg-[#23120A] p-4">
-              <div className="flex items-center gap-3">
-                <img
-                  src="/Web.jpeg"
-                  alt="Lekhok Tripura Cafe Logo"
-                  className="h-10 w-10 shrink-0 rounded-full object-cover shadow-md"
-                />
-                <div>
-                  <span className="text-sm font-black tracking-widest text-[#FAF5EB]">CAFE</span>
-                  <p className="text-[10px] text-[#D4A85A] font-semibold tracking-wider">Lekhok Tripura</p>
-                </div>
+            <div>
+              {/* Header Bar */}
+              <div className="flex items-center justify-between rounded-3xl border border-[#D4A85A]/35 bg-[#1F0E07] p-3.5 shadow-2xl">
+                <Link to="/cafe" onClick={() => setOpen(false)} className="flex items-center gap-3">
+                  <img
+                    src="/Web.jpeg"
+                    alt="Lekhok Tripura Cafe Logo"
+                    className="h-11 w-11 shrink-0 rounded-full object-cover border border-[#D4A85A]/50 shadow-md"
+                  />
+                  <div>
+                    <span className="block text-sm font-black tracking-widest uppercase text-[#FAF5EB] leading-none" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                      Lekhok Tripura
+                    </span>
+                    <span className="block text-[10px] font-black tracking-[0.25em] uppercase text-[#D4A85A] mt-1">
+                      Literary Cafe &amp; Studio
+                    </span>
+                  </div>
+                </Link>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="grid h-10 w-10 place-items-center rounded-full border border-[#D4A85A]/30 bg-white/5 text-[#FAF5EB] hover:bg-[#D4A85A] hover:text-[#140803] transition duration-300"
+                >
+                  <X size={20} />
+                </button>
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                className="grid h-10 w-10 place-items-center rounded-full border border-white/20 text-white hover:bg-white/10 transition"
+
+              {/* Navigation Links */}
+              <motion.div
+                className="mt-6 flex flex-col gap-2.5"
+                initial="hidden"
+                animate="visible"
+                variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
               >
-                <X size={20} />
-              </button>
+                {[
+                  { label: "Home", to: "/cafe", icon: Coffee, subtitle: "Cafe Welcome Page" },
+                  { label: "Full Cafe Menu", to: "/cafe/menu", icon: Sparkles, badge: "Order Online", subtitle: "Artisan Coffee & Gourmet Food" },
+                  { label: "Readers & Writers Space", to: "/cafe/reserve", icon: BookOpen, subtitle: "Quiet Reading & Focus Writing" },
+                  { label: "Artist Space", to: "/cafe/artist-space", icon: Palette, subtitle: "Creative Studio Workstations" },
+                  { label: "Updates & Spotlight", to: "/cafe/updates", icon: Bell, subtitle: "Daily Announcements & Events" },
+                  { label: "Back to Main Site", to: "/", icon: ExternalLink, subtitle: "E-Books, Bookstore & Rentals" },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <motion.div
+                      key={item.to}
+                      variants={{ hidden: { opacity: 0, x: -16 }, visible: { opacity: 1, x: 0 } }}
+                    >
+                      <NavLink
+                        to={item.to}
+                        end={item.to === "/cafe"}
+                        onClick={() => setOpen(false)}
+                        className={({ isActive }) =>
+                          `group flex items-center justify-between rounded-2xl border px-4 py-3.5 transition-all duration-300 shadow-lg ${
+                            isActive
+                              ? "border-[#D4A85A] bg-gradient-to-r from-[#D4A85A]/25 via-[#23120A] to-[#1F0E07] text-[#FAF5EB]"
+                              : "border-[#D4A85A]/20 bg-[#1F0E07] text-white/80 hover:border-[#D4A85A]/60 hover:bg-[#2A140B]"
+                          }`
+                        }
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#D4A85A]/30 bg-[#140803] text-[#D4A85A]">
+                            <Icon size={18} />
+                          </div>
+                          <div className="text-left">
+                            <span className="block text-sm font-black tracking-wide text-[#FAF5EB]">
+                              {item.label}
+                            </span>
+                            <span className="block text-[10px] font-medium text-white/50">
+                              {item.subtitle}
+                            </span>
+                          </div>
+                        </div>
+
+                        {item.badge && (
+                          <span className="rounded-full bg-[#D4A85A] px-2.5 py-0.5 text-[9px] font-black uppercase text-[#140803] tracking-wider shadow-sm">
+                            {item.badge}
+                          </span>
+                        )}
+                      </NavLink>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+
+              {/* Mobile Cart & Order Quick Bar */}
+              <div className="mt-5 grid grid-cols-2 gap-2.5 pt-4 border-t border-[#D4A85A]/20">
+                <button
+                  onClick={() => { setOpen(false); setCartOpen(true); }}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-[#D4A85A]/40 bg-[#1F0E07] py-3 text-xs font-black text-[#D4A85A] hover:bg-[#D4A85A] hover:text-[#140803] transition shadow-md"
+                >
+                  <ShoppingBag size={15} /> View Cart ({cartCount})
+                </button>
+
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    const saved = localStorage.getItem("lekhok_cafe_active_order");
+                    if (saved) {
+                      try {
+                        setActiveTrackerOrder(JSON.parse(saved));
+                        setTrackerOpen(true);
+                      } catch {
+                        navigate("/cafe/menu");
+                      }
+                    } else {
+                      navigate("/cafe/menu");
+                    }
+                  }}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-[#D4A85A]/40 bg-[#1F0E07] py-3 text-xs font-black text-[#FAF5EB] hover:bg-white/10 transition shadow-md"
+                >
+                  <Clock size={15} className="text-[#D4A85A]" /> Track Order
+                </button>
+              </div>
             </div>
 
-            <motion.div
-              className="mx-auto mt-6 flex max-w-sm flex-col gap-3 pb-10"
-              initial="hidden"
-              animate="visible"
-              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}
-            >
-              {[{ label: "Home", to: "/cafe" }, { label: "Menu", to: "/cafe/menu" }, { label: "Readers & Writers Space 📚", to: "/cafe/reserve" }, { label: "← Back to Main Site", to: "/" }].map((item) => (
-                <motion.div
-                  key={item.to}
-                  variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
-                >
-                  <Link
-                    to={item.to}
-                    onClick={() => setOpen(false)}
-                    className="block rounded-2xl border border-[#D4A85A]/25 bg-[#23120A] px-5 py-3.5 text-center text-xl font-black text-[#FAF5EB] transition hover:border-[#D4A85A] hover:bg-[#D4A85A] hover:text-[#140803]"
-                  >
-                    {item.label}
-                  </Link>
-                </motion.div>
-              ))}
-
-              {/* Auth section in mobile */}
+            {/* User Profile / Auth Bottom Footer in Drawer */}
+            <div className="mt-8 pt-4 border-t border-[#D4A85A]/20">
               {authUser ? (
-                <motion.div
-                  variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
-                  className="flex flex-col gap-2.5 rounded-2xl border border-[#D4A85A]/30 bg-[#23120A] p-4 mt-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-11 w-11 overflow-hidden rounded-full border-2 border-[#D4A85A]/50 bg-gradient-to-br from-[#D4A85A] to-[#6B3F2A] flex items-center justify-center text-white font-bold text-base shrink-0 relative">
-                      {authUser.avatarUrl ? (
-                        <img src={authUser.avatarUrl} alt={authUser.name || "User"} className="absolute inset-0 h-full w-full object-cover rounded-full" referrerPolicy="no-referrer" />
-                      ) : userInitial}
+                <div className="flex flex-col gap-3 rounded-2xl border border-[#D4A85A]/35 bg-[#1F0E07] p-4 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-11 w-11 overflow-hidden rounded-full border-2 border-[#D4A85A]/60 bg-gradient-to-br from-[#D4A85A] to-[#6B3F2A] flex items-center justify-center text-white font-bold text-base shrink-0 relative shadow-md">
+                        {authUser.avatarUrl ? (
+                          <img src={authUser.avatarUrl} alt={authUser.name || "User"} className="absolute inset-0 h-full w-full object-cover rounded-full" referrerPolicy="no-referrer" />
+                        ) : userInitial}
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-[#FAF5EB]">{authUser.name || "Guest User"}</p>
+                        <p className="text-[10px] text-white/50 truncate max-w-[180px]">{authUser.email}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-[#FAF5EB]">{authUser.name || "Guest"}</p>
-                      <p className="text-[10px] text-white/50 truncate">{authUser.email}</p>
-                    </div>
+
+                    <button
+                      onClick={() => { handleLogout(); setOpen(false); }}
+                      className="grid h-9 w-9 place-items-center rounded-full border border-red-500/30 bg-red-950/40 text-red-300 hover:bg-red-900 transition"
+                      title="Sign Out"
+                    >
+                      <LogOut size={16} />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => { handleLogout(); setOpen(false); }}
-                    className="flex items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-900/40 px-4 py-2.5 text-xs font-semibold text-red-200 hover:bg-red-900/60 transition"
-                  >
-                    <LogOut size={14} /> Sign Out
-                  </button>
-                </motion.div>
+
+                  {authUser.role === "admin" && (
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#D4A85A]/15">
+                      <Link
+                        to="/cafe/admin"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-[#D4A85A]/30 bg-[#140803] py-2 text-[11px] font-bold text-[#D4A85A]"
+                      >
+                        <ShieldCheck size={13} /> Cafe Admin
+                      </Link>
+                      <Link
+                        to="/admin"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-[#140803] py-2 text-[11px] font-bold text-white/80"
+                      >
+                        <ShieldCheck size={13} /> Main Admin
+                      </Link>
+                    </div>
+                  )}
+                </div>
               ) : (
-                <motion.div
-                  variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
-                  className="flex gap-3 mt-2"
-                >
+                <div className="flex gap-3">
                   <button
                     onClick={() => { setShowAuthModal(true); setOpen(false); }}
-                    className="flex-1 rounded-xl border border-[#D4A85A]/30 bg-[#23120A] py-3 text-sm font-bold text-[#D4A85A] hover:bg-white/5 transition"
+                    className="flex-1 rounded-2xl border border-[#D4A85A]/40 bg-[#1F0E07] py-3.5 text-xs font-black text-[#D4A85A] hover:bg-white/5 transition shadow-lg"
                   >
-                    Login
+                    Login Account
                   </button>
                   <button
                     onClick={() => { setShowAuthModal(true); setOpen(false); }}
-                    className="flex-1 rounded-xl bg-[#D4A85A] py-3 text-sm font-black text-[#140803] hover:bg-white transition"
+                    className="flex-1 rounded-2xl bg-gradient-to-r from-[#D4A85A] to-[#A0522D] py-3.5 text-xs font-black text-[#140803] hover:brightness-110 transition shadow-lg"
                   >
-                    Sign Up
+                    Sign Up Free
                   </button>
-                </motion.div>
+                </div>
               )}
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
