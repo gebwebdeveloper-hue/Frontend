@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import CafeNavbar from "./CafeNavbar.jsx";
+import CafeFooter from "./components/CafeFooter.jsx";
 
 /**
  * CafeLayout — wraps customer-facing /cafe pages.
@@ -12,6 +13,7 @@ export default function CafeLayout() {
       <main>
         <Outlet />
       </main>
+      <CafeFooter />
     </div>
   );
 }

@@ -65,6 +65,21 @@ export default function CafeArtistSpacePage() {
       .catch(() => {});
   }, []);
 
+  /* Lock background scroll when modal is open */
+  useEffect(() => {
+    if (showComingSoon) {
+      document.body.style.overflow = "hidden";
+      if (window.lenis) window.lenis.stop();
+    } else {
+      document.body.style.overflow = "";
+      if (window.lenis) window.lenis.start();
+    }
+    return () => {
+      document.body.style.overflow = "";
+      if (window.lenis) window.lenis.start();
+    };
+  }, [showComingSoon]);
+
   useEffect(() => {
     async function fetchSlots() {
       setLoadingSlots(true);

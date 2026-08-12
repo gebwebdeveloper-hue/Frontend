@@ -4,7 +4,7 @@ import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
   Coffee, Leaf, Clock, MapPin, Star, ChevronRight, Phone, Instagram,
   Facebook, ArrowRight, Sparkles, UtensilsCrossed, Wind, Music,
-  BookOpen, Wifi, ShoppingBag,
+  BookOpen, Wifi, ShoppingBag, Mail, Youtube,
 } from "lucide-react";
 import { API_BASE } from "../../config.js";
 import { addToCafeCart } from "../utils/cafeCart.js";
@@ -728,9 +728,10 @@ export default function CafeHomePage() {
 
               <div className="flex flex-col gap-4">
                 {[
-                  { icon: MapPin, label: "Address",  value: "Lekhok Tripura, Agartala, Tripura, India" },
-                  { icon: Clock,  label: "Hours",    value: "Monday – Sunday  |  8:00 AM – 9:00 PM" },
-                  { icon: Phone,  label: "Phone",    value: "+91 XXXXX XXXXX" },
+                  { icon: MapPin, label: "Address",  value: "Lekhok Tripura Publishers & Cafe, Agartala, Tripura, India", href: null },
+                  { icon: Clock,  label: "Hours",    value: "Monday – Sunday  |  8:00 AM – 9:00 PM", href: null },
+                  { icon: Phone,  label: "Phone",    value: "+91 60335 50539", href: "tel:+916033550539" },
+                  { icon: Mail,   label: "Email",    value: "lekhok.tripura@gmail.com", href: "mailto:lekhok.tripura@gmail.com" },
                 ].map((info) => (
                   <div key={info.label} className="flex items-start gap-4">
                     <div
@@ -741,30 +742,47 @@ export default function CafeHomePage() {
                     </div>
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wider text-[#D4A85A]">{info.label}</p>
-                      <p className="text-sm font-medium text-[#FAF5EB]">{info.value}</p>
+                      {info.href ? (
+                        <a href={info.href} className="text-sm font-medium text-[#FAF5EB] hover:text-[#D4A85A] transition hover:underline">
+                          {info.value}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium text-[#FAF5EB]">{info.value}</p>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
 
               {/* Social */}
-              <div className="mt-8 flex items-center gap-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-[#FAF5EB]/50">Follow</p>
+              <div className="mt-8 flex items-center gap-3">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#FAF5EB]/50 mr-2">Follow Us</p>
                 <a
-                  href="https://www.instagram.com/lekhok_tripura_publishers"
+                  href="https://www.instagram.com/lekhok_tripura_publishers/"
                   target="_blank"
                   rel="noopener noreferrer"
+                  title="Instagram"
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-[#D4A85A]/30 text-[#D4A85A] transition hover:bg-[#D4A85A] hover:text-[#140803] hover:scale-110"
                 >
                   <Instagram size={16} />
                 </a>
                 <a
-                  href="https://www.facebook.com/share/1DLfEnitkJ/"
+                  href="https://www.facebook.com/lekhoktripurapublishers"
                   target="_blank"
                   rel="noopener noreferrer"
+                  title="Facebook"
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-[#D4A85A]/30 text-[#D4A85A] transition hover:bg-[#D4A85A] hover:text-[#140803] hover:scale-110"
                 >
                   <Facebook size={16} />
+                </a>
+                <a
+                  href="https://www.youtube.com/@LekhokTripura"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="YouTube"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#D4A85A]/30 text-[#D4A85A] transition hover:bg-[#D4A85A] hover:text-[#140803] hover:scale-110"
+                >
+                  <Youtube size={16} />
                 </a>
               </div>
             </FadeIn>
@@ -783,17 +801,17 @@ export default function CafeHomePage() {
                     <MapPin size={28} className="text-[#140803]" />
                   </div>
                   <div>
-                    <p className="font-black text-lg text-[#FAF5EB]">Lekhok Tripura Cafe</p>
-                    <p className="text-sm mt-1 text-[#D4A85A]">Agartala, Tripura</p>
+                    <p className="font-black text-lg text-[#FAF5EB]">Lekhok Tripura Publishers &amp; Cafe</p>
+                    <p className="text-sm mt-1 text-[#D4A85A]">Agartala, Tripura, India</p>
                   </div>
                   <a
-                    href="https://maps.google.com"
+                    href="https://share.google/7vpNUS2mIYyADWZow"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-black text-[#140803] transition hover:scale-105 shadow-md"
                     style={{ background: "linear-gradient(135deg, #D4A85A, #A0522D)" }}
                   >
-                    Open in Maps <ArrowRight size={14} />
+                    Open in Google Maps <ArrowRight size={14} />
                   </a>
                 </div>
               </div>
@@ -801,33 +819,6 @@ export default function CafeHomePage() {
           </div>
         </div>
       </section>
-
-      {/* ── FOOTER ──────────────────────────────────────────────── */}
-      <footer
-        className="py-12 px-4 text-center border-t border-[#D4A85A]/20"
-        style={{ background: "#0D0502" }}
-      >
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-4 flex items-center justify-center gap-2">
-            <Coffee size={18} style={{ color: "#D4A85A" }} />
-            <span className="text-sm font-black uppercase tracking-widest text-[#FAF5EB]">
-              Lekhok Tripura Cafe
-            </span>
-          </div>
-          <p className="mb-4 text-xs text-[#FAF5EB]/60">
-            A space crafted with love for readers, writers, and dreamers in Tripura.
-          </p>
-          <div className="flex items-center justify-center gap-6 text-xs font-semibold text-[#D4A85A]">
-            <Link to="/cafe" className="hover:text-white transition">Home</Link>
-            <Link to="/cafe/menu" className="hover:text-white transition">Menu</Link>
-            <Link to="/cafe/reserve" className="hover:text-white transition">Readers &amp; Writers Space</Link>
-            <Link to="/" className="hover:text-white transition">← Main Site</Link>
-          </div>
-          <p className="mt-6 text-[11px] text-white/30">
-            © {new Date().getFullYear()} Lekhok Tripura. All rights reserved.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
