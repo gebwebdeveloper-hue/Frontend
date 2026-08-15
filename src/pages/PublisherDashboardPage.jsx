@@ -316,14 +316,6 @@ export default function PublisherDashboardPage() {
               {loading ? "Authenticating..." : loginTab === "publisher" ? "Login to Publisher Dashboard" : "Login to Author Portal"}
             </button>
           </form>
-
-          <div className="mt-6 text-center text-xs text-gray-400 bg-[#14141c] p-3 rounded-xl border border-[#262636]">
-            {loginTab === "publisher" ? (
-              <span>Publisher access uses Admin credentials (`kiransamanta88@gmail.com`).</span>
-            ) : (
-              <span>Author login uses your email ID & password (e.g. <strong>RITTV3210</strong>).</span>
-            )}
-          </div>
         </div>
       </div>
     );
