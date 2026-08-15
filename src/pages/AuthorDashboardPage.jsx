@@ -164,7 +164,7 @@ export default function AuthorDashboardPage() {
           </form>
 
           <div className="mt-6 text-center text-xs text-gray-400 bg-[#14141c] p-3.5 rounded-xl border border-[#262636]">
-            Author login uses your registered email ID & password (e.g. <strong>RITTV3210</strong>).
+            Password logic: <strong>First 5 letters of name (UPPERCASE) + Last 4 digits of phone number</strong> (e.g. <strong>RITVI3210</strong>).
           </div>
         </div>
       </div>
