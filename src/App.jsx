@@ -37,6 +37,8 @@ import CafeSpacePage from "./cafe/pages/CafeSpacePage.jsx";
 import CafeMenuPage from "./cafe/pages/CafeMenuPage.jsx";
 import CafeBooksPage from "./cafe/pages/CafeBooksPage.jsx";
 import CafeUpdatesPage from "./cafe/pages/CafeUpdatesPage.jsx";
+import PublisherDashboardPage from "./pages/PublisherDashboardPage.jsx";
+import AuthorDashboardPage from "./pages/AuthorDashboardPage.jsx";
 
 
 // Helper component to normalize URLs (strip trailing slashes, decode spaces/encoded URIs)
@@ -75,8 +77,8 @@ export default function App() {
   const location = useLocation();
   useLenis();
 
-  // Hide the global dark Navbar on all /cafe/* pages
-  const isCafePage = location.pathname.startsWith("/cafe");
+  // Hide global Navbar on /cafe/* and dashboard pages
+  const hideNavbar = location.pathname.startsWith("/cafe") || location.pathname.includes("dashboard");
 
   return (
     <>
@@ -84,7 +86,7 @@ export default function App() {
       <ScrollToTop />
       <PageLoader />
       <ScrollProgress />
-      {!isCafePage && <Navbar />}
+      {!hideNavbar && <Navbar />}
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           {/* Main Pages */}
@@ -108,6 +110,12 @@ export default function App() {
           <Route path="/club" element={<ClubPage />} />
           <Route path="/short-stories" element={<NewsletterListingPage />} />
           <Route path="/short-stories/:slug" element={<NewsletterReaderPage />} />
+          {/* Publisher & Author Dashboard */}
+          <Route path="/publisher_dashboard" element={<PublisherDashboardPage />} />
+          <Route path="/publisher-dashboard" element={<PublisherDashboardPage />} />
+          <Route path="/author_dashboard" element={<AuthorDashboardPage />} />
+          <Route path="/author-dashboard" element={<AuthorDashboardPage />} />
+
           <Route path="/help" element={<HelpPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/privacy-policy" element={<Navigate to="/privacy" replace />} />

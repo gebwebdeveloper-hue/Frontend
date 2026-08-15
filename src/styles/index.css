@@ -12,6 +12,41 @@
   box-sizing: border-box;
 }
 
+/* ===========================================
+   ULTRA-PREMIUM DARK GLOW CUSTOM SCROLLBARS
+=========================================== */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(8, 8, 12, 0.4);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(6, 182, 212, 0.5), rgba(168, 85, 247, 0.4));
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(6, 182, 212, 0.9), rgba(244, 114, 182, 0.8));
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox Scrollbar Support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(6, 182, 212, 0.5) rgba(8, 8, 12, 0.4);
+}
+
 html {
   background: #030303;
   color: #ffffff;
@@ -358,6 +393,7 @@ a {
   border-radius:99px;
   background:white;
 }
+
 /* ===========================================
    Premium Animated Navbar Border
 =========================================== */
@@ -406,19 +442,22 @@ a {
 
 /* Custom Scrollbar Utility */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 10px;
+  background: rgba(8, 8, 12, 0.4);
+  border-radius: 99px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(6, 182, 212, 0.5), rgba(168, 85, 247, 0.4));
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(34, 211, 238, 0.5);
+  background: linear-gradient(180deg, rgba(6, 182, 212, 0.9), rgba(244, 114, 182, 0.8));
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
 }
+
 /* Premium book cards */
 .premium-book-card {
   isolation: isolate;
@@ -545,8 +584,6 @@ a {
   }
 }
 
-
-
 .book-format-button {
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.055);
@@ -617,4 +654,3 @@ a {
   -webkit-text-fill-color: transparent;
   animation: textGradientShimmer 4s ease infinite;
 }
-

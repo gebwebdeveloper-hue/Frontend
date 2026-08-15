@@ -144,7 +144,8 @@ export default function AdminNavbar({ activeTab, onSelectTab, onLogoutSuccess })
     <div ref={navRef} className="relative z-30">
       {/* ════════════ DESKTOP LEFT VERTICAL SIDEBAR (lg: and up) ════════════ */}
       <aside
-        className={`hidden lg:flex fixed top-24 xl:top-28 left-4 xl:left-8 z-30 flex-col bg-zinc-950/95 border border-white/10 rounded-3xl p-3.5 shadow-2xl backdrop-blur-2xl transition-all duration-300 ease-in-out ${
+        onWheel={(e) => e.stopPropagation()}
+        className={`hidden lg:flex fixed top-24 xl:top-28 left-4 xl:left-8 z-30 flex-col bg-zinc-950/95 border border-white/10 rounded-3xl p-3.5 shadow-2xl backdrop-blur-2xl transition-all duration-300 ease-in-out overscroll-y-contain ${
           isCollapsed ? "w-20 max-h-[calc(100vh-7rem)]" : "w-64 xl:w-72 max-h-[calc(100vh-7rem)] xl:max-h-[calc(100vh-8.5rem)] p-4 xl:p-5"
         }`}
       >
@@ -177,7 +178,7 @@ export default function AdminNavbar({ activeTab, onSelectTab, onLogoutSuccess })
           </div>
 
           {/* Navigation Links - Scrollable Area */}
-          <div className="space-y-1.5 flex-1 overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-white/20 hover:scrollbar-thumb-emerald-400/40 scrollbar-track-transparent">
+          <div className="space-y-1.5 flex-1 overflow-y-auto overscroll-y-contain pr-0.5 custom-scrollbar">
             {navItems.map((item) => {
               const active = isItemActive(item);
               const Icon = item.icon;

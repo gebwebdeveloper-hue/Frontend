@@ -441,7 +441,8 @@ export default function AdminPurchasesPage() {
   // Metrics Calculations
   const metrics = useMemo(() => {
     const approvedPurchases = purchasesList.filter((p) => p.status === "approved");
-    const totalRevenue = approvedPurchases.reduce((acc, p) => acc + (p.amount || 0), 0);
+    const rawTotalRevenue = approvedPurchases.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+    const totalRevenue = Math.round(rawTotalRevenue * 100) / 100;
     const totalCount = approvedPurchases.length;
     const ebookCount = approvedPurchases.filter((p) => p.format === "ebook").length;
     const storyCount = approvedPurchases.filter((p) => p.itemType === "story" || p.format === "story").length;
@@ -619,7 +620,9 @@ export default function AdminPurchasesPage() {
                     <span className="text-xs font-bold uppercase tracking-wider">Total Revenue</span>
                     <span className="text-xl font-extrabold leading-none text-emerald-400">₹</span>
                   </div>
-                  <h3 className="text-3xl font-black text-white">₹{metrics.totalRevenue}</h3>
+                  <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight truncate">
+                    ₹{Number(metrics.totalRevenue || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h3>
                   <p className="text-xs text-white/40 mt-1">Verified Razorpay Payments</p>
                 </div>
 
