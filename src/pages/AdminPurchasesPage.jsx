@@ -273,6 +273,13 @@ export default function AdminPurchasesPage() {
       note: ""
     });
     setShipmentModalOpen(true);
+
+    // Dynamic Auto-Sync from Shiprocket on modal open!
+    if (purchase._id && (purchase.shiprocketOrderId || purchase.shiprocketShipmentId || !purchase.trackingNumber)) {
+      setTimeout(() => {
+        handleAutoSyncTracking(purchase._id);
+      }, 100);
+    }
   };
 
   const handleSaveShipment = (e) => {
