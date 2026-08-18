@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   BookOpen, CreditCard, Newspaper, Users, UserCheck,
   BookMarked, LogOut, Menu, X, Feather, ChevronRight,
-  PanelLeftClose, PanelLeft
+  PanelLeftClose, PanelLeft, Receipt
 } from "lucide-react";
 import { API_BASE } from "../config.js";
 
@@ -118,6 +118,12 @@ export default function AdminNavbar({ activeTab, onSelectTab, onLogoutSuccess })
       label: "Library Cards",
       path: "/admin/library-cards",
       icon: CreditCard,
+    },
+    {
+      id: "invoices",
+      label: "Invoices",
+      path: "/admin/invoices",
+      icon: Receipt,
     },
   ];
 
