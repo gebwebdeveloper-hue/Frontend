@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Mail, Lock, Eye, EyeOff, User, Phone,
-  KeyRound, CheckCircle2, AlertCircle, Loader2, ArrowLeft
+  KeyRound, CheckCircle2, AlertCircle, Loader2, ArrowLeft,
+  Building2, Feather
 } from "lucide-react";
 
 import { API_BASE } from "../config.js";
@@ -66,7 +68,7 @@ function Alert({ type, msg }) {
 }
 
 // ── LOGIN ─────────────────────────────────────────────────────────────────────
-function LoginForm({ onSuccess, onForgot, onRegister }) {
+function LoginForm({ onSuccess, onForgot, onRegister, onPublisherAuthorLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -116,6 +118,154 @@ function LoginForm({ onSuccess, onForgot, onRegister }) {
           Sign in here
         </button>
       </p>
+
+      {/* Publisher & Author Login Section */}
+      <div className="pt-4 border-t border-white/10 mt-4">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2.5 text-center">
+          Publisher & Author Portal
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => onPublisherAuthorLogin("publisher")}
+            className="flex items-center justify-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-2.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400/50 transition shadow-sm"
+          >
+            <Building2 size={14} className="shrink-0 text-cyan-400" />
+            <span>Login as Publisher</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onPublisherAuthorLogin("author")}
+            className="flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-2.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 hover:border-amber-400/50 transition shadow-sm"
+          >
+            <Feather size={14} className="shrink-0 text-amber-400" />
+            <span>Login as Author</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+// ── PUBLISHER & AUTHOR LOGIN FORM ─────────────────────────────────────────────
+function PublisherAuthorLoginForm({ initialRole = "publisher", onSuccess, onBack }) {
+  const navigate = useNavigate();
+  const [roleTab, setRoleTab] = useState(initialRole); // 'publisher' | 'author'
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const endpoint = roleTab === "author"
+      ? `${API_BASE}/publisher/author-login`
+      : `${API_BASE}/publisher/login`;
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem("lekhok_publisher_token", data.token);
+        localStorage.setItem("lekhok_publisher_role", roleTab);
+        onSuccess({ name: roleTab === "author" ? "Author" : "Publisher", role: roleTab });
+        setTimeout(() => {
+          navigate(roleTab === "author" ? "/author_dashboard" : "/publisher_dashboard");
+        }, 1200);
+      } else {
+        setError(data.message || `Invalid ${roleTab} credentials.`);
+      }
+    } catch {
+      setError("Could not connect to server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <button
+        type="button"
+        onClick={onBack}
+        className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white transition mb-2"
+      >
+        <ArrowLeft size={13} /> Back to Reader Login
+      </button>
+
+      {/* Role Switcher */}
+      <div className="flex gap-1.5 rounded-xl bg-white/5 p-1 border border-white/10 mb-3">
+        <button
+          type="button"
+          onClick={() => { setRoleTab("publisher"); setError(""); }}
+          className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition ${
+            roleTab === "publisher"
+              ? "bg-cyan-500/20 border border-cyan-400/40 text-cyan-300"
+              : "text-white/50 hover:text-white"
+          }`}
+        >
+          <Building2 size={14} /> Publisher Portal
+        </button>
+        <button
+          type="button"
+          onClick={() => { setRoleTab("author"); setError(""); }}
+          className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition ${
+            roleTab === "author"
+              ? "bg-amber-500/20 border border-amber-400/40 text-amber-300"
+              : "text-white/50 hover:text-white"
+          }`}
+        >
+          <Feather size={14} /> Author Portal
+        </button>
+      </div>
+
+      <Alert type="error" msg={error} />
+
+      <InputField
+        label={`${roleTab === "publisher" ? "Publisher" : "Author"} Email`}
+        id="portal-email"
+        type="email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="you@example.com"
+        required
+        icon={Mail}
+        autoComplete="email"
+      />
+
+      <PasswordField
+        label="Password"
+        id="portal-password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        autoComplete="current-password"
+      />
+
+      <button
+        type="submit"
+        disabled={loading}
+        className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-black transition disabled:opacity-50 ${
+          roleTab === "publisher"
+            ? "bg-cyan-400 hover:bg-cyan-300"
+            : "bg-amber-400 hover:bg-amber-300"
+        }`}
+      >
+        {loading ? <Loader2 size={16} className="animate-spin" /> : `Login as ${roleTab === "publisher" ? "Publisher" : "Author"}`}
+      </button>
+
+      <div className="pt-2 text-center">
+        <a
+          href={roleTab === "publisher" ? "/publisher_dashboard" : "/author_dashboard"}
+          className="text-[11px] text-white/40 hover:text-white/70 transition underline"
+        >
+          Go directly to {roleTab === "publisher" ? "Publisher Portal" : "Author Portal"} →
+        </a>
+      </div>
     </form>
   );
 }
@@ -565,11 +715,15 @@ export default function AuthModal({ onClose, initialTab = "login" }) {
               {tab === "login" && "Welcome Back"}
               {tab === "register" && "Create Your Account"}
               {tab === "forgot" && "Password Recovery"}
+              {tab === "publisher" && "Publisher Portal Login"}
+              {tab === "author" && "Author Portal Login"}
             </h2>
             <p className="text-xs text-white/40 mt-1">
               {tab === "login" && "Login to access your purchased ebooks"}
               {tab === "register" && "Sign In to purchase and read ebooks"}
               {tab === "forgot" && "We'll help you get back into your account"}
+              {tab === "publisher" && "Sign in to access your publisher management dashboard"}
+              {tab === "author" && "Sign in to access your author stats and royalties"}
             </p>
           </div>
 
@@ -584,14 +738,14 @@ export default function AuthModal({ onClose, initialTab = "login" }) {
                 <CheckCircle2 size={32} />
               </div>
               <p className="text-lg font-bold text-white">
-                Welcome, {successUser.name || successUser.email.split("@")[0]}!
+                Welcome, {successUser.name || successUser.email?.split("@")[0] || "User"}!
               </p>
               <p className="text-xs text-white/40 mt-2">You are now signed in.</p>
             </motion.div>
           ) : (
             <>
               {/* Tab switcher (login/register only) */}
-              {tab !== "forgot" && (
+              {tab !== "forgot" && tab !== "publisher" && tab !== "author" && (
                 <>
                   <div className="flex gap-1 rounded-full bg-white/5 p-1 border border-white/10 mb-6">
                     {tabBtn("login", "Login")}
@@ -614,6 +768,7 @@ export default function AuthModal({ onClose, initialTab = "login" }) {
                       onSuccess={handleSuccess}
                       onForgot={() => setTab("forgot")}
                       onRegister={() => setTab("register")}
+                      onPublisherAuthorLogin={(role) => setTab(role)}
                     />
                   )}
                   {tab === "register" && (
@@ -628,10 +783,17 @@ export default function AuthModal({ onClose, initialTab = "login" }) {
                       onSuccess={handleSuccess}
                     />
                   )}
-                 </motion.div>
-               </AnimatePresence>
-             </>
-           )}
+                  {(tab === "publisher" || tab === "author") && (
+                    <PublisherAuthorLoginForm
+                      initialRole={tab}
+                      onSuccess={handleSuccess}
+                      onBack={() => setTab("login")}
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
