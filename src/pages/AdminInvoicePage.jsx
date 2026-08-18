@@ -4,12 +4,18 @@ import {
   ShieldCheck, Loader2, Plus, Trash2, Printer, Download,
   RefreshCw, Mail, MessageSquare, Check, Sparkles, Building,
   CreditCard, FileText, ArrowLeft, Eye, Edit3, CheckCircle2,
-  Copy, X, ExternalLink
+  Copy, X, ExternalLink, TrendingUp, BarChart3, ArrowDownLeft,
+  ArrowUpRight, Receipt, PlusCircle, Search, Filter, Calendar,
+  DollarSign, FileSpreadsheet, Edit
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
 import AdminNavbar from "../components/AdminNavbar.jsx";
 import { API_BASE } from "../config.js";
+import AdminFinancialDashboard from "../components/admin/AdminFinancialDashboard.jsx";
+import AdminIncomeRegister from "../components/admin/AdminIncomeRegister.jsx";
+import AdminExpenseRegister from "../components/admin/AdminExpenseRegister.jsx";
+import AddExpenseModal from "../components/admin/AddExpenseModal.jsx";
 
 // Helper: Convert numbers to words in Rupees
 function convertNumberToWords(amount) {
@@ -65,6 +71,167 @@ function getInitialInvoiceNo() {
   return `LT/TR/${fy}/${paddedSeq}`;
 }
 
+// Initial Mock Income Records (Matching Screenshot 2)
+const INITIAL_INCOME_RECORDS = [
+  {
+    id: "inc-1",
+    slNo: 1,
+    year: "2026",
+    month: "AUG",
+    invoiceNo: "LT/TR/26-27/0001",
+    date: "12 Aug 2026",
+    paymentMode: "Bank",
+    customerName: "Susmita Das",
+    customerPhone: "9862123456",
+    customerEmail: "susmita@example.com",
+    customerAddress: "Agartala, West Tripura",
+    description: "Tripura History & Culture Book",
+    qty: 1,
+    actualRate: 450,
+    taxablePayable: 450,
+    gstAmount: 81,
+    deliveryCharges: 50,
+    courierName: "BlueDart",
+    discount: 0,
+    totalAmount: 581,
+    billLink: "https://www.lekhoktripura.in/"
+  },
+  {
+    id: "inc-2",
+    slNo: 2,
+    year: "2026",
+    month: "AUG",
+    invoiceNo: "LT/TR/26-27/0002",
+    date: "14 Aug 2026",
+    paymentMode: "Google Pay",
+    customerName: "Rahul Roy",
+    customerPhone: "9862987654",
+    customerEmail: "rahul@example.com",
+    customerAddress: "Dharmanagar, North Tripura",
+    description: "Kokborok Learning Guide (Set of 2)",
+    qty: 2,
+    actualRate: 300,
+    taxablePayable: 600,
+    gstAmount: 108,
+    deliveryCharges: 40,
+    courierName: "DTDC",
+    discount: 0,
+    totalAmount: 748,
+    billLink: "https://www.lekhoktripura.in/"
+  },
+  {
+    id: "inc-3",
+    slNo: 3,
+    year: "2026",
+    month: "AUG",
+    invoiceNo: "LT/TR/26-27/0003",
+    date: "16 Aug 2026",
+    paymentMode: "PhonePe",
+    customerName: "Amit Saha",
+    customerPhone: "9436123456",
+    customerEmail: "amit@example.com",
+    customerAddress: "Udaipur, Gomati Tripura",
+    description: "Modern Bengali Literature Vol. 1",
+    qty: 1,
+    actualRate: 500,
+    taxablePayable: 500,
+    gstAmount: 90,
+    deliveryCharges: 60,
+    courierName: "Speed Post",
+    discount: 0,
+    totalAmount: 650,
+    billLink: "https://www.lekhoktripura.in/"
+  },
+  {
+    id: "inc-4",
+    slNo: 4,
+    year: "2026",
+    month: "AUG",
+    invoiceNo: "LT/TR/26-27/0004",
+    date: "17 Aug 2026",
+    paymentMode: "UPI",
+    customerName: "Priya Deb",
+    customerPhone: "7005123456",
+    customerEmail: "priya@example.com",
+    customerAddress: "Kailashahar, Unakoti",
+    description: "Tripura Poetry Anthology",
+    qty: 3,
+    actualRate: 250,
+    taxablePayable: 750,
+    gstAmount: 135,
+    deliveryCharges: 50,
+    courierName: "BlueDart",
+    discount: 0,
+    totalAmount: 935,
+    billLink: "https://www.lekhoktripura.in/"
+  },
+  {
+    id: "inc-5",
+    slNo: 5,
+    year: "2026",
+    month: "AUG",
+    invoiceNo: "LT/TR/26-27/0005",
+    date: "18 Aug 2026",
+    paymentMode: "Google Pay",
+    customerName: "Kiran Samanta",
+    customerPhone: "8794123456",
+    customerEmail: "kiransamanta88@gmail.com",
+    customerAddress: "Madhuban, Agartala",
+    description: "Publishing & Printing Services",
+    qty: 1,
+    actualRate: 400,
+    taxablePayable: 400,
+    gstAmount: 72,
+    deliveryCharges: 40,
+    courierName: "Local Delivery",
+    discount: 0,
+    totalAmount: 512,
+    billLink: "https://www.lekhoktripura.in/"
+  }
+];
+
+// Initial Mock Expense Records (Matching Screenshot 1)
+const INITIAL_EXPENSE_RECORDS = [
+  {
+    id: "exp-1",
+    invoiceNo: "EXP/2026/001",
+    gstBill: "YES",
+    itemName: "Book Printing Paper Roll 80GSM",
+    purpose: "Publication Printing",
+    year: "2026",
+    month: "AUG",
+    date: "10 Aug 2026",
+    partyName: "Agartala Print House",
+    partyNumber: "9862000000",
+    partyEmail: "print@agartala.com",
+    partyAddress: "Battala, Agartala",
+    gstRate: 18,
+    gstAmount: 360,
+    beforeTaxAmount: 2000,
+    totalBillAmount: 2360,
+    billLink: "https://www.lekhoktripura.in/"
+  },
+  {
+    id: "exp-2",
+    invoiceNo: "EXP/2026/002",
+    gstBill: "NO",
+    itemName: "Office Tea & Snacks",
+    purpose: "Office Maintenance",
+    year: "2026",
+    month: "AUG",
+    date: "15 Aug 2026",
+    partyName: "Local Store",
+    partyNumber: "9862111111",
+    partyEmail: "",
+    partyAddress: "Madhuban, Agartala",
+    gstRate: 0,
+    gstAmount: 0,
+    beforeTaxAmount: 450,
+    totalBillAmount: 450,
+    billLink: "#"
+  }
+];
+
 export default function AdminInvoicePage() {
   const navigate = useNavigate();
   const [authed, setAuthed] = useState(false);
@@ -74,7 +241,42 @@ export default function AdminInvoicePage() {
   const [authError, setAuthError] = useState("");
   const [submittingAuth, setSubmittingAuth] = useState(false);
   const [loginStep, setLoginStep] = useState("email");
-  const [activeTab, setActiveTab] = useState("generator"); // 'generator' | 'preview'
+  const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard' | 'income' | 'expense' | 'generator' | 'preview'
+  
+  // Financial Records Stores (Local Storage Persisted)
+  const [incomeRecords, setIncomeRecords] = useState(() => {
+    const saved = localStorage.getItem("lekhok_income_records");
+    return saved ? JSON.parse(saved) : INITIAL_INCOME_RECORDS;
+  });
+  const [expenseRecords, setExpenseRecords] = useState(() => {
+    const saved = localStorage.getItem("lekhok_expense_records");
+    return saved ? JSON.parse(saved) : INITIAL_EXPENSE_RECORDS;
+  });
+
+  // Expense Modal State
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [editingExpenseId, setEditingExpenseId] = useState(null);
+  const [expenseForm, setExpenseForm] = useState({
+    invoiceNo: "",
+    gstBill: "YES",
+    itemName: "",
+    purpose: "",
+    year: new Date().getFullYear().toString(),
+    month: new Date().toLocaleString("en-US", { month: "short" }).toUpperCase(),
+    date: new Date().toISOString().split("T")[0],
+    partyName: "",
+    partyNumber: "",
+    partyEmail: "",
+    partyAddress: "",
+    gstRate: 18,
+    beforeTaxAmount: "",
+    billLink: ""
+  });
+
+  // Search & Filters
+  const [incomeSearch, setIncomeSearch] = useState("");
+  const [expenseSearch, setExpenseSearch] = useState("");
+
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailRecipient, setEmailRecipient] = useState("");
   const [emailSubject, setEmailSubject] = useState("");
@@ -84,9 +286,9 @@ export default function AdminInvoicePage() {
   const termsTextareaRef = useRef(null);
   const modalTextareaRef = useRef(null);
 
-  // Lock background body & html scroll when Email Modal is open
+  // Lock background body & html scroll when Email Modal or Expense Modal is open
   useEffect(() => {
-    if (showEmailModal) {
+    if (showEmailModal || showExpenseModal) {
       document.body.style.overflow = "hidden";
       document.documentElement.style.overflow = "hidden";
       document.body.style.touchAction = "none";
@@ -100,7 +302,7 @@ export default function AdminInvoicePage() {
       document.documentElement.style.overflow = "";
       document.body.style.touchAction = "";
     };
-  }, [showEmailModal]);
+  }, [showEmailModal, showExpenseModal]);
 
   // Ensure mouse wheel scrolling inside Email Modal textarea always works seamlessly
   useEffect(() => {
@@ -362,6 +564,239 @@ export default function AdminInvoicePage() {
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
     return dStr;
+  };
+
+  // Sync to local storage
+  useEffect(() => {
+    localStorage.setItem("lekhok_income_records", JSON.stringify(incomeRecords));
+  }, [incomeRecords]);
+
+  useEffect(() => {
+    localStorage.setItem("lekhok_expense_records", JSON.stringify(expenseRecords));
+  }, [expenseRecords]);
+
+  // Auto-sync current invoice into Income Records whenever generated or previewed
+  const handleAutoSaveIncome = () => {
+    if (!form.billInfo.invoiceNo) return;
+
+    const billingDateObj = form.billInfo.billingDate ? new Date(form.billInfo.billingDate) : new Date();
+    const formattedDateStr = formatDateDisplay(form.billInfo.billingDate);
+    const monthStr = billingDateObj.toLocaleString("en-US", { month: "short" }).toUpperCase();
+    const yearStr = billingDateObj.getFullYear().toString();
+
+    const firstItem = form.items && form.items.length > 0 ? form.items[0] : {};
+    const itemDesc = form.items && form.items.length > 1 
+      ? `${firstItem.description || 'Item'} + ${form.items.length - 1} more`
+      : (firstItem.description || 'Goods & Services');
+
+    const totalQty = form.items ? form.items.reduce((acc, i) => acc + Number(i.qty || 0), 0) : 1;
+
+    setIncomeRecords((prev) => {
+      const existingIdx = prev.findIndex((r) => r.invoiceNo === form.billInfo.invoiceNo);
+      const record = {
+        id: existingIdx >= 0 ? prev[existingIdx].id : `inc-${Date.now()}`,
+        slNo: existingIdx >= 0 ? prev[existingIdx].slNo : prev.length + 1,
+        year: yearStr,
+        month: monthStr,
+        invoiceNo: form.billInfo.invoiceNo,
+        date: formattedDateStr,
+        paymentMode: form.billInfo.paymentMode,
+        customerName: form.billTo.name || "Customer",
+        customerPhone: form.billTo.phoneNo || "N/A",
+        customerEmail: form.billTo.email || "N/A",
+        customerAddress: form.billTo.address || "N/A",
+        description: itemDesc,
+        qty: totalQty,
+        actualRate: Number(firstItem.rate || 0),
+        taxablePayable: taxableAmount,
+        gstAmount: totalTax,
+        deliveryCharges: deliveryChg,
+        courierName: form.deliveryDetails.courierName || "Courier",
+        discount: discount,
+        totalAmount: totalPayable,
+        billLink: `/admin/invoices`
+      };
+
+      if (existingIdx >= 0) {
+        const copy = [...prev];
+        copy[existingIdx] = record;
+        return copy;
+      }
+      return [record, ...prev];
+    });
+  };
+
+  // Save Expense Handler
+  const handleSaveExpense = (e) => {
+    e.preventDefault();
+    const bTax = Number(expenseForm.beforeTaxAmount) || 0;
+    const gRate = Number(expenseForm.gstRate) || 0;
+    const gAmt = bTax * (gRate / 100);
+    const totBill = bTax + gAmt;
+
+    const dateObj = expenseForm.date ? new Date(expenseForm.date) : new Date();
+    const monthStr = dateObj.toLocaleString("en-US", { month: "short" }).toUpperCase();
+    const yearStr = dateObj.getFullYear().toString();
+    const formattedDateStr = formatDateDisplay(expenseForm.date);
+
+    const expenseRecord = {
+      id: editingExpenseId || `exp-${Date.now()}`,
+      invoiceNo: expenseForm.invoiceNo || `EXP/${yearStr}/${String(expenseRecords.length + 1).padStart(3, '0')}`,
+      gstBill: expenseForm.gstBill,
+      itemName: expenseForm.itemName,
+      purpose: expenseForm.purpose,
+      year: yearStr,
+      month: monthStr,
+      date: formattedDateStr,
+      partyName: expenseForm.partyName,
+      partyNumber: expenseForm.partyNumber || "N/A",
+      partyEmail: expenseForm.partyEmail || "N/A",
+      partyAddress: expenseForm.partyAddress || "N/A",
+      gstRate: gRate,
+      gstAmount: gAmt,
+      beforeTaxAmount: bTax,
+      totalBillAmount: totBill,
+      billLink: expenseForm.billLink || "#"
+    };
+
+    if (editingExpenseId) {
+      setExpenseRecords((prev) => prev.map((item) => (item.id === editingExpenseId ? expenseRecord : item)));
+    } else {
+      setExpenseRecords((prev) => [expenseRecord, ...prev]);
+    }
+
+    setShowExpenseModal(false);
+    setEditingExpenseId(null);
+    setExpenseForm({
+      invoiceNo: "",
+      gstBill: "YES",
+      itemName: "",
+      purpose: "",
+      year: new Date().getFullYear().toString(),
+      month: new Date().toLocaleString("en-US", { month: "short" }).toUpperCase(),
+      date: new Date().toISOString().split("T")[0],
+      partyName: "",
+      partyNumber: "",
+      partyEmail: "",
+      partyAddress: "",
+      gstRate: 18,
+      beforeTaxAmount: "",
+      billLink: ""
+    });
+  };
+
+  const handleDeleteExpense = (id) => {
+    setExpenseRecords((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  const handleDeleteIncome = (id) => {
+    setIncomeRecords((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  // Calculate Dashboard Aggregates grouped by Month + Year
+  const getDashboardData = () => {
+    const monthGroups = {};
+
+    // Process Income
+    incomeRecords.forEach((inc) => {
+      const key = `${inc.month},${inc.year}`;
+      if (!monthGroups[key]) {
+        monthGroups[key] = {
+          month: inc.month,
+          year: inc.year,
+          totalReceived: 0,
+          totalDeductions: 0,
+          netIncome: 0,
+          totalExpense: 0,
+          netProfitLoss: 0,
+        };
+      }
+      const rec = Number(inc.totalAmount) || 0;
+      const ded = (Number(inc.gstAmount) || 0) + (Number(inc.deliveryCharges) || 0) + (Number(inc.discount) || 0);
+      monthGroups[key].totalReceived += rec;
+      monthGroups[key].totalDeductions += ded;
+      monthGroups[key].netIncome += (rec - ded);
+    });
+
+    // Process Expenses
+    expenseRecords.forEach((exp) => {
+      const key = `${exp.month},${exp.year}`;
+      if (!monthGroups[key]) {
+        monthGroups[key] = {
+          month: exp.month,
+          year: exp.year,
+          totalReceived: 0,
+          totalDeductions: 0,
+          netIncome: 0,
+          totalExpense: 0,
+          netProfitLoss: 0,
+        };
+      }
+      const expAmt = Number(exp.totalBillAmount) || 0;
+      monthGroups[key].totalExpense += expAmt;
+    });
+
+    // Compute Net Profit/Loss for each month
+    Object.keys(monthGroups).forEach((k) => {
+      const g = monthGroups[k];
+      g.netProfitLoss = g.netIncome - g.totalExpense;
+    });
+
+    // Sort by Year desc, then Month order
+    const monthOrder = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    return Object.values(monthGroups).sort((a, b) => {
+      if (a.year !== b.year) return Number(b.year) - Number(a.year);
+      return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month);
+    });
+  };
+
+  const dashboardCards = getDashboardData();
+  const lifetimeReceived = incomeRecords.reduce((s, r) => s + (Number(r.totalAmount) || 0), 0);
+  const lifetimeDeductions = incomeRecords.reduce((s, r) => s + ((Number(r.gstAmount) || 0) + (Number(r.deliveryCharges) || 0) + (Number(r.discount) || 0)), 0);
+  const lifetimeExpenses = expenseRecords.reduce((s, r) => s + (Number(r.totalBillAmount) || 0), 0);
+  const lifetimeNetIncome = lifetimeReceived - lifetimeDeductions;
+  const lifetimeNetProfit = lifetimeNetIncome - lifetimeExpenses;
+
+  // Filtered Income & Expense lists
+  const filteredIncomeRecords = incomeRecords.filter((inc) => {
+    const term = incomeSearch.toLowerCase();
+    return (
+      inc.invoiceNo.toLowerCase().includes(term) ||
+      inc.customerName.toLowerCase().includes(term) ||
+      inc.description.toLowerCase().includes(term) ||
+      inc.paymentMode.toLowerCase().includes(term)
+    );
+  });
+
+  const filteredExpenseRecords = expenseRecords.filter((exp) => {
+    const term = expenseSearch.toLowerCase();
+    return (
+      exp.invoiceNo.toLowerCase().includes(term) ||
+      exp.itemName.toLowerCase().includes(term) ||
+      exp.partyName.toLowerCase().includes(term) ||
+      exp.purpose.toLowerCase().includes(term)
+    );
+  });
+
+  const handleEditExpense = (record) => {
+    setEditingExpenseId(record.id);
+    setExpenseForm({
+      invoiceNo: record.invoiceNo,
+      gstBill: record.gstBill,
+      itemName: record.itemName,
+      purpose: record.purpose,
+      year: record.year,
+      month: record.month,
+      date: record.date ? record.date.split("/").reverse().join("-") : new Date().toISOString().split("T")[0],
+      partyName: record.partyName,
+      partyNumber: record.partyNumber,
+      partyEmail: record.partyEmail,
+      partyAddress: record.partyAddress,
+      gstRate: record.gstRate,
+      beforeTaxAmount: record.beforeTaxAmount,
+      billLink: record.billLink
+    });
+    setShowExpenseModal(true);
   };
 
   // Printable Action Handlers
@@ -634,29 +1069,109 @@ Lekhok Tripura Publishers`;
               </div>
             </div>
 
-            {/* Mode Switcher & Quick Actions */}
-            <div className="flex items-center gap-3">
-              <div className="flex rounded-2xl bg-white/5 p-1 border border-white/10">
+            {/* Multi-Tab Financial & Invoice Navigation Bar */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+              <div className="flex rounded-2xl bg-white/5 p-1 border border-white/10 flex-wrap sm:flex-nowrap gap-1">
+                <button
+                  onClick={() => setActiveTab("dashboard")}
+                  className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
+                    activeTab === "dashboard" ? "bg-emerald-400 text-black shadow-lg" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  DASHBOARD
+                </button>
+                <button
+                  onClick={() => {
+                    handleAutoSaveIncome();
+                    setActiveTab("income");
+                  }}
+                  className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
+                    activeTab === "income" ? "bg-emerald-400 text-black shadow-lg" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  <ArrowDownLeft className="h-3.5 w-3.5 text-emerald-400" />
+                  INCOME ({incomeRecords.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab("expense")}
+                  className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
+                    activeTab === "expense" ? "bg-emerald-400 text-black shadow-lg" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  <ArrowUpRight className="h-3.5 w-3.5 text-rose-400" />
+                  EXPENSE ({expenseRecords.length})
+                </button>
                 <button
                   onClick={() => setActiveTab("generator")}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
+                  className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
                     activeTab === "generator" ? "bg-emerald-400 text-black shadow-lg" : "text-white/60 hover:text-white"
                   }`}
                 >
                   <Edit3 className="h-3.5 w-3.5" />
-                  Generator Form
+                  INVOICE GENERATOR
                 </button>
                 <button
-                  onClick={() => setActiveTab("preview")}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
+                  onClick={() => {
+                    handleAutoSaveIncome();
+                    setActiveTab("preview");
+                  }}
+                  className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
                     activeTab === "preview" ? "bg-emerald-400 text-black shadow-lg" : "text-white/60 hover:text-white"
                   }`}
                 >
                   <Eye className="h-3.5 w-3.5" />
-                  Print / Download PDF Preview
+                  PREVIEW / PRINT
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* 1. EXECUTIVE DASHBOARD */}
+          <div className={activeTab === "dashboard" ? "no-print space-y-6" : "hidden no-print"}>
+            <AdminFinancialDashboard
+              incomeRecords={incomeRecords}
+              expenseRecords={expenseRecords}
+            />
+          </div>
+
+          {/* 2. INCOME REGISTER */}
+          <div className={activeTab === "income" ? "no-print space-y-6" : "hidden no-print"}>
+            <AdminIncomeRegister
+              incomeRecords={incomeRecords}
+              onDeleteIncome={handleDeleteIncome}
+              onViewPreview={() => setActiveTab("preview")}
+              onOpenGenerator={() => setActiveTab("generator")}
+            />
+          </div>
+
+          {/* 3. EXPENSE REGISTER */}
+          <div className={activeTab === "expense" ? "no-print space-y-6" : "hidden no-print"}>
+            <AdminExpenseRegister
+              expenseRecords={expenseRecords}
+              onAddExpense={() => {
+                setEditingExpenseId(null);
+                setExpenseForm({
+                  invoiceNo: `EXP/2026/${String(expenseRecords.length + 1).padStart(3, "0")}`,
+                  gstBill: "YES",
+                  itemName: "",
+                  purpose: "",
+                  year: new Date().getFullYear().toString(),
+                  month: new Date().toLocaleString("en-US", { month: "short" }).toUpperCase(),
+                  date: new Date().toISOString().split("T")[0],
+                  partyName: "",
+                  partyNumber: "",
+                  partyEmail: "",
+                  partyAddress: "",
+                  gstRate: 18,
+                  beforeTaxAmount: "",
+                  billLink: ""
+                });
+                setShowExpenseModal(true);
+              }}
+              onEditExpense={handleEditExpense}
+              onDeleteExpense={handleDeleteExpense}
+            />
           </div>
 
           <div className={activeTab === "generator" ? "no-print space-y-6" : "hidden no-print"}>
@@ -1777,6 +2292,16 @@ Lekhok Tripura Publishers`;
           </div>
         </div>
       )}
+
+      {/* ── ADD / EDIT EXPENSE MODAL ── */}
+      <AddExpenseModal
+        isOpen={showExpenseModal}
+        onClose={() => setShowExpenseModal(false)}
+        onSave={handleSaveExpense}
+        editingExpenseId={editingExpenseId}
+        expenseForm={expenseForm}
+        setExpenseForm={setExpenseForm}
+      />
       </div>
     </PageTransition>
   );
