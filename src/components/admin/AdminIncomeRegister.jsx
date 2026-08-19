@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Search, Plus, ExternalLink, Trash2 } from "lucide-react";
+import { Search, Plus, ExternalLink, Trash2, Edit3 } from "lucide-react";
 
 export default function AdminIncomeRegister({
   incomeRecords,
   onDeleteIncome,
+  onEditIncome,
   onViewPreview,
   onOpenGenerator,
 }) {
@@ -97,14 +98,25 @@ export default function AdminIncomeRegister({
                 <td className="p-3 text-right text-amber-300 font-medium">₹{Number(row.gstAmount).toFixed(2)}</td>
                 <td className="p-3 text-right text-cyan-300 font-medium">₹{Number(row.deliveryCharges).toFixed(2)}</td>
                 <td className="p-3 text-right font-black text-emerald-400 text-sm">₹{Number(row.totalAmount).toFixed(2)}</td>
-                <td className="p-3 text-center">
-                  <button
-                    onClick={() => onViewPreview(row)}
-                    className="inline-flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500/20 hover:text-emerald-300 transition"
-                    title="View / Print Printable Document"
-                  >
-                    <ExternalLink className="h-3 w-3" /> Soft Bill
-                  </button>
+                <td className="p-3 text-center whitespace-nowrap">
+                  <div className="inline-flex items-center gap-1.5">
+                    <button
+                      onClick={() => onViewPreview(row)}
+                      className="inline-flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500/20 hover:text-emerald-300 transition"
+                      title="View / Print Printable Document"
+                    >
+                      <ExternalLink className="h-3 w-3" /> Soft Bill
+                    </button>
+                    {onEditIncome && (
+                      <button
+                        onClick={() => onEditIncome(row)}
+                        className="inline-flex items-center gap-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-300 hover:bg-emerald-400 hover:text-black transition"
+                        title="Edit Income Record"
+                      >
+                        <Edit3 className="h-3 w-3" /> Edit
+                      </button>
+                    )}
+                  </div>
                 </td>
                 <td className="p-3 text-center">
                   <button

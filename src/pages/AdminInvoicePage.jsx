@@ -12,6 +12,7 @@ import AdminFinancialDashboard from "../components/admin/AdminFinancialDashboard
 import AdminIncomeRegister from "../components/admin/AdminIncomeRegister.jsx";
 import AdminExpenseRegister from "../components/admin/AdminExpenseRegister.jsx";
 import AddExpenseModal from "../components/admin/AddExpenseModal.jsx";
+import EditIncomeModal from "../components/admin/EditIncomeModal.jsx";
 import SendEmailModal from "../components/admin/SendEmailModal.jsx";
 import AdminInvoiceAuth from "../components/admin/AdminInvoiceAuth.jsx";
 import AdminInvoicePreview from "../components/admin/AdminInvoicePreview.jsx";
@@ -286,6 +287,26 @@ export default function AdminInvoicePage() {
     billLink: ""
   });
 
+  // Edit Income Record Modal State
+  const [showIncomeModal, setShowIncomeModal] = useState(false);
+  const [editingIncomeForm, setEditingIncomeForm] = useState(null);
+
+  const handleEditIncome = (record) => {
+    setEditingIncomeForm({
+      ...record,
+      rawDate: record.date ? record.date.split(" ").reverse().join("-") : new Date().toISOString().split("T")[0]
+    });
+    setShowIncomeModal(true);
+  };
+
+  const handleSaveIncomeRecord = (updatedRecord) => {
+    setIncomeRecords((prev) =>
+      prev.map((r) => (r.id === updatedRecord.id ? updatedRecord : r))
+    );
+    setShowIncomeModal(false);
+    setEditingIncomeForm(null);
+  };
+
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailRecipient, setEmailRecipient] = useState("");
   const [emailSubject, setEmailSubject] = useState("");
@@ -295,9 +316,9 @@ export default function AdminInvoicePage() {
   const termsTextareaRef = useRef(null);
   const modalTextareaRef = useRef(null);
 
-  // Lock background body & html scroll when Email Modal or Expense Modal is open
+  // Lock background body & html scroll when Modal is open
   useEffect(() => {
-    if (showEmailModal || showExpenseModal) {
+    if (showEmailModal || showExpenseModal || showIncomeModal) {
       document.body.style.overflow = "hidden";
       document.documentElement.style.overflow = "hidden";
       document.body.style.touchAction = "none";
@@ -311,7 +332,7 @@ export default function AdminInvoicePage() {
       document.documentElement.style.overflow = "";
       document.body.style.touchAction = "";
     };
-  }, [showEmailModal, showExpenseModal]);
+  }, [showEmailModal, showExpenseModal, showIncomeModal]);
 
   // Form State
   const initialForm = {
@@ -967,6 +988,10 @@ Lekhok Tripura Publishers`;
               <AdminFinancialDashboard
                 incomeRecords={incomeRecords}
                 expenseRecords={expenseRecords}
+                onViewPreview={handleViewSoftBill}
+                onOpenGenerator={() => setActiveTab("generator")}
+                onEditIncome={handleEditIncome}
+                onDeleteIncome={handleDeleteIncome}
               />
             </div>
 
@@ -975,6 +1000,7 @@ Lekhok Tripura Publishers`;
               <AdminIncomeRegister
                 incomeRecords={incomeRecords}
                 onDeleteIncome={handleDeleteIncome}
+                onEditIncome={handleEditIncome}
                 onViewPreview={handleViewSoftBill}
                 onOpenGenerator={() => setActiveTab("generator")}
               />
@@ -1111,6 +1137,18 @@ Lekhok Tripura Publishers`;
           editingExpenseId={editingExpenseId}
           expenseForm={expenseForm}
           setExpenseForm={setExpenseForm}
+        />
+
+        {/* ── EDIT INCOME / SALES RECORD MODAL ── */}
+        <EditIncomeModal
+          isOpen={showIncomeModal}
+          onClose={() => {
+            setShowIncomeModal(false);
+            setEditingIncomeForm(null);
+          }}
+          onSave={handleSaveIncomeRecord}
+          incomeForm={editingIncomeForm}
+          setIncomeForm={setEditingIncomeForm}
         />
       </PageTransition>
     </AdminInvoiceAuth>
