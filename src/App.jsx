@@ -30,6 +30,7 @@ import AdminRentalsPage from "./pages/AdminRentalsPage.jsx";
 import AdminLibraryCardsPage from "./pages/AdminLibraryCardsPage.jsx";
 import AdminClubTransactionsPage from "./pages/AdminClubTransactionsPage.jsx";
 import AdminInvoicePage from "./pages/AdminInvoicePage.jsx";
+import AdminCrmPage from "./pages/AdminCrmPage.jsx";
 import BookRentPage from "./pages/BookRentPage.jsx";
 import CafeLayout from "./cafe/CafeLayout.jsx";
 import CafeHomePage from "./cafe/pages/CafeHomePage.jsx";
@@ -106,6 +107,7 @@ export default function App() {
           <Route path="/admin/library-cards" element={<AdminLibraryCardsPage />} />
           <Route path="/admin/invoices" element={<AdminInvoicePage />} />
           <Route path="/admin/invoice" element={<Navigate to="/admin/invoices" replace />} />
+          <Route path="/admin/crm" element={<AdminCrmPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/rentals" element={<BookRentPage />} />
           <Route path="/book-rent" element={<Navigate to="/rentals" replace />} />

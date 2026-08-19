@@ -95,10 +95,16 @@ export default function AdminNavbar({ activeTab, onSelectTab, onLogoutSuccess })
       isTab: true,
     },
     {
+      id: "crm",
+      label: "CRM & User Follow-Up",
+      path: "/admin/crm",
+      icon: Users,
+    },
+    {
       id: "users",
       label: "Manage Users",
       path: "/admin/users",
-      icon: Users,
+      icon: UserCheck,
     },
     {
       id: "club",
