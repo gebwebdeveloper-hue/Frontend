@@ -54,28 +54,28 @@ export default function AddExpenseModal({
           e.preventDefault();
         }
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md no-print animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-md no-print animate-fade-in"
     >
       <div
         ref={modalBodyRef}
-        className="w-full max-w-2xl rounded-3xl border border-white/15 bg-zinc-900 p-6 sm:p-8 text-white shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto overscroll-contain"
+        className="w-full max-w-2xl rounded-3xl border border-amber-900/15 bg-white p-6 sm:p-8 text-stone-900 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto overscroll-contain"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="flex items-center justify-between border-b border-stone-200 pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-100 text-rose-700 border border-rose-200">
               <Receipt className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-bold text-amber-950">
                 {editingExpenseId ? "Edit Expense Entry" : "Add New Expense Entry"}
               </h3>
-              <p className="text-xs text-white/50">Log company purchases, printing & operational expenses</p>
+              <p className="text-xs text-stone-600 font-medium">Log company purchases, printing & operational expenses</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-xl border border-white/10 p-2 text-white/60 hover:bg-white/10 hover:text-white transition"
+            className="rounded-xl border border-stone-300 bg-[#F7F3ED] p-2 text-stone-600 hover:bg-stone-200 transition"
           >
             <X className="h-4 w-4" />
           </button>
@@ -85,7 +85,7 @@ export default function AddExpenseModal({
         <form onSubmit={onSave} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 Invoice / Ref No
               </label>
               <input
@@ -93,17 +93,17 @@ export default function AddExpenseModal({
                 required
                 value={expenseForm.invoiceNo}
                 onChange={(e) => setExpenseForm({ ...expenseForm, invoiceNo: e.target.value })}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:border-rose-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs font-mono font-bold text-rose-800 focus:border-amber-700 focus:outline-none transition"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 GST Bill?
               </label>
               <select
                 value={expenseForm.gstBill}
                 onChange={(e) => setExpenseForm({ ...expenseForm, gstBill: e.target.value })}
-                className="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-2.5 text-xs text-white focus:border-rose-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
               >
                 <option value="YES">YES (Tax Invoice)</option>
                 <option value="NO">NO (Non-GST Cash Memo)</option>
@@ -113,7 +113,7 @@ export default function AddExpenseModal({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 Item Name *
               </label>
               <input
@@ -122,11 +122,11 @@ export default function AddExpenseModal({
                 value={expenseForm.itemName}
                 onChange={(e) => setExpenseForm({ ...expenseForm, itemName: e.target.value })}
                 placeholder="e.g. Paper Roll 80GSM"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder-white/20 focus:border-rose-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 Purpose / Category *
               </label>
               <input
@@ -135,14 +135,14 @@ export default function AddExpenseModal({
                 value={expenseForm.purpose}
                 onChange={(e) => setExpenseForm({ ...expenseForm, purpose: e.target.value })}
                 placeholder="e.g. Publication Printing"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder-white/20 focus:border-rose-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
               />
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 Purchase Date
               </label>
               <input
@@ -150,11 +150,11 @@ export default function AddExpenseModal({
                 required
                 value={expenseForm.date}
                 onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:border-rose-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 Party / Vendor Name *
               </label>
               <input
@@ -163,14 +163,14 @@ export default function AddExpenseModal({
                 value={expenseForm.partyName}
                 onChange={(e) => setExpenseForm({ ...expenseForm, partyName: e.target.value })}
                 placeholder="e.g. Agartala Print House"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder-white/20 focus:border-rose-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
               />
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 Party Phone (10 Digits)
               </label>
               <input
@@ -182,36 +182,36 @@ export default function AddExpenseModal({
                   setExpenseForm({ ...expenseForm, partyNumber: cleaned });
                 }}
                 placeholder="10-digit phone"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:border-rose-400 focus:outline-none transition font-mono"
+                className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition font-mono"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 Party Email
               </label>
               <input
                 type="email"
                 value={expenseForm.partyEmail}
                 onChange={(e) => setExpenseForm({ ...expenseForm, partyEmail: e.target.value })}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:border-rose-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 Party Address
               </label>
               <input
                 type="text"
                 value={expenseForm.partyAddress}
                 onChange={(e) => setExpenseForm({ ...expenseForm, partyAddress: e.target.value })}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:border-rose-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
               />
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 Before Tax Amount (₹) *
               </label>
               <input
@@ -225,17 +225,17 @@ export default function AddExpenseModal({
                   setExpenseForm({ ...expenseForm, beforeTaxAmount: cleaned });
                 }}
                 placeholder="e.g. 2000"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-white focus:border-rose-400 focus:outline-none transition font-mono"
+                className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs font-bold text-stone-900 focus:border-amber-700 focus:outline-none transition font-mono"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 GST Rate (%)
               </label>
               <select
                 value={expenseForm.gstRate}
                 onChange={(e) => setExpenseForm({ ...expenseForm, gstRate: Number(e.target.value) })}
-                className="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-2.5 text-xs text-white focus:border-rose-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
               >
                 <option value={18}>18% GST</option>
                 <option value={5}>5% GST</option>
@@ -246,7 +246,7 @@ export default function AddExpenseModal({
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
               Bill Soft Link / File URL
             </label>
             <input
@@ -254,29 +254,29 @@ export default function AddExpenseModal({
               value={expenseForm.billLink}
               onChange={(e) => setExpenseForm({ ...expenseForm, billLink: e.target.value })}
               placeholder="e.g. https://drive.google.com/file/... or website link"
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder-white/20 focus:border-rose-400 focus:outline-none transition"
+              className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
             />
           </div>
 
           {/* Total Summary box */}
-          <div className="rounded-xl border border-white/10 bg-white/5 p-3 flex items-center justify-between text-xs">
+          <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 flex items-center justify-between text-xs font-semibold text-stone-800">
             <span>Calculated Total Bill (+GST):</span>
-            <span className="font-black text-rose-400 text-sm">
+            <span className="font-black text-rose-700 text-sm">
               ₹{calculatedTotal}
             </span>
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-white/10">
+          <div className="flex justify-end gap-3 pt-3 border-t border-stone-200">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white/70 hover:bg-white/10 hover:text-white transition"
+              className="rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs font-bold text-stone-700 hover:bg-stone-200 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="rounded-xl bg-rose-500 px-6 py-2.5 text-xs font-bold text-white hover:bg-rose-400 transition shadow-lg"
+              className="rounded-xl bg-rose-700 px-6 py-2.5 text-xs font-bold text-white hover:bg-rose-800 transition shadow-md"
             >
               {editingExpenseId ? "Update Expense" : "Save Expense"}
             </button>

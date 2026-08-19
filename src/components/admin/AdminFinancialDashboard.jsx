@@ -154,16 +154,16 @@ export default function AdminFinancialDashboard({
 
   return (
     <div className="space-y-6">
-      {/* ── FILTER HEADER BAR: SELECT YEAR & MONTH ── */}
-      <div className="rounded-3xl border border-white/10 bg-zinc-900/90 p-6 text-white shadow-2xl backdrop-blur-xl flex flex-wrap items-center justify-between gap-4">
+      {/* ── FILTER HEADER BAR: SELECT YEAR & MONTH (WHITE CREME BROWN) ── */}
+      <div className="rounded-3xl border border-amber-900/15 bg-white p-6 text-stone-900 shadow-xl shadow-stone-200/50 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-xs uppercase tracking-widest">
+          <div className="flex items-center gap-2 text-[#8B5E3C] font-extrabold text-xs uppercase tracking-widest">
             <Filter className="h-4 w-4" /> Financial Report Selector
           </div>
-          <h2 className="text-xl font-black text-white tracking-wide mt-1">
+          <h2 className="text-xl font-black text-amber-950 tracking-wide mt-1">
             Select Year & Month to View Report
           </h2>
-          <p className="text-xs text-white/50">
+          <p className="text-xs text-stone-600 font-medium">
             First select year, then select month to view sales, expenses, net profit & sales details
           </p>
         </div>
@@ -171,58 +171,58 @@ export default function AdminFinancialDashboard({
         <div className="flex items-center gap-3 flex-wrap">
           {/* STEP 1: YEAR SELECTOR */}
           <div className={`flex items-center gap-2 rounded-2xl border px-4 py-2.5 transition ${
-            selectedYear ? "border-emerald-500/50 bg-emerald-500/10 text-white" : "border-white/10 bg-white/5 text-white/60"
+            selectedYear ? "border-amber-700 bg-amber-100/50 text-amber-950" : "border-stone-300 bg-[#F7F3ED] text-stone-700"
           }`}>
-            <Calendar className="h-4 w-4 text-emerald-400" />
+            <Calendar className="h-4 w-4 text-[#8B5E3C]" />
             <span className="text-xs font-bold">1. Select Year:</span>
             <select
               value={selectedYear}
               onChange={handleYearChange}
-              className="bg-transparent text-xs font-black text-white focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-black text-amber-950 focus:outline-none cursor-pointer"
             >
-              <option value="" className="bg-zinc-900 text-white/50">-- Select Year --</option>
-              <option value="ALL" className="bg-zinc-900 text-white">ALL YEARS</option>
+              <option value="" className="bg-white text-stone-500">-- Select Year --</option>
+              <option value="ALL" className="bg-white text-stone-900">ALL YEARS</option>
               {availableYears.map((yr) => (
-                <option key={yr} value={yr} className="bg-zinc-900 text-white">
+                <option key={yr} value={yr} className="bg-white text-stone-900">
                   {yr}
                 </option>
               ))}
             </select>
-            <ChevronDown className="h-3.5 w-3.5 text-white/40" />
+            <ChevronDown className="h-3.5 w-3.5 text-stone-500" />
           </div>
 
           {/* STEP 2: MONTH SELECTOR */}
           <div className={`flex items-center gap-2 rounded-2xl border px-4 py-2.5 transition ${
-            selectedMonth ? "border-cyan-500/50 bg-cyan-500/10 text-white" : "border-white/10 bg-white/5 text-white/60"
+            selectedMonth ? "border-amber-700 bg-amber-100/50 text-amber-950" : "border-stone-300 bg-[#F7F3ED] text-stone-700"
           }`}>
-            <Calendar className="h-4 w-4 text-cyan-400" />
+            <Calendar className="h-4 w-4 text-[#8B5E3C]" />
             <span className="text-xs font-bold">2. Select Month:</span>
             <select
               value={selectedMonth}
               onChange={handleMonthChange}
-              className="bg-transparent text-xs font-black text-white focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-black text-amber-950 focus:outline-none cursor-pointer"
             >
-              <option value="" className="bg-zinc-900 text-white/50">-- Select Month --</option>
-              <option value="ALL" className="bg-zinc-900 text-white">ALL MONTHS</option>
+              <option value="" className="bg-white text-stone-500">-- Select Month --</option>
+              <option value="ALL" className="bg-white text-stone-900">ALL MONTHS</option>
               {MONTH_NAMES.map((m) => (
-                <option key={m} value={m} className="bg-zinc-900 text-white">
+                <option key={m} value={m} className="bg-white text-stone-900">
                   {m}
                 </option>
               ))}
             </select>
-            <ChevronDown className="h-3.5 w-3.5 text-white/40" />
+            <ChevronDown className="h-3.5 w-3.5 text-stone-500" />
           </div>
         </div>
       </div>
 
       {/* ── PROMPT BANNER WHEN YEAR OR MONTH IS NOT YET SELECTED ── */}
       {!isPeriodSelected && (
-        <div className="rounded-3xl border border-dashed border-white/20 bg-zinc-900/50 p-12 text-center text-white space-y-3 backdrop-blur-xl">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <div className="rounded-3xl border border-dashed border-amber-900/20 bg-white/80 p-12 text-center text-stone-900 space-y-3 shadow-sm">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-900 border border-amber-200 shadow-inner">
             <Info className="h-7 w-7" />
           </div>
-          <h3 className="text-lg font-bold text-white">Please Select Year & Month</h3>
-          <p className="text-xs text-white/50 max-w-md mx-auto">
+          <h3 className="text-lg font-bold text-amber-950">Please Select Year & Month</h3>
+          <p className="text-xs text-stone-600 max-w-md mx-auto font-medium">
             Choose a Year and Month using the dropdowns above to view the total sale, total expense, total profit, and detailed sales list for that period.
           </p>
         </div>
@@ -236,76 +236,76 @@ export default function AdminFinancialDashboard({
             {/* CARD 1: TOTAL SALE (CLICKABLE TO AUTO-SHOW SALES DETAILS) */}
             <button
               onClick={() => setShowSalesDetails((prev) => !prev)}
-              className={`text-left rounded-3xl border transition-all duration-300 p-6 text-white shadow-xl group relative overflow-hidden ${
+              className={`text-left rounded-3xl border transition-all duration-300 p-6 text-stone-900 shadow-xl group relative overflow-hidden ${
                 showSalesDetails
-                  ? "border-emerald-400/80 bg-gradient-to-br from-emerald-500/20 via-zinc-900 to-zinc-900 ring-2 ring-emerald-400/30"
-                  : "border-white/10 bg-gradient-to-br from-emerald-500/10 via-zinc-900 to-zinc-900 hover:border-emerald-400/50"
+                  ? "border-amber-700 bg-gradient-to-br from-amber-100/80 via-white to-white ring-2 ring-amber-700/30"
+                  : "border-amber-900/15 bg-gradient-to-br from-amber-50 via-white to-white hover:border-amber-700/50"
               }`}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
                   <ArrowDownLeft className="h-4 w-4" /> TOTAL SALE
                 </span>
                 <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border transition ${
                   showSalesDetails
-                    ? "bg-emerald-400 text-black border-emerald-400 font-bold"
-                    : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 group-hover:bg-emerald-400 group-hover:text-black"
+                    ? "bg-[#6B4226] text-white border-[#6B4226] font-bold"
+                    : "bg-amber-100 text-amber-900 border-amber-300 group-hover:bg-[#6B4226] group-hover:text-white"
                 }`}>
                   {showSalesDetails ? "DETAILS OPEN ▼" : "CLICK FOR DETAILS ➔"}
                 </span>
               </div>
 
-              <h3 className="text-3xl font-black tracking-tight text-white">
+              <h3 className="text-3xl font-black tracking-tight text-amber-950">
                 ₹{totalSaleReceived.toFixed(2)}
               </h3>
 
-              <div className="mt-3 flex items-center justify-between text-xs text-white/60">
+              <div className="mt-3 flex items-center justify-between text-xs text-stone-600 font-medium">
                 <span>{filteredIncomeRecords.length} Sales Invoices</span>
-                <span className="text-emerald-300 font-semibold">Net: ₹{netSaleIncome.toFixed(2)}</span>
+                <span className="text-emerald-700 font-bold">Net: ₹{netSaleIncome.toFixed(2)}</span>
               </div>
 
-              <p className="mt-2 text-[11px] text-emerald-400/90 font-semibold flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <p className="mt-2 text-[11px] text-[#8B5E3C] font-bold flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-700 animate-pulse" />
                 Click sales card to view/hide sales details
               </p>
             </button>
 
             {/* CARD 2: TOTAL EXPENSE */}
-            <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-rose-500/10 via-zinc-900 to-zinc-900 p-6 text-white shadow-xl">
+            <div className="rounded-3xl border border-rose-900/15 bg-gradient-to-br from-rose-50 via-white to-white p-6 text-stone-900 shadow-xl">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-rose-700 flex items-center gap-1.5">
                   <ArrowUpRight className="h-4 w-4" /> TOTAL EXPENSE
                 </span>
-                <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-500/20 text-rose-400">
+                <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-100 text-rose-700 border border-rose-200">
                   <Receipt className="h-4 w-4" />
                 </div>
               </div>
 
-              <h3 className="text-3xl font-black tracking-tight text-white">
+              <h3 className="text-3xl font-black tracking-tight text-amber-950">
                 ₹{totalExpensesPaid.toFixed(2)}
               </h3>
 
-              <div className="mt-3 flex items-center justify-between text-xs text-white/60">
+              <div className="mt-3 flex items-center justify-between text-xs text-stone-600 font-medium">
                 <span>{filteredExpenseRecords.length} Expense Bills Paid</span>
-                <span className="text-rose-300 font-semibold">Period Expenses</span>
+                <span className="text-rose-700 font-bold">Period Expenses</span>
               </div>
 
-              <p className="mt-2 text-[11px] text-white/40">
+              <p className="mt-2 text-[11px] text-stone-500 font-medium">
                 Total operating & material expenses paid
               </p>
             </div>
 
             {/* CARD 3: TOTAL PROFIT / LOSS */}
-            <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-500/10 via-zinc-900 to-zinc-900 p-6 text-white shadow-xl">
+            <div className="rounded-3xl border border-amber-900/15 bg-gradient-to-br from-amber-50 via-white to-white p-6 text-stone-900 shadow-xl">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-[#8B5E3C] flex items-center gap-1.5">
                   <TrendingUp className="h-4 w-4" /> TOTAL PROFIT
                 </span>
                 <span
                   className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full border ${
                     netProfitLoss >= 0
-                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-                      : "bg-rose-500/20 text-rose-300 border-rose-500/30"
+                      ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                      : "bg-rose-100 text-rose-800 border-rose-300"
                   }`}
                 >
                   {netProfitLoss >= 0 ? "PROFIT" : "LOSS"}
@@ -314,50 +314,50 @@ export default function AdminFinancialDashboard({
 
               <h3
                 className={`text-3xl font-black tracking-tight ${
-                  netProfitLoss >= 0 ? "text-emerald-400" : "text-rose-400"
+                  netProfitLoss >= 0 ? "text-emerald-700" : "text-rose-700"
                 }`}
               >
                 ₹{netProfitLoss.toFixed(2)}
               </h3>
 
-              <div className="mt-3 flex items-center justify-between text-xs text-white/60">
+              <div className="mt-3 flex items-center justify-between text-xs text-stone-600 font-medium">
                 <span>Calculation</span>
-                <span className="font-semibold text-white/80">Net Selling Income − Expense</span>
+                <span className="font-semibold text-stone-900">Net Selling Income − Expense</span>
               </div>
 
-              <p className="mt-2 text-[11px] text-white/40">
+              <p className="mt-2 text-[11px] text-stone-500 font-medium">
                 Period: {selectedMonth} {selectedYear}
               </p>
             </div>
           </div>
 
-          {/* ── MONTH-WISE PROFIT & LOSS BREAKDOWN CARD (MATCHING USER SCREENSHOT DESIGN) ── */}
-          <div className="rounded-3xl border border-white/10 bg-zinc-900/80 p-6 text-white shadow-2xl backdrop-blur-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          {/* ── MONTH-WISE PROFIT & LOSS BREAKDOWN CARD (WHITE CREME BROWN DESIGN) ── */}
+          <div className="rounded-3xl border border-amber-900/15 bg-white p-6 text-stone-900 shadow-xl shadow-stone-200/50 space-y-4">
+            <div className="flex items-center justify-between border-b border-stone-200 pb-4">
               <div>
-                <h3 className="text-lg font-black tracking-wide text-white uppercase flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                <h3 className="text-lg font-black tracking-wide text-amber-950 uppercase flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-amber-700" />
                   Month-Wise Profit & Loss Breakdown
                 </h3>
-                <p className="text-xs text-white/50">
+                <p className="text-xs text-stone-600 font-medium">
                   Detailed selling income, deductions & expenses for {selectedMonth}, {selectedYear}
                 </p>
               </div>
             </div>
 
             <div className="max-w-md">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4 hover:border-emerald-400/40 transition">
+              <div className="rounded-2xl border border-amber-900/15 bg-[#FDFBF7] p-5 space-y-4 shadow-sm hover:border-amber-700/40 transition">
                 {/* Month Tag Header */}
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <span className="text-sm font-black tracking-wider text-white uppercase flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-emerald-400" />
+                <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+                  <span className="text-sm font-black tracking-wider text-amber-950 uppercase flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-[#8B5E3C]" />
                     {selectedMonth}, {selectedYear}
                   </span>
                   <span
                     className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${
                       netProfitLoss >= 0
-                        ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
-                        : "bg-rose-500/10 text-rose-300 border-rose-500/20"
+                        ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                        : "bg-rose-100 text-rose-800 border-rose-300"
                     }`}
                   >
                     {netProfitLoss >= 0 ? "PROFIT" : "LOSS"}
@@ -365,51 +365,51 @@ export default function AdminFinancialDashboard({
                 </div>
 
                 {/* Income Section */}
-                <div className="space-y-2 border-l-2 border-emerald-500/50 pl-3">
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">
+                <div className="space-y-2 border-l-2 border-emerald-600 pl-3">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">
                     INCOME
                   </p>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/60">Total Received</span>
-                    <span className="font-bold text-white">
+                  <div className="flex justify-between text-xs font-medium">
+                    <span className="text-stone-600">Total Received</span>
+                    <span className="font-bold text-stone-900">
                       ₹{totalSaleReceived.toFixed(2)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/60">Deductions (GST + Delivery)</span>
-                    <span className="font-semibold text-amber-300">
+                  <div className="flex justify-between text-xs font-medium">
+                    <span className="text-stone-600">Deductions (GST + Delivery)</span>
+                    <span className="font-semibold text-amber-800">
                       ₹{totalSaleDeductions.toFixed(2)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-xs border-t border-white/10 pt-1 font-bold">
-                    <span className="text-white/80">Net Selling Income</span>
-                    <span className="text-emerald-300">
+                  <div className="flex justify-between text-xs border-t border-stone-200 pt-1 font-bold">
+                    <span className="text-stone-800">Net Selling Income</span>
+                    <span className="text-emerald-700">
                       ₹{netSaleIncome.toFixed(2)}
                     </span>
                   </div>
                 </div>
 
                 {/* Expense Section */}
-                <div className="space-y-2 border-l-2 border-rose-500/50 pl-3">
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-rose-400">
+                <div className="space-y-2 border-l-2 border-rose-600 pl-3">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700">
                     EXPENSE
                   </p>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/60">Total Expenses Paid</span>
-                    <span className="font-bold text-rose-300">
+                  <div className="flex justify-between text-xs font-medium">
+                    <span className="text-stone-600">Total Expenses Paid</span>
+                    <span className="font-bold text-rose-700">
                       ₹{totalExpensesPaid.toFixed(2)}
                     </span>
                   </div>
                 </div>
 
                 {/* Profit/Loss Bottom Bar */}
-                <div className="rounded-xl border border-white/10 bg-black/40 p-3 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-white/70">
+                <div className="rounded-xl border border-amber-900/10 bg-[#F5F0EB] p-3 flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-950">
                     NET PROFIT / LOSS
                   </span>
                   <span
                     className={`text-sm font-black ${
-                      netProfitLoss >= 0 ? "text-emerald-400" : "text-rose-400"
+                      netProfitLoss >= 0 ? "text-emerald-700" : "text-rose-700"
                     }`}
                   >
                     ₹{netProfitLoss.toFixed(2)}
@@ -419,18 +419,18 @@ export default function AdminFinancialDashboard({
             </div>
           </div>
 
-          {/* ── AUTOMATIC SALES DETAILS SECTION (VISIBLE WHEN SALES IS CLICKED) ── */}
+          {/* ── AUTOMATIC SALES DETAILS SECTION (WHITE CREME BROWN DESIGN) ── */}
           {showSalesDetails && (
-            <div className="rounded-3xl border border-emerald-500/30 bg-zinc-900/90 p-6 text-white shadow-2xl backdrop-blur-xl space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
-              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div className="rounded-3xl border border-amber-900/15 bg-white p-6 text-stone-900 shadow-xl shadow-stone-200/50 space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 pb-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full bg-emerald-400 animate-ping" />
-                    <h3 className="text-lg font-black tracking-wide text-white uppercase flex items-center gap-2">
+                    <span className="h-3 w-3 rounded-full bg-amber-700 animate-ping" />
+                    <h3 className="text-lg font-black tracking-wide text-amber-950 uppercase flex items-center gap-2">
                       Sales Details ({selectedMonth === "ALL" ? "All Months" : selectedMonth} {selectedYear === "ALL" ? "All Years" : selectedYear})
                     </h3>
                   </div>
-                  <p className="text-xs text-white/50 mt-0.5">
+                  <p className="text-xs text-stone-600 font-medium mt-0.5">
                     Detailed transaction records for {selectedMonth}, {selectedYear} ({searchedSalesRecords.length} invoices logged)
                   </p>
                 </div>
@@ -438,20 +438,20 @@ export default function AdminFinancialDashboard({
                 {/* ACTION BUTTONS & SEARCH */}
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="relative flex items-center">
-                    <Search className="absolute left-3 h-4 w-4 text-white/40" />
+                    <Search className="absolute left-3 h-4 w-4 text-stone-400" />
                     <input
                       type="text"
                       value={salesSearchQuery}
                       onChange={(e) => setSalesSearchQuery(e.target.value)}
                       placeholder="Search invoice, customer, item..."
-                      className="rounded-xl border border-white/10 bg-white/5 pl-9 pr-4 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none transition w-56 sm:w-64"
+                      className="rounded-xl border border-stone-300 bg-[#F7F3ED] pl-9 pr-4 py-2 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition w-56 sm:w-64 font-medium"
                     />
                   </div>
 
                   {/* DOWNLOAD XLSX BUTTON */}
                   <button
                     onClick={handleExportXLSX}
-                    className="flex items-center gap-2 rounded-xl bg-emerald-400 px-4 py-2 text-xs font-black text-black hover:bg-emerald-300 transition shadow-lg hover:scale-105 active:scale-95"
+                    className="flex items-center gap-2 rounded-xl bg-[#6B4226] px-4 py-2 text-xs font-black text-white hover:bg-[#52331C] transition shadow-md hover:scale-105 active:scale-95"
                     title="Download Sales Details in Excel (.xlsx) Format"
                   >
                     <FileSpreadsheet className="h-4 w-4" /> Download XLSX
@@ -460,10 +460,10 @@ export default function AdminFinancialDashboard({
               </div>
 
               {/* TABLE OF SALES DETAILS */}
-              <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5">
-                <table className="w-full text-left text-xs text-white">
+              <div className="overflow-x-auto rounded-2xl border border-amber-900/15 bg-white shadow-sm">
+                <table className="w-full text-left text-xs text-stone-900">
                   <thead>
-                    <tr className="border-b border-white/10 bg-zinc-950/90 text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                    <tr className="border-b border-amber-950 bg-[#3B2314] text-[11px] font-bold uppercase tracking-wider text-amber-100">
                       <th className="p-3">SL</th>
                       <th className="p-3">DATE</th>
                       <th className="p-3">INVOICE NO</th>
@@ -477,40 +477,40 @@ export default function AdminFinancialDashboard({
                       <th className="p-3 text-center">ACTION</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-stone-200">
                     {searchedSalesRecords.length > 0 ? (
                       searchedSalesRecords.map((row, idx) => (
-                        <tr key={row.id || idx} className="hover:bg-white/5 transition">
-                          <td className="p-3 font-bold text-white/40">{idx + 1}</td>
+                        <tr key={row.id || idx} className="hover:bg-amber-50/60 transition">
+                          <td className="p-3 font-bold text-stone-500">{idx + 1}</td>
                           <td className="p-3 font-medium whitespace-nowrap">
-                            <p className="font-semibold text-white">{row.date}</p>
-                            <p className="text-[10px] text-white/40">{row.month}, {row.year}</p>
+                            <p className="font-bold text-stone-900">{row.date}</p>
+                            <p className="text-[10px] text-stone-500">{row.month}, {row.year}</p>
                           </td>
-                          <td className="p-3 font-mono font-bold text-emerald-300">{row.invoiceNo}</td>
+                          <td className="p-3 font-mono font-black text-[#6B4226]">{row.invoiceNo}</td>
                           <td className="p-3">
-                            <span className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                            <span className="rounded-lg border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900">
                               {row.paymentMode}
                             </span>
                           </td>
                           <td className="p-3">
-                            <p className="font-bold text-white">{row.customerName}</p>
-                            <p className="text-[10px] text-white/50">{row.customerPhone} | {row.customerEmail}</p>
-                            <p className="text-[10px] text-white/40 truncate max-w-xs">{row.customerAddress}</p>
+                            <p className="font-bold text-stone-900">{row.customerName}</p>
+                            <p className="text-[10px] text-stone-600">{row.customerPhone} | {row.customerEmail}</p>
+                            <p className="text-[10px] text-stone-500 truncate max-w-xs">{row.customerAddress}</p>
                           </td>
                           <td className="p-3">
-                            <p className="font-semibold text-white/90">{row.description}</p>
-                            <p className="text-[10px] text-white/50">Qty: {row.qty || 1}</p>
+                            <p className="font-semibold text-stone-800">{row.description}</p>
+                            <p className="text-[10px] text-stone-500">Qty: {row.qty || 1}</p>
                           </td>
                           <td className="p-3 text-right font-medium">₹{Number(row.actualRate || 0).toFixed(2)}</td>
-                          <td className="p-3 text-right text-amber-300 font-medium">₹{Number(row.gstAmount || 0).toFixed(2)}</td>
-                          <td className="p-3 text-right text-cyan-300 font-medium">₹{Number(row.deliveryCharges || 0).toFixed(2)}</td>
-                          <td className="p-3 text-right font-black text-emerald-400 text-sm">₹{Number(row.totalAmount || 0).toFixed(2)}</td>
+                          <td className="p-3 text-right text-amber-800 font-bold">₹{Number(row.gstAmount || 0).toFixed(2)}</td>
+                          <td className="p-3 text-right text-teal-800 font-bold">₹{Number(row.deliveryCharges || 0).toFixed(2)}</td>
+                          <td className="p-3 text-right font-black text-emerald-700 text-sm">₹{Number(row.totalAmount || 0).toFixed(2)}</td>
                           <td className="p-3 text-center whitespace-nowrap">
                             <div className="inline-flex items-center gap-1.5">
                               {onViewPreview && (
                                 <button
                                   onClick={() => onViewPreview(row)}
-                                  className="inline-flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500/20 hover:text-emerald-300 transition"
+                                  className="inline-flex items-center gap-1 rounded-xl border border-stone-300 bg-[#F7F3ED] px-2.5 py-1 text-[11px] font-bold text-stone-800 hover:bg-stone-200 transition"
                                   title="View / Print Printable Document"
                                 >
                                   <ExternalLink className="h-3 w-3" /> Soft Bill
@@ -519,7 +519,7 @@ export default function AdminFinancialDashboard({
                               {onEditIncome && (
                                 <button
                                   onClick={() => onEditIncome(row)}
-                                  className="inline-flex items-center gap-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-300 hover:bg-emerald-400 hover:text-black transition"
+                                  className="inline-flex items-center gap-1 rounded-xl border border-amber-800/30 bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-900 hover:bg-[#6B4226] hover:text-white transition"
                                   title="Edit Sales Record"
                                 >
                                   <Edit3 className="h-3 w-3" /> Edit
@@ -528,7 +528,7 @@ export default function AdminFinancialDashboard({
                               {onDeleteIncome && (
                                 <button
                                   onClick={() => onDeleteIncome(row.id)}
-                                  className="rounded-xl border border-white/10 bg-white/5 p-1 text-white/40 hover:bg-rose-500/20 hover:text-rose-400 transition"
+                                  className="rounded-xl border border-stone-300 bg-white p-1 text-stone-500 hover:bg-rose-100 hover:text-rose-700 transition"
                                   title="Delete Income Record"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
@@ -540,7 +540,7 @@ export default function AdminFinancialDashboard({
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="11" className="p-8 text-center text-white/40">
+                        <td colSpan="11" className="p-8 text-center text-stone-500 font-medium">
                           No sales records found for {selectedMonth}, {selectedYear}.
                         </td>
                       </tr>

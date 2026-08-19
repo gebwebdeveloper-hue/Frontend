@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ArrowDownLeft, X, Edit3 } from "lucide-react";
+import { X, Edit3 } from "lucide-react";
 
 export default function EditIncomeModal({
   isOpen,
@@ -55,7 +55,6 @@ export default function EditIncomeModal({
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Determine year & month from date string or date picker
     let yearStr = incomeForm.year;
     let monthStr = incomeForm.month;
     let formattedDate = incomeForm.date;
@@ -94,28 +93,28 @@ export default function EditIncomeModal({
           e.preventDefault();
         }
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md no-print animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-md no-print animate-fade-in"
     >
       <div
         ref={modalBodyRef}
-        className="w-full max-w-3xl rounded-3xl border border-white/15 bg-zinc-900 p-6 sm:p-8 text-white shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto overscroll-contain"
+        className="w-full max-w-3xl rounded-3xl border border-amber-900/15 bg-white p-6 sm:p-8 text-stone-900 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto overscroll-contain"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="flex items-center justify-between border-b border-stone-200 pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-900 border border-amber-200 shadow-inner">
               <Edit3 className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-bold text-amber-950">
                 Edit Sales / Income Record
               </h3>
-              <p className="text-xs text-white/50">Modify invoice details, customer information & financial amounts</p>
+              <p className="text-xs text-stone-600 font-medium">Modify invoice details, customer information & financial amounts</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-xl border border-white/10 p-2 text-white/60 hover:bg-white/10 hover:text-white transition"
+            className="rounded-xl border border-stone-300 bg-[#F7F3ED] p-2 text-stone-600 hover:bg-stone-200 transition"
           >
             <X className="h-4 w-4" />
           </button>
@@ -125,7 +124,7 @@ export default function EditIncomeModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 Invoice No *
               </label>
               <input
@@ -133,28 +132,28 @@ export default function EditIncomeModal({
                 required
                 value={incomeForm.invoiceNo || ""}
                 onChange={(e) => setIncomeForm({ ...incomeForm, invoiceNo: e.target.value })}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-emerald-300 font-mono font-bold focus:border-emerald-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs text-[#6B4226] font-mono font-bold focus:border-amber-700 focus:outline-none transition"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 Billing Date
               </label>
               <input
                 type="date"
                 value={incomeForm.rawDate || ""}
                 onChange={(e) => setIncomeForm({ ...incomeForm, rawDate: e.target.value })}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
                 Payment Mode
               </label>
               <select
                 value={incomeForm.paymentMode || "Google Pay"}
                 onChange={(e) => setIncomeForm({ ...incomeForm, paymentMode: e.target.value })}
-                className="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
               >
                 <option value="Google Pay">Google Pay</option>
                 <option value="PhonePe">PhonePe</option>
@@ -168,142 +167,142 @@ export default function EditIncomeModal({
           </div>
 
           {/* Customer Info */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+          <div className="rounded-2xl border border-stone-200 bg-[#FDFBF7] p-4 space-y-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-amber-900">
               Customer Details
             </p>
             <div className="grid gap-3 sm:grid-cols-3">
               <div>
-                <label className="mb-1 block text-[11px] text-white/60">Customer Name *</label>
+                <label className="mb-1 block text-[11px] text-stone-600 font-medium">Customer Name *</label>
                 <input
                   type="text"
                   required
                   value={incomeForm.customerName || ""}
                   onChange={(e) => setIncomeForm({ ...incomeForm, customerName: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none transition"
+                  className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] text-white/60">Phone Number</label>
+                <label className="mb-1 block text-[11px] text-stone-600 font-medium">Phone Number</label>
                 <input
                   type="text"
                   value={incomeForm.customerPhone || ""}
                   onChange={(e) => setIncomeForm({ ...incomeForm, customerPhone: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none transition"
+                  className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] text-white/60">Email Address</label>
+                <label className="mb-1 block text-[11px] text-stone-600 font-medium">Email Address</label>
                 <input
                   type="email"
                   value={incomeForm.customerEmail || ""}
                   onChange={(e) => setIncomeForm({ ...incomeForm, customerEmail: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none transition"
+                  className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
                 />
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-[11px] text-white/60">Address</label>
+              <label className="mb-1 block text-[11px] text-stone-600 font-medium">Address</label>
               <input
                 type="text"
                 value={incomeForm.customerAddress || ""}
                 onChange={(e) => setIncomeForm({ ...incomeForm, customerAddress: e.target.value })}
-                className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
               />
             </div>
           </div>
 
           {/* Goods & Services Details */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+          <div className="rounded-2xl border border-stone-200 bg-[#FDFBF7] p-4 space-y-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-amber-900">
               Goods & Services / Financial Breakdown
             </p>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2">
-                <label className="mb-1 block text-[11px] text-white/60">Description *</label>
+                <label className="mb-1 block text-[11px] text-stone-600 font-medium">Description *</label>
                 <input
                   type="text"
                   required
                   value={incomeForm.description || ""}
                   onChange={(e) => setIncomeForm({ ...incomeForm, description: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none transition"
+                  className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] text-white/60">Quantity</label>
+                <label className="mb-1 block text-[11px] text-stone-600 font-medium">Quantity</label>
                 <input
                   type="number"
                   min="1"
                   value={incomeForm.qty || 1}
                   onChange={(e) => setIncomeForm({ ...incomeForm, qty: Number(e.target.value) })}
-                  className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none transition"
+                  className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition"
                 />
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-4">
               <div>
-                <label className="mb-1 block text-[11px] text-white/60">Unit Rate (₹)</label>
+                <label className="mb-1 block text-[11px] text-stone-600 font-medium">Unit Rate (₹)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={incomeForm.actualRate || 0}
                   onChange={(e) => setIncomeForm({ ...incomeForm, actualRate: Number(e.target.value) })}
-                  className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs font-bold text-white focus:border-emerald-400 focus:outline-none transition"
+                  className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs font-bold text-stone-900 focus:border-amber-700 focus:outline-none transition"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] text-white/60">GST Amount (₹)</label>
+                <label className="mb-1 block text-[11px] text-stone-600 font-medium">GST Amount (₹)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={incomeForm.gstAmount || 0}
                   onChange={(e) => setIncomeForm({ ...incomeForm, gstAmount: Number(e.target.value) })}
-                  className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-amber-300 font-bold focus:border-emerald-400 focus:outline-none transition"
+                  className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs text-amber-800 font-bold focus:border-amber-700 focus:outline-none transition"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] text-white/60">Delivery Charge (₹)</label>
+                <label className="mb-1 block text-[11px] text-stone-600 font-medium">Delivery Charge (₹)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={incomeForm.deliveryCharges || 0}
                   onChange={(e) => setIncomeForm({ ...incomeForm, deliveryCharges: Number(e.target.value) })}
-                  className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-cyan-300 font-bold focus:border-emerald-400 focus:outline-none transition"
+                  className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs text-teal-800 font-bold focus:border-amber-700 focus:outline-none transition"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] text-white/60">Discount (₹)</label>
+                <label className="mb-1 block text-[11px] text-stone-600 font-medium">Discount (₹)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={incomeForm.discount || 0}
                   onChange={(e) => setIncomeForm({ ...incomeForm, discount: Number(e.target.value) })}
-                  className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-xs text-rose-300 font-bold focus:border-emerald-400 focus:outline-none transition"
+                  className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs text-rose-700 font-bold focus:border-amber-700 focus:outline-none transition"
                 />
               </div>
             </div>
           </div>
 
           {/* Total Summary box */}
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-center justify-between text-xs">
-            <span className="font-semibold text-white/80">Calculated Total Amount:</span>
-            <span className="font-black text-emerald-400 text-base">
+          <div className="rounded-xl border border-amber-300 bg-amber-100/60 p-3 flex items-center justify-between text-xs">
+            <span className="font-bold text-stone-800">Calculated Total Amount:</span>
+            <span className="font-black text-emerald-800 text-base">
               ₹{calculatedTotal}
             </span>
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-white/10">
+          <div className="flex justify-end gap-3 pt-3 border-t border-stone-200">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white/70 hover:bg-white/10 hover:text-white transition"
+              className="rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs font-bold text-stone-700 hover:bg-stone-200 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="rounded-xl bg-emerald-400 px-6 py-2.5 text-xs font-extrabold text-black hover:bg-emerald-300 transition shadow-lg"
+              className="rounded-xl bg-[#6B4226] px-6 py-2.5 text-xs font-bold text-white hover:bg-[#52331C] transition shadow-md"
             >
               Save Changes
             </button>

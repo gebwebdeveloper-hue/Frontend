@@ -248,7 +248,7 @@ export default function AdminInvoicePage() {
   const [loginStep, setLoginStep] = useState("email");
   const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard' | 'income' | 'expense' | 'generator' | 'preview'
   
-  // Financial Records Stores (Local Storage Persisted)
+  // Financial Records Stores (Local Storage & MongoDB API Persisted)
   const [incomeRecords, setIncomeRecords] = useState(() => {
     const saved = localStorage.getItem("lekhok_income_records");
     return saved ? JSON.parse(saved) : INITIAL_INCOME_RECORDS;
@@ -257,6 +257,28 @@ export default function AdminInvoicePage() {
     const saved = localStorage.getItem("lekhok_expense_records");
     return saved ? JSON.parse(saved) : INITIAL_EXPENSE_RECORDS;
   });
+
+  // Fetch real-time Financial Records from MongoDB Database on mount
+  useEffect(() => {
+    const fetchFinancialData = async () => {
+      try {
+        const [incRes, expRes] = await Promise.all([
+          fetch(`${API_BASE}/financial/invoices`).then((r) => r.json()).catch(() => null),
+          fetch(`${API_BASE}/financial/expenses`).then((r) => r.json()).catch(() => null),
+        ]);
+
+        if (incRes && incRes.success && Array.isArray(incRes.data) && incRes.data.length > 0) {
+          setIncomeRecords(incRes.data);
+        }
+        if (expRes && expRes.success && Array.isArray(expRes.data) && expRes.data.length > 0) {
+          setExpenseRecords(expRes.data);
+        }
+      } catch (err) {
+        console.error("Failed to load financial records from database API:", err);
+      }
+    };
+    fetchFinancialData();
+  }, []);
 
   // Persist financial records to local storage whenever updated
   useEffect(() => {
@@ -299,12 +321,23 @@ export default function AdminInvoicePage() {
     setShowIncomeModal(true);
   };
 
-  const handleSaveIncomeRecord = (updatedRecord) => {
+  const handleSaveIncomeRecord = async (updatedRecord) => {
     setIncomeRecords((prev) =>
-      prev.map((r) => (r.id === updatedRecord.id ? updatedRecord : r))
+      prev.map((r) => (r.id === updatedRecord.id || r._id === updatedRecord.id ? updatedRecord : r))
     );
     setShowIncomeModal(false);
     setEditingIncomeForm(null);
+
+    try {
+      const recordId = updatedRecord.id || updatedRecord._id;
+      await fetch(`${API_BASE}/financial/invoices/${recordId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedRecord),
+      });
+    } catch (err) {
+      console.error("Failed to update invoice in database:", err);
+    }
   };
 
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -532,8 +565,8 @@ export default function AdminInvoicePage() {
   const autoWords = convertNumberToWords(totalPayable);
   const computedAmountInWords = form.customAmountInWords || autoWords;
 
-  // Automatically save / sync generated invoice to Income & Sales Register
-  const handleAutoSaveIncome = (targetForm = form) => {
+  // Automatically save / sync generated invoice to Income & Sales Register and MongoDB Database
+  const handleAutoSaveIncome = async (targetForm = form) => {
     if (!targetForm.billInfo || !targetForm.billInfo.invoiceNo) return;
 
     const sub = targetForm.items ? targetForm.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0) : 0;
@@ -560,51 +593,124 @@ export default function AdminInvoicePage() {
 
     const totalQty = targetForm.items ? targetForm.items.reduce((acc, i) => acc + Number(i.qty || 0), 0) : 1;
 
-    setIncomeRecords((prev) => {
-      const existingIdx = prev.findIndex((r) => r.invoiceNo === targetForm.billInfo.invoiceNo);
-      const record = {
-        id: existingIdx >= 0 ? prev[existingIdx].id : `inc-${Date.now()}`,
-        slNo: existingIdx >= 0 ? prev[existingIdx].slNo : prev.length + 1,
-        year: yearStr,
-        month: monthStr,
-        invoiceNo: targetForm.billInfo.invoiceNo,
-        date: formattedDateStr,
-        paymentMode: targetForm.billInfo.paymentMode,
-        customerName: targetForm.billTo?.name || "Customer",
-        customerPhone: targetForm.billTo?.phoneNo || "N/A",
-        customerEmail: targetForm.billTo?.email || "N/A",
-        customerAddress: targetForm.billTo?.address || "N/A",
-        description: itemDesc,
-        qty: totalQty,
-        actualRate: Number(firstItem.rate || 0),
-        taxablePayable: taxBase,
-        gstAmount: taxAmt,
-        deliveryCharges: del,
-        courierName: targetForm.deliveryDetails?.courierName || "Courier",
-        discount: disc,
-        totalAmount: totPayable,
-        billLink: `/admin/invoices`,
-        fullForm: targetForm
-      };
+    const existingIdx = incomeRecords.findIndex((r) => r.invoiceNo === targetForm.billInfo.invoiceNo);
+    const record = {
+      id: existingIdx >= 0 ? incomeRecords[existingIdx].id || incomeRecords[existingIdx]._id : `inc-${Date.now()}`,
+      slNo: existingIdx >= 0 ? incomeRecords[existingIdx].slNo : incomeRecords.length + 1,
+      year: yearStr,
+      month: monthStr,
+      invoiceNo: targetForm.billInfo.invoiceNo,
+      date: formattedDateStr,
+      paymentMode: targetForm.billInfo.paymentMode,
+      customerName: targetForm.billTo?.name || "Customer",
+      customerPhone: targetForm.billTo?.phoneNo || "N/A",
+      customerEmail: targetForm.billTo?.email || "N/A",
+      customerAddress: targetForm.billTo?.address || "N/A",
+      description: itemDesc,
+      qty: totalQty,
+      actualRate: Number(firstItem.rate || 0),
+      taxablePayable: taxBase,
+      gstAmount: taxAmt,
+      deliveryCharges: del,
+      courierName: targetForm.deliveryDetails?.courierName || "Courier",
+      discount: disc,
+      totalAmount: totPayable,
+      billLink: `/admin/invoices`,
+      fullForm: targetForm
+    };
 
-      if (existingIdx >= 0) {
+    setIncomeRecords((prev) => {
+      const idx = prev.findIndex((r) => r.invoiceNo === targetForm.billInfo.invoiceNo);
+      if (idx >= 0) {
         const copy = [...prev];
-        copy[existingIdx] = record;
+        copy[idx] = record;
         return copy;
       }
       return [record, ...prev];
     });
+
+    try {
+      await fetch(`${API_BASE}/financial/invoices`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(record),
+      });
+    } catch (err) {
+      console.error("Failed to save invoice to MongoDB API:", err);
+    }
   };
 
   const handleViewSoftBill = (record) => {
-    if (record && record.fullForm) {
+    if (!record) return;
+
+    if (record.fullForm && record.fullForm.billInfo) {
       setForm(record.fullForm);
+    } else {
+      // Reconstruct complete GST invoice form structure from record fields
+      const qtyNum = Number(record.qty) || 1;
+      const rateNum = Number(record.actualRate) || 0;
+      const amountNum = qtyNum * rateNum;
+
+      const reconstructedForm = {
+        billInfo: {
+          generatedBy: "Admin",
+          invoiceNo: record.invoiceNo || getInitialInvoiceNo(),
+          billingDate: record.date || new Date().toISOString().split("T")[0],
+          paymentMode: record.paymentMode || "Google Pay",
+        },
+        billTo: {
+          name: record.customerName || "Customer",
+          address: record.customerAddress || "N/A",
+          state: "Tripura",
+          gstNo: "NA",
+          phoneNo: record.customerPhone || "N/A",
+          email: record.customerEmail || "N/A",
+        },
+        shipTo: {
+          sameAsBillTo: true,
+          name: record.customerName || "Customer",
+          address: record.customerAddress || "N/A",
+          state: "Tripura",
+          gstNo: "NA",
+        },
+        deliveryDetails: {
+          deliveryCharges: Number(record.deliveryCharges) || 0,
+          courierName: record.courierName || "Local Delivery",
+          courierId: "NA",
+        },
+        items: [
+          {
+            id: 1,
+            description: record.description || "Goods & Services",
+            hsn: "998313",
+            qty: qtyNum,
+            rate: rateNum,
+            amount: amountNum,
+          },
+        ],
+        extraCharges: {
+          packagingCharge: 0,
+          courierCharge: 0,
+          platformCharge: 0,
+          discountAmount: Number(record.discount) || 0,
+        },
+        taxConfig: {
+          cgstRate: 9,
+          sgstRate: 9,
+        },
+        bankDetails: initialForm.bankDetails,
+        terms: initialForm.terms,
+        signatoryName: "Lekhok Tripura Publishers",
+        signatureImage: "/authorised_signatory.png",
+        customAmountInWords: convertNumberToWords(record.totalAmount),
+      };
+      setForm(reconstructedForm);
     }
     setActiveTab("preview");
   };
 
-  // Save Expense Handler
-  const handleSaveExpense = (e) => {
+  // Save Expense Handler (Saves to MongoDB)
+  const handleSaveExpense = async (e) => {
     e.preventDefault();
     const bTax = Number(expenseForm.beforeTaxAmount) || 0;
     const gRate = Number(expenseForm.gstRate) || 0;
@@ -616,7 +722,7 @@ export default function AdminInvoicePage() {
     const yearStr = dateObj.getFullYear().toString();
     const formattedDateStr = formatDateDisplay(expenseForm.date);
 
-    const expenseRecord = {
+    let expenseRecord = {
       id: editingExpenseId || `exp-${Date.now()}`,
       invoiceNo: expenseForm.invoiceNo || `EXP/${yearStr}/${String(expenseRecords.length + 1).padStart(3, '0')}`,
       gstBill: expenseForm.gstBill,
@@ -637,9 +743,23 @@ export default function AdminInvoicePage() {
     };
 
     if (editingExpenseId) {
-      setExpenseRecords((prev) => prev.map((item) => (item.id === editingExpenseId ? expenseRecord : item)));
+      setExpenseRecords((prev) => prev.map((item) => (item.id === editingExpenseId || item._id === editingExpenseId ? expenseRecord : item)));
     } else {
       setExpenseRecords((prev) => [expenseRecord, ...prev]);
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/financial/expenses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(expenseRecord),
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        expenseRecord = data.data;
+      }
+    } catch (err) {
+      console.error("Failed to save expense to MongoDB API:", err);
     }
 
     setShowExpenseModal(false);
@@ -662,12 +782,26 @@ export default function AdminInvoicePage() {
     });
   };
 
-  const handleDeleteExpense = (id) => {
-    setExpenseRecords((prev) => prev.filter((r) => r.id !== id));
+  const handleDeleteExpense = async (id) => {
+    setExpenseRecords((prev) => prev.filter((r) => r.id !== id && r._id !== id));
+    try {
+      await fetch(`${API_BASE}/financial/expenses/${id}`, {
+        method: "DELETE",
+      });
+    } catch (err) {
+      console.error("Failed to delete expense from database:", err);
+    }
   };
 
-  const handleDeleteIncome = (id) => {
-    setIncomeRecords((prev) => prev.filter((r) => r.id !== id));
+  const handleDeleteIncome = async (id) => {
+    setIncomeRecords((prev) => prev.filter((r) => r.id !== id && r._id !== id));
+    try {
+      await fetch(`${API_BASE}/financial/invoices/${id}`, {
+        method: "DELETE",
+      });
+    } catch (err) {
+      console.error("Failed to delete invoice from database:", err);
+    }
   };
 
   const handleEditExpense = (record) => {
@@ -893,22 +1027,22 @@ Lekhok Tripura Publishers`;
           }
         `}</style>
 
-        <div className="min-h-screen bg-zinc-950 text-zinc-100 antialiased pb-20">
+        <div className="min-h-screen bg-[#FDFBF7] text-stone-900 antialiased pb-20">
           <AdminNavbar activeTab="invoices" />
 
           <main className="container mx-auto px-4 pt-24 lg:pt-28 max-w-7xl">
             {/* Header Bar */}
-            <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-white/10 bg-zinc-900/80 p-6 backdrop-blur-xl shadow-2xl">
+            <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-amber-900/15 bg-white p-6 shadow-xl shadow-stone-200/50">
               <div>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-900 border border-amber-200 shadow-inner">
                     <FileText className="h-6 w-6" />
                   </div>
                   <div>
-                    <h1 className="text-xl sm:text-2xl font-black text-white tracking-wide">
+                    <h1 className="text-xl sm:text-2xl font-black text-amber-950 tracking-wide">
                       Invoice Generator
                     </h1>
-                    <p className="text-xs text-white/50">
+                    <p className="text-xs text-amber-900/70 font-medium">
                       Create, customize, print & download GST compliant invoices
                     </p>
                   </div>
@@ -917,13 +1051,13 @@ Lekhok Tripura Publishers`;
 
               {/* Multi-Tab Financial & Invoice Navigation Bar */}
               <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-                <div className="flex rounded-2xl bg-white/5 p-1 border border-white/10 flex-wrap sm:flex-nowrap gap-1">
+                <div className="flex rounded-2xl bg-[#F5F0EB] p-1 border border-amber-900/10 flex-wrap sm:flex-nowrap gap-1">
                   <button
                     onClick={() => setActiveTab("dashboard")}
                     className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
                       activeTab === "dashboard"
-                        ? "bg-emerald-400 text-black shadow-lg"
-                        : "text-white/60 hover:text-white"
+                        ? "bg-[#6B4226] text-white shadow-md"
+                        : "text-amber-950/70 hover:text-amber-950 hover:bg-white/60"
                     }`}
                   >
                     <TrendingUp className="h-3.5 w-3.5" />
@@ -936,30 +1070,30 @@ Lekhok Tripura Publishers`;
                     }}
                     className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
                       activeTab === "income"
-                        ? "bg-emerald-400 text-black shadow-lg"
-                        : "text-white/60 hover:text-white"
+                        ? "bg-[#6B4226] text-white shadow-md"
+                        : "text-amber-950/70 hover:text-amber-950 hover:bg-white/60"
                     }`}
                   >
-                    <ArrowDownLeft className="h-3.5 w-3.5 text-emerald-400" />
+                    <ArrowDownLeft className="h-3.5 w-3.5 text-emerald-600" />
                     INCOME ({incomeRecords.length})
                   </button>
                   <button
                     onClick={() => setActiveTab("expense")}
                     className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
                       activeTab === "expense"
-                        ? "bg-emerald-400 text-black shadow-lg"
-                        : "text-white/60 hover:text-white"
+                        ? "bg-[#6B4226] text-white shadow-md"
+                        : "text-amber-950/70 hover:text-amber-950 hover:bg-white/60"
                     }`}
                   >
-                    <ArrowUpRight className="h-3.5 w-3.5 text-rose-400" />
+                    <ArrowUpRight className="h-3.5 w-3.5 text-rose-600" />
                     EXPENSE ({expenseRecords.length})
                   </button>
                   <button
                     onClick={() => setActiveTab("generator")}
                     className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
                       activeTab === "generator"
-                        ? "bg-emerald-400 text-black shadow-lg"
-                        : "text-white/60 hover:text-white"
+                        ? "bg-[#6B4226] text-white shadow-md"
+                        : "text-amber-950/70 hover:text-amber-950 hover:bg-white/60"
                     }`}
                   >
                     <Edit3 className="h-3.5 w-3.5" />
@@ -972,8 +1106,8 @@ Lekhok Tripura Publishers`;
                     }}
                     className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
                       activeTab === "preview"
-                        ? "bg-emerald-400 text-black shadow-lg"
-                        : "text-white/60 hover:text-white"
+                        ? "bg-[#6B4226] text-white shadow-md"
+                        : "text-amber-950/70 hover:text-amber-950 hover:bg-white/60"
                     }`}
                   >
                     <Eye className="h-3.5 w-3.5" />
