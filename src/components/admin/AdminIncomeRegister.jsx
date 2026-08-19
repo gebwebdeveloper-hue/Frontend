@@ -99,7 +99,7 @@ export default function AdminIncomeRegister({
                 <td className="p-3 text-right font-black text-emerald-400 text-sm">₹{Number(row.totalAmount).toFixed(2)}</td>
                 <td className="p-3 text-center">
                   <button
-                    onClick={onViewPreview}
+                    onClick={() => onViewPreview(row)}
                     className="inline-flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500/20 hover:text-emerald-300 transition"
                     title="View / Print Printable Document"
                   >

@@ -171,13 +171,18 @@ export default function AddExpenseModal({
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/60">
-                Party Phone
+                Party Phone (10 Digits)
               </label>
               <input
-                type="text"
+                type="tel"
+                maxLength={10}
                 value={expenseForm.partyNumber}
-                onChange={(e) => setExpenseForm({ ...expenseForm, partyNumber: e.target.value })}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:border-rose-400 focus:outline-none transition"
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/[^0-9]/g, "").slice(0, 10);
+                  setExpenseForm({ ...expenseForm, partyNumber: cleaned });
+                }}
+                placeholder="10-digit phone"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white focus:border-rose-400 focus:outline-none transition font-mono"
               />
             </div>
             <div>
@@ -210,13 +215,17 @@ export default function AddExpenseModal({
                 Before Tax Amount (₹) *
               </label>
               <input
-                type="number"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
                 required
-                value={expenseForm.beforeTaxAmount}
-                onChange={(e) => setExpenseForm({ ...expenseForm, beforeTaxAmount: e.target.value })}
+                value={expenseForm.beforeTaxAmount === 0 || expenseForm.beforeTaxAmount === "0" ? "" : expenseForm.beforeTaxAmount}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/[^0-9.]/g, "");
+                  setExpenseForm({ ...expenseForm, beforeTaxAmount: cleaned });
+                }}
                 placeholder="e.g. 2000"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-white focus:border-rose-400 focus:outline-none transition"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-white focus:border-rose-400 focus:outline-none transition font-mono"
               />
             </div>
             <div>
