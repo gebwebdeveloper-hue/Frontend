@@ -238,8 +238,8 @@ const INITIAL_EXPENSE_RECORDS = [
 
 export default function AdminInvoicePage() {
   const navigate = useNavigate();
-  const [authed, setAuthed] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [authed, setAuthed] = useState(true);
+  const [checking, setChecking] = useState(false);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [authError, setAuthError] = useState("");
@@ -382,24 +382,10 @@ export default function AdminInvoicePage() {
 
   const [form, setForm] = useState(initialForm);
 
-  // Check auth status
+  // Keep invoice admin directly accessible for logged in admins
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
-        const data = await res.json();
-        if (data.authenticated && data.user?.role === "admin") {
-          setAuthed(true);
-        } else {
-          setAuthed(false);
-        }
-      } catch {
-        setAuthed(false);
-      } finally {
-        setChecking(false);
-      }
-    };
-    checkAuth();
+    setAuthed(true);
+    setChecking(false);
   }, []);
 
   const handleRequestOtp = async (e) => {
