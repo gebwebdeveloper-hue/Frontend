@@ -1,8 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Users, UserPlus, PhoneCall, History, Edit3, Trash2, Search, Filter,
-  CheckCircle2, XCircle, Clock, AlertCircle, Calendar, RefreshCw, X, MessageSquare, Plus, DollarSign
+  CheckCircle2, XCircle, Clock, AlertCircle, Calendar, RefreshCw, X, MessageSquare, Plus, DollarSign,
+  FileSpreadsheet, Upload, Download
 } from "lucide-react";
+import * as XLSX from "xlsx";
 import AdminNavbar from "../components/AdminNavbar.jsx";
 import PageTransition from "../components/PageTransition.jsx";
 import { API_BASE } from "../config.js";
@@ -27,6 +29,13 @@ export default function AdminCrmPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const fileInputRef = useRef(null);
+
+  // Excel Import Animation Overlay States
+  const [importing, setImporting] = useState(false);
+  const [importStep, setImportStep] = useState("");
+  const [importProgress, setImportProgress] = useState(0);
+  const [importResult, setImportResult] = useState(null);
 
   // Modal States
   const [showLogModal, setShowLogModal] = useState(false);
@@ -81,13 +90,11 @@ export default function AdminCrmPage() {
   // Filtered Users List
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
-      // Filter tab check
       if (activeFilter === "positive" && u.sentiment !== "Positive" && u.sentiment !== "Hot Lead") return false;
       if (activeFilter === "negative" && u.sentiment !== "Negative" && u.sentiment !== "Cold Lead") return false;
       if (activeFilter === "pending" && u.paymentStatus !== "Pending") return false;
       if (activeFilter === "paid" && u.paymentStatus !== "Paid") return false;
 
-      // Text search check
       if (!searchQuery.trim()) return true;
       const term = searchQuery.toLowerCase();
       return (
@@ -110,6 +117,107 @@ export default function AdminCrmPage() {
     const totalFollowUps = users.reduce((sum, u) => sum + (u.followUpCount || 0), 0);
     return { totalUsers, positiveLeads, negativeLeads, pendingPaymentUsers, totalFollowUps };
   }, [users]);
+
+  // ── EXPORT CRM DATA TO XLSX SPREADSHEET ──
+  const handleExportXLSX = () => {
+    if (filteredUsers.length === 0) {
+      alert("No user records available to export for the current filter.");
+      return;
+    }
+
+    const excelData = filteredUsers.map((u, idx) => ({
+      "SL No": idx + 1,
+      "Name": u.name || "",
+      "Email": u.email || "",
+      "Phone": u.phone || "",
+      "Care Of": u.co || "",
+      "District": u.district || "",
+      "Country": u.country || "India",
+      "Sentiment": u.sentiment || "Neutral",
+      "Payment Status": u.paymentStatus || "Pending",
+      "Total Spent (INR)": Number(u.totalSpent || u.paymentAmount || 0),
+      "Follow Up Count": Number(u.followUpCount || 0),
+      "CRM Notes": u.crmNotes || "",
+      "Last Follow Up": u.lastFollowUpAt ? new Date(u.lastFollowUpAt).toLocaleDateString() : ""
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "CRM_Leads");
+
+    XLSX.writeFile(workbook, `Lekhak_Tripura_CRM_Records_${new Date().toISOString().split("T")[0]}.xlsx`);
+  };
+
+  // ── IMPORT & BULK SYNC XLSX FILE WITH ANIMATION ──
+  const handleImportXLSX = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    setImportProgress(15);
+    setImportStep("Reading Excel Spreadsheet...");
+    setImportResult(null);
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        setImportProgress(40);
+        setImportStep("Parsing User Records & Validating Fields...");
+        
+        await new Promise((r) => setTimeout(r, 400));
+
+        const bstr = evt.target?.result;
+        const workbook = XLSX.read(bstr, { type: "binary" });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const parsedJson = XLSX.utils.sheet_to_json(worksheet);
+
+        if (!parsedJson || parsedJson.length === 0) {
+          setImporting(false);
+          alert("The uploaded Excel sheet contains no readable rows.");
+          return;
+        }
+
+        setImportProgress(70);
+        setImportStep(`Syncing ${parsedJson.length} Records into MongoDB Database...`);
+
+        const res = await fetch(`${API_BASE}/crm/import`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ records: parsedJson, syncMode: "full" })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          setImportProgress(100);
+          setImportStep("Import Completed!");
+          setImportResult(data.message || "Excel sheet imported and synced successfully!");
+
+          if (Array.isArray(data.users)) {
+            setUsers(data.users);
+          } else {
+            fetchCrmUsers();
+          }
+
+          setTimeout(() => {
+            setImporting(false);
+            setImportResult(null);
+          }, 1800);
+        } else {
+          setImporting(false);
+          alert(data.message || "Failed to import Excel sheet records.");
+        }
+      } catch (err) {
+        console.error("Failed to parse or sync Excel file:", err);
+        setImporting(false);
+        alert("Error parsing Excel file. Please ensure it is a valid .xlsx or .xls file.");
+      } finally {
+        e.target.value = "";
+      }
+    };
+
+    reader.readAsBinaryString(file);
+  };
 
   // Handle Opening Follow-Up Modal
   const handleOpenLogModal = (u) => {
@@ -242,12 +350,38 @@ export default function AdminCrmPage() {
                   CRM & User Follow-Up Manager
                 </h1>
                 <p className="text-xs text-amber-900/70 font-medium">
-                  Track registered readers, log call interactions, update lead sentiment & manage payments
+                  Track registered readers, log call interactions, update lead sentiment, manage payments & sync via Excel (.xlsx)
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* ACTION BUTTONS: EXPORT, IMPORT, REFRESH, ADD */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {/* Hidden File Input for Excel Import */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImportXLSX}
+                accept=".xlsx, .xls"
+                className="hidden"
+              />
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1.5 rounded-xl border border-amber-800/30 bg-amber-100 px-3.5 py-2 text-xs font-bold text-amber-950 hover:bg-amber-200 transition shadow-sm"
+                title="Import & Sync Records from Excel Sheet (.xlsx)"
+              >
+                <Upload className="h-3.5 w-3.5 text-[#8B5E3C]" /> Import XLSX
+              </button>
+
+              <button
+                onClick={handleExportXLSX}
+                className="flex items-center gap-1.5 rounded-xl border border-amber-900/15 bg-[#F7F3ED] px-3.5 py-2 text-xs font-bold text-stone-800 hover:bg-stone-200 transition shadow-sm"
+                title="Export CRM Records to Excel File (.xlsx)"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5 text-[#6B4226]" /> Export XLSX
+              </button>
+
               <button
                 onClick={fetchCrmUsers}
                 className="flex items-center gap-1.5 rounded-xl border border-stone-300 bg-[#F7F3ED] px-3.5 py-2 text-xs font-bold text-stone-800 hover:bg-stone-200 transition shadow-sm"
@@ -255,6 +389,7 @@ export default function AdminCrmPage() {
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
               </button>
+
               <button
                 onClick={() => handleOpenUserModal(null)}
                 className="flex items-center gap-2 rounded-xl bg-[#6B4226] px-4 py-2 text-xs font-black text-white hover:bg-[#52331C] transition shadow-md"
@@ -499,6 +634,60 @@ export default function AdminCrmPage() {
             </div>
           </div>
         </main>
+
+        {/* ── ANIMATED IMPORTING EXCEL OVERLAY MODAL ── */}
+        {importing && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/70 backdrop-blur-md no-print animate-fade-in">
+            <div className="w-full max-w-md rounded-3xl border border-amber-900/20 bg-white p-8 text-stone-900 shadow-2xl space-y-6 text-center">
+              {/* Animated Glowing Icon */}
+              <div className="relative mx-auto h-20 w-20 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-amber-400/20 animate-ping" />
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-100 text-[#6B4226] border-2 border-amber-300 shadow-inner">
+                  {importProgress < 100 ? (
+                    <FileSpreadsheet className="h-10 w-10 animate-bounce text-[#6B4226]" />
+                  ) : (
+                    <CheckCircle2 className="h-10 w-10 text-emerald-600 animate-pulse" />
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-black text-amber-950 tracking-wide">
+                  {importProgress < 100 ? "Importing Excel Sheet..." : "Import Completed Successfully!"}
+                </h3>
+                <p className="text-xs text-stone-600 font-medium mt-1">
+                  {importStep}
+                </p>
+              </div>
+
+              {/* Progress Bar Container */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs font-bold text-stone-700">
+                  <span>Processing Data</span>
+                  <span className="text-[#6B4226] font-mono">{importProgress}%</span>
+                </div>
+                <div className="h-3 w-full rounded-full bg-[#F7F3ED] overflow-hidden border border-stone-200 p-0.5">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#8B5E3C] via-[#6B4226] to-emerald-600 transition-all duration-500 ease-out shadow"
+                    style={{ width: `${importProgress}%` }}
+                  />
+                </div>
+              </div>
+
+              {importResult && (
+                <p className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 p-3 rounded-xl">
+                  ✓ {importResult}
+                </p>
+              )}
+
+              {importProgress < 100 && (
+                <p className="text-[11px] text-stone-400 font-medium">
+                  Please wait while records are extracted and updated in your MongoDB Database.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── MODAL 1: LOG FOLLOW-UP CALL / MESSAGE ── */}
         {showLogModal && selectedUserForLog && (
