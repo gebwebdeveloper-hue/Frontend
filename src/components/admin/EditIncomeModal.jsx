@@ -80,7 +80,8 @@ export default function EditIncomeModal({
       gstAmount: gst,
       deliveryCharges: delivery,
       discount: discount,
-      totalAmount: Number(calculatedTotal)
+      totalAmount: Number(calculatedTotal),
+      billLink: incomeForm.billLink || ""
     };
 
     onSave(updatedRecord);
@@ -282,6 +283,20 @@ export default function EditIncomeModal({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Bill Soft Link / File URL */}
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-stone-600">
+              Bill Soft Link / File URL
+            </label>
+            <input
+              type="text"
+              value={incomeForm.billLink || ""}
+              onChange={(e) => setIncomeForm({ ...incomeForm, billLink: e.target.value })}
+              placeholder="e.g. https://drive.google.com/file/... or custom soft bill link"
+              className="w-full rounded-xl border border-stone-300 bg-[#F7F3ED] px-4 py-2.5 text-xs text-stone-900 focus:border-amber-700 focus:outline-none transition font-mono"
+            />
           </div>
 
           {/* Total Summary box */}

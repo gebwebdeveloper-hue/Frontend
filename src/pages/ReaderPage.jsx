@@ -977,7 +977,25 @@ export default function ReaderPage() {
 
                         {/* Book Genre & Page Count */}
                         <Input label="* Book Genre :" required value={form.genre} onChange={setField("genre")} placeholder="e.g. Novel, Poetry, Story Collection, Drama" />
-                        <Input label="* Total Number of Pages :" required value={form.totalPages} onChange={setField("totalPages")} placeholder="e.g. 120" inputMode="numeric" />
+                        <div>
+                          <Input
+                            label="* Total Number of Pages (Limit: 60 Pages) :"
+                            required
+                            value={form.totalPages}
+                            onChange={setField("totalPages")}
+                            placeholder="e.g. 60"
+                            inputMode="numeric"
+                          />
+                          <p className="mt-1.5 text-[11px] text-cyan-300/80 font-medium leading-normal">
+                            💡 Standard plan includes up to 60 pages. If pages exceed 60, extra charges will be needed and included on Quotation (CALL / MESSAGE TO 6033550539).
+                          </p>
+                          {Number(form.totalPages) > 60 && (
+                            <div className="mt-2 rounded-xl border border-amber-400/40 bg-amber-400/10 p-2.5 text-xs text-amber-200 font-bold flex items-start gap-1.5">
+                              <span className="shrink-0">⚠️</span>
+                              <span>Note: Manuscript exceeds 60 pages limit. Extra charges will be needed & included on Quotation. CALL / MESSAGE TO 6033550539</span>
+                            </div>
+                          )}
+                        </div>
 
                         {/* Book Size */}
                         <fieldset className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -1049,7 +1067,18 @@ export default function ReaderPage() {
                         </fieldset>
 
                         {/* Initial Print Quantity */}
-                        <Input label="* Number of Copies Required (Initial Print Quantity) :" required value={form.copies} onChange={setField("copies")} placeholder="e.g. 10 Copies" className="md:col-span-2" />
+                        <div className="md:col-span-2">
+                          <Input
+                            label="* Number of Copies Required (Initial Print Quantity) :"
+                            required
+                            value={form.copies}
+                            onChange={setField("copies")}
+                            placeholder="e.g. 10 Copies"
+                          />
+                          <p className="mt-1.5 text-[11px] text-cyan-300/80 font-medium leading-normal">
+                            💡 Standard plan includes print run copies as per package (Basic: 10, Essential: 26, Popular: 50). If additional printed copies are required, extra charges will be needed and included on Quotation (CALL / MESSAGE TO 6033550539).
+                          </p>
+                        </div>
 
                         {/* Add-on Services (Optional) */}
                         <div className="md:col-span-2 mt-4">

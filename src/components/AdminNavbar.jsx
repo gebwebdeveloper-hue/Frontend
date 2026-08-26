@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  BookOpen, CreditCard, Newspaper, Users, UserCheck,
+  BookOpen, CreditCard, Newspaper, FileText, Users, UserCheck,
   BookMarked, LogOut, Menu, X, Feather, ChevronRight,
   PanelLeftClose, PanelLeft, Receipt
 } from "lucide-react";
@@ -80,6 +80,14 @@ export default function AdminNavbar({ activeTab, onSelectTab, onLogoutSuccess })
       path: "/admin/news",
       icon: Newspaper,
     },
+    /*
+    {
+      id: "blogs",
+      label: "Blog Articles",
+      path: "/admin/blogs",
+      icon: FileText,
+    },
+    */
     {
       id: "authors",
       label: "Authors",

@@ -99,7 +99,7 @@ const INITIAL_INCOME_RECORDS = [
     courierName: "SpeedPost",
     discount: 0,
     totalAmount: 9100,
-    billLink: "https://www.lekhoktripura.in/"
+    billLink: ""
   },
   {
     id: "inc-2",
@@ -122,7 +122,7 @@ const INITIAL_INCOME_RECORDS = [
     courierName: "Email Delivery",
     discount: 200,
     totalAmount: 3340,
-    billLink: "https://www.lekhoktripura.in/"
+    billLink: ""
   },
   {
     id: "inc-3",
@@ -145,7 +145,7 @@ const INITIAL_INCOME_RECORDS = [
     courierName: "Local Van",
     discount: 500,
     totalAmount: 14160,
-    billLink: "https://www.lekhoktripura.in/"
+    billLink: ""
   },
   {
     id: "inc-4",
@@ -168,7 +168,7 @@ const INITIAL_INCOME_RECORDS = [
     courierName: "BlueDart",
     discount: 0,
     totalAmount: 935,
-    billLink: "https://www.lekhoktripura.in/"
+    billLink: ""
   },
   {
     id: "inc-5",
@@ -191,7 +191,7 @@ const INITIAL_INCOME_RECORDS = [
     courierName: "Local Delivery",
     discount: 0,
     totalAmount: 512,
-    billLink: "https://www.lekhoktripura.in/"
+    billLink: ""
   }
 ];
 
@@ -615,7 +615,7 @@ export default function AdminInvoicePage() {
       courierName: targetForm.deliveryDetails?.courierName || "Courier",
       discount: disc,
       totalAmount: totPayable,
-      billLink: `/admin/invoices`,
+      billLink: targetForm.billLink || "",
       fullForm: targetForm
     };
 
@@ -642,6 +642,16 @@ export default function AdminInvoicePage() {
 
   const handleViewSoftBill = (record) => {
     if (!record) return;
+
+    if (
+      record.billLink &&
+      (record.billLink.startsWith("http://") || record.billLink.startsWith("https://")) &&
+      !record.billLink.endsWith("lekhoktripura.in/") &&
+      !record.billLink.endsWith("lekhoktripura.in")
+    ) {
+      window.open(record.billLink, "_blank");
+      return;
+    }
 
     if (record.fullForm && record.fullForm.billInfo) {
       setForm(record.fullForm);

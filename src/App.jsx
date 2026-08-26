@@ -22,6 +22,7 @@ import WhatsAppFloat from "./components/WhatsAppFloat.jsx";
 import HelpPage from "./pages/HelpPage.jsx";
 import NewsPage from "./pages/NewsPage.jsx";
 import AdminNewsPage from "./pages/AdminNewsPage.jsx";
+import AdminBlogPage from "./pages/AdminBlogPage.jsx";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage.jsx";
 import TermsPage from "./pages/TermsPage.jsx";
 import AboutPage from "./pages/AboutPage.jsx";
@@ -101,6 +102,7 @@ export default function App() {
           <Route path="/admin/users" element={<AdminUsersPage />} />
           <Route path="/admin/purchases" element={<AdminPurchasesPage />} />
           <Route path="/admin/news" element={<AdminNewsPage />} />
+          {/* <Route path="/admin/blogs" element={<AdminBlogPage />} /> */}
           <Route path="/admin/club" element={<AdminClubPage />} />
           <Route path="/admin/club/transactions" element={<AdminClubTransactionsPage />} />
           <Route path="/admin/rentals" element={<AdminRentalsPage />} />
@@ -109,6 +111,8 @@ export default function App() {
           <Route path="/admin/invoice" element={<Navigate to="/admin/invoices" replace />} />
           <Route path="/admin/crm" element={<AdminCrmPage />} />
           <Route path="/news" element={<NewsPage />} />
+          {/* <Route path="/blogs" element={<NewsPage defaultTab="blogs" />} /> */}
+          {/* <Route path="/blog" element={<NewsPage defaultTab="blogs" />} /> */}
           <Route path="/rentals" element={<BookRentPage />} />
           <Route path="/book-rent" element={<Navigate to="/rentals" replace />} />
           <Route path="/rent" element={<Navigate to="/rentals" replace />} />
