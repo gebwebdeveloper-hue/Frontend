@@ -34,6 +34,7 @@ const publishingPlans = [
     id: "basic",
     name: "Basic Publishing Plan",
     price: "₹4,999",
+    pages: "Upto 100 pages",
     Icon: BookMarked,
     iconBg: "bg-cyan-400/15",
     iconColor: "text-cyan-300",
@@ -60,6 +61,7 @@ const publishingPlans = [
     id: "essential",
     name: "Essential Publishing Plan",
     price: "₹9,999",
+    pages: "Upto 100 pages",
     Icon: Star,
     iconBg: "bg-violet-400/15",
     iconColor: "text-violet-300",
@@ -80,6 +82,7 @@ const publishingPlans = [
     id: "popular",
     name: "Popular Publishing Plan",
     price: "₹14,999",
+    pages: "Upto 100 pages",
     Icon: Crown,
     iconBg: "bg-amber-400/15",
     iconColor: "text-amber-300",
@@ -614,9 +617,17 @@ export default function ReaderPage() {
                               <span className="text-lg font-bold text-white/40 line-through">{plan.price}</span>
                               <span className="text-2xl font-black text-emerald-300">₹{cardPricing.basePrice.toLocaleString("en-IN")}</span>
                               <span className="rounded-md bg-emerald-400/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-emerald-300 border border-emerald-400/30">10% Off</span>
+                              {plan.pages && (
+                                <span className="text-xs font-semibold text-white/70">({plan.pages})</span>
+                              )}
                             </div>
                           ) : (
-                            <p className="text-2xl font-black text-white">{plan.price}</p>
+                            <div className="flex items-baseline gap-2 flex-wrap">
+                              <p className="text-2xl font-black text-white">{plan.price}</p>
+                              {plan.pages && (
+                                <span className="text-xs font-semibold text-white/70">({plan.pages})</span>
+                              )}
+                            </div>
                           )}
                         </div>
                       );
@@ -979,20 +990,20 @@ export default function ReaderPage() {
                         <Input label="* Book Genre :" required value={form.genre} onChange={setField("genre")} placeholder="e.g. Novel, Poetry, Story Collection, Drama" />
                         <div>
                           <Input
-                            label="* Total Number of Pages (Limit: 60 Pages) :"
+                            label="* Total Number of Pages (Limit: 100 Pages) :"
                             required
                             value={form.totalPages}
                             onChange={setField("totalPages")}
-                            placeholder="e.g. 60"
+                            placeholder="e.g. 100"
                             inputMode="numeric"
                           />
                           <p className="mt-1.5 text-[11px] text-cyan-300/80 font-medium leading-normal">
-                            💡 Standard plan includes up to 60 pages. If pages exceed 60, extra charges will be needed and included on Quotation (CALL / MESSAGE TO 6033550539).
+                            💡 Standard plan includes up to 100 pages. If pages exceed 100, extra charges will be needed and included on Quotation (CALL / MESSAGE TO 6033550539).
                           </p>
-                          {Number(form.totalPages) > 60 && (
+                          {Number(form.totalPages) > 100 && (
                             <div className="mt-2 rounded-xl border border-amber-400/40 bg-amber-400/10 p-2.5 text-xs text-amber-200 font-bold flex items-start gap-1.5">
                               <span className="shrink-0">⚠️</span>
-                              <span>Note: Manuscript exceeds 60 pages limit. Extra charges will be needed & included on Quotation. CALL / MESSAGE TO 6033550539</span>
+                              <span>Note: Manuscript exceeds 100 pages limit. Extra charges will be needed & included on Quotation. CALL / MESSAGE TO 6033550539</span>
                             </div>
                           )}
                         </div>
