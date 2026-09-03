@@ -34,6 +34,7 @@ const publishingPlans = [
     id: "basic",
     name: "Basic Publishing Plan",
     price: "₹4,999",
+    numericPrice: 4999,
     pages: "Upto 100 pages",
     Icon: BookMarked,
     iconBg: "bg-cyan-400/15",
@@ -61,6 +62,7 @@ const publishingPlans = [
     id: "essential",
     name: "Essential Publishing Plan",
     price: "₹9,999",
+    numericPrice: 9999,
     pages: "Upto 100 pages",
     Icon: Star,
     iconBg: "bg-violet-400/15",
@@ -82,6 +84,7 @@ const publishingPlans = [
     id: "popular",
     name: "Popular Publishing Plan",
     price: "₹14,999",
+    numericPrice: 14999,
     pages: "Upto 100 pages",
     Icon: Crown,
     iconBg: "bg-amber-400/15",
@@ -167,6 +170,14 @@ function calculateTotalPricing(planName, selectedAddonsList = [], posterCount = 
   const gst = subtotal * 0.18;
   const total = subtotal + gst;
 
+  const hasRegistrationFee = !norm.includes("starter");
+  const regBase = 1000;
+  const regGst = Math.round(regBase * 0.18 * 100) / 100;
+  const regTotal = regBase + regGst; // 1180.00
+  const registrationFee = hasRegistrationFee ? regTotal : total;
+  const remainingBase = hasRegistrationFee ? Math.max(0, basePrice - regBase) : 0;
+  const remainingToPayLater = hasRegistrationFee ? Math.max(0, basePrice - regBase + addonsTotal) : 0;
+
   return {
     planName: planInfo.name,
     rawBasePrice,
@@ -177,6 +188,13 @@ function calculateTotalPricing(planName, selectedAddonsList = [], posterCount = 
     subtotal,
     gst,
     total,
+    hasRegistrationFee,
+    regBase,
+    regGst,
+    regTotal,
+    registrationFee,
+    remainingBase,
+    remainingToPayLater,
   };
 }
 
@@ -1232,47 +1250,97 @@ export default function ReaderPage() {
                                 </div>
                               )}
 
-                              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-                                <div>
-                                  <p className="text-xs text-white/60">Selected Plan Package</p>
-                                  <p className="text-lg font-black text-white">{pricing.planName}</p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-xs text-white/60">Total Payable Fee (Incl. 18% GST)</p>
-                                  <p className="text-2xl font-black text-cyan-300">₹{pricing.total.toFixed(2)}</p>
-                                </div>
-                              </div>
-
-                              {pricing.addonsBreakdown.length > 0 && (
-                                <div className="space-y-1.5 text-xs border-b border-white/10 pb-3">
-                                  <p className="font-bold text-cyan-300">Selected Add-on Services ({pricing.addonsBreakdown.length}):</p>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {pricing.addonsBreakdown.map((item) => (
-                                      <span key={item.name} className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-bold text-cyan-200">
-                                        {item.name}: ₹{item.numericPrice.toLocaleString("en-IN")}
+                              {pricing.hasRegistrationFee ? (
+                                <div className="space-y-3">
+                                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+                                    <div>
+                                      <p className="text-xs text-white/60">Selected Plan Package</p>
+                                      <p className="text-lg font-black text-white">{pricing.planName}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="inline-block rounded-full border border-emerald-400/40 bg-emerald-400/15 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-300">
+                                        PAY NOW TO UNLOCK
                                       </span>
-                                    ))}
+                                      <p className="text-2xl font-black text-emerald-300">₹{pricing.regTotal.toFixed(2)}</p>
+                                      <p className="text-[10px] text-white/50 font-medium">₹1,000 + 18% GST (₹180.00)</p>
+                                    </div>
+                                  </div>
+
+                                  <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">
+                                    <p className="font-bold flex items-center gap-1.5 text-emerald-300">
+                                      <Sparkles size={14} /> Registration Fee: ₹1,000 + 18% GST (₹1,180.00) to Unlock Plan!
+                                    </p>
+                                    <p className="mt-1 text-[11px] text-white/75 leading-relaxed">
+                                      Pay <strong>₹1,180.00</strong> (₹1,000 registration fee + 18% GST) today to unlock this plan and submit your manuscript. <strong>Pay the rest later</strong> (Remaining: <strong className="text-white">₹{pricing.remainingToPayLater.toLocaleString("en-IN")}.00</strong>) before final book printing & distribution.
+                                    </p>
+                                  </div>
+
+                                  {pricing.addonsBreakdown.length > 0 && (
+                                    <div className="space-y-1.5 text-xs border-b border-white/10 pb-3">
+                                      <p className="font-bold text-cyan-300">Selected Add-on Services ({pricing.addonsBreakdown.length}):</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {pricing.addonsBreakdown.map((item) => (
+                                          <span key={item.name} className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-bold text-cyan-200">
+                                            {item.name}: ₹{item.numericPrice.toLocaleString("en-IN")}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="flex flex-wrap items-center justify-between text-xs text-white/70 gap-2 pt-1 border-t border-white/10">
+                                    <span>Total Package: <strong>₹{pricing.basePrice.toLocaleString("en-IN")}.00</strong></span>
+                                    <span>Registration Fee: <strong>₹1,000.00</strong></span>
+                                    <span>GST (18%): <strong>₹180.00</strong></span>
+                                    <span>Pay Now to Unlock: <strong className="text-emerald-300">₹{pricing.regTotal.toFixed(2)}</strong></span>
+                                    <span>Pay the Rest Later: <strong className="text-cyan-300">₹{pricing.remainingToPayLater.toLocaleString("en-IN")}.00</strong></span>
                                   </div>
                                 </div>
-                              )}
+                              ) : (
+                                <>
+                                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+                                    <div>
+                                      <p className="text-xs text-white/60">Selected Plan Package</p>
+                                      <p className="text-lg font-black text-white">{pricing.planName}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-xs text-white/60">Total Payable Fee (Incl. 18% GST)</p>
+                                      <p className="text-2xl font-black text-cyan-300">₹{pricing.total.toFixed(2)}</p>
+                                    </div>
+                                  </div>
 
-                              <div className="flex flex-wrap items-center justify-between text-xs text-white/70 gap-2">
-                                <span>
-                                  Base Plan:{" "}
-                                  {isClubMember && pricing.rawBasePrice > pricing.basePrice ? (
-                                    <>
-                                      <span className="line-through text-white/40 mr-1">₹{pricing.rawBasePrice.toLocaleString("en-IN")}.00</span>
-                                      <strong className="text-emerald-300">₹{pricing.basePrice.toLocaleString("en-IN")}.00</strong>
-                                    </>
-                                  ) : (
-                                    <strong>₹{pricing.basePrice.toLocaleString("en-IN")}.00</strong>
+                                  {pricing.addonsBreakdown.length > 0 && (
+                                    <div className="space-y-1.5 text-xs border-b border-white/10 pb-3">
+                                      <p className="font-bold text-cyan-300">Selected Add-on Services ({pricing.addonsBreakdown.length}):</p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {pricing.addonsBreakdown.map((item) => (
+                                          <span key={item.name} className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-bold text-cyan-200">
+                                            {item.name}: ₹{item.numericPrice.toLocaleString("en-IN")}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
                                   )}
-                                </span>
-                                <span>Add-ons Total: <strong>₹{pricing.addonsTotal.toLocaleString("en-IN")}.00</strong></span>
-                                <span>Subtotal: <strong>₹{pricing.subtotal.toLocaleString("en-IN")}.00</strong></span>
-                                <span>GST (18%): <strong>₹{pricing.gst.toFixed(2)}</strong></span>
-                                <span className="text-cyan-300 font-extrabold text-sm">Total Amount: <strong>₹{pricing.total.toFixed(2)}</strong></span>
-                              </div>
+
+                                  <div className="flex flex-wrap items-center justify-between text-xs text-white/70 gap-2">
+                                    <span>
+                                      Base Plan:{" "}
+                                      {isClubMember && pricing.rawBasePrice > pricing.basePrice ? (
+                                        <>
+                                          <span className="line-through text-white/40 mr-1">₹{pricing.rawBasePrice.toLocaleString("en-IN")}.00</span>
+                                          <strong className="text-emerald-300">₹{pricing.basePrice.toLocaleString("en-IN")}.00</strong>
+                                        </>
+                                      ) : (
+                                        <strong>₹{pricing.basePrice.toLocaleString("en-IN")}.00</strong>
+                                      )}
+                                    </span>
+                                    <span>Add-ons Total: <strong>₹{pricing.addonsTotal.toLocaleString("en-IN")}.00</strong></span>
+                                    <span>Subtotal: <strong>₹{pricing.subtotal.toLocaleString("en-IN")}.00</strong></span>
+                                    <span>GST (18%): <strong>₹{pricing.gst.toFixed(2)}</strong></span>
+                                    <span className="text-cyan-300 font-extrabold text-sm">Total Amount: <strong>₹{pricing.total.toFixed(2)}</strong></span>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           );
                         })()}
@@ -1328,6 +1396,9 @@ export default function ReaderPage() {
                       {selectedPlan ? (
                         (() => {
                           const currentPricing = calculateTotalPricing(selectedPlan, selectedAddons, posterCount, isClubMember);
+                          if (currentPricing.hasRegistrationFee) {
+                            return `Pay ₹${currentPricing.regTotal.toFixed(2)} (₹1,000 + 18% GST) to Unlock & Submit Registration`;
+                          }
                           return `Pay ₹${currentPricing.total.toFixed(2)} via Razorpay & Submit Registration`;
                         })()
                       ) : "Submit Free Sponsored Publishing Request"}
