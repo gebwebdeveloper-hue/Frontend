@@ -167,7 +167,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
 
   const getShareUrl = (targetBook) => {
     const identifier = targetBook?.slug || targetBook?._id || targetBook?.id || "";
-    return `${SITE_URL}/library?book=${identifier}`;
+    return `${SITE_URL}/book/${identifier}`;
   };
 
   const handleShareBook = async (e) => {

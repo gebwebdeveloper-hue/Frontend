@@ -1,5 +1,28 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/book/:slug",
+      "destination": "https://lekhok.onrender.com/api/books/:slug/og"
+    },
+    {
+      "source": "/library",
+      "has": [
+        {
+          "type": "query",
+          "key": "book",
+          "value": "(?<slug>[^&]+)"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|Twitterbot|TelegramBot|Slackbot|LinkedInBot|Discordbot).*"
+        }
+      ],
+      "destination": "https://lekhok.onrender.com/api/books/:slug/og"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
