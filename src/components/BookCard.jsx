@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Star, Loader2, AlertCircle, CheckCircle2, Copy, Smartphone, Mail, KeyRound, ShieldCheck, Coins, X, ShoppingCart } from "lucide-react";
+import { Star, Loader2, AlertCircle, CheckCircle2, Copy, Smartphone, Mail, KeyRound, ShieldCheck, Coins, X, ShoppingCart, Share2, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
-import { API_BASE, SERVER_URL } from "../config.js";
+import { API_BASE, SERVER_URL, SITE_URL } from "../config.js";
 import AuthModal from "./AuthModal.jsx";
 import { addToCart } from "../utils/cart.js";
 import { INDIA_STATES, DISTRICTS_BY_STATE } from "../utils/indiaData.js";
 
-export default function BookCard({ book, onAuthorClick, isAuthorActive = false }) {
+export default function BookCard({ book, onAuthorClick, isAuthorActive = false, autoOpen = false }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [showReader, setShowReader] = useState(false);
@@ -16,6 +16,8 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState("");
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState("");
@@ -163,9 +165,72 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
     return withGST(base);
   };
 
+  const getShareUrl = (targetBook) => {
+    const identifier = targetBook?.slug || targetBook?._id || targetBook?.id || "";
+    return `${SITE_URL}/library?book=${identifier}`;
+  };
+
+  const handleShareBook = async (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const shareUrl = getShareUrl(book);
+    const shareTitle = book?.title || "Book";
+    const shareAuthor = book?.author ? ` by ${book.author}` : "";
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: `Check out "${shareTitle}"${shareAuthor} on Lekhak Tripura`,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = shareUrl;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setShareCopied(true);
+      setShareFeedback("Link copied to clipboard!");
+      setTimeout(() => {
+        setShareCopied(false);
+        setShareFeedback("");
+      }, 3000);
+    } catch {
+      setShareFeedback("Failed to copy link");
+      setTimeout(() => setShareFeedback(""), 3000);
+    }
+  };
+
+  useEffect(() => {
+    if (autoOpen && !showReader) {
+      handleOpenPreview();
+    }
+  }, [autoOpen]);
+
   const handleOpenPreview = async (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
     
+    // Sync URL parameter cleanly
+    try {
+      const url = new URL(window.location.href);
+      const identifier = book.slug || book._id;
+      if (identifier && url.searchParams.get("book") !== identifier) {
+        url.searchParams.set("book", identifier);
+        navigate(`${location.pathname}${url.search}${url.hash}`, { replace: true });
+      }
+    } catch {}
+
     // Show Details modal immediately!
     setShowReader(true);
     setModalStep("details");
@@ -387,6 +452,18 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
   };
 
   const handleCloseModal = () => {
+    // Clear URL query param or route if it was set for this book
+    try {
+      const url = new URL(window.location.href);
+      const identifier = book.slug || book._id;
+      if (location.pathname.startsWith("/book/")) {
+        navigate("/library", { replace: true });
+      } else if (url.searchParams.get("book") === identifier) {
+        url.searchParams.delete("book");
+        navigate(`${location.pathname}${url.search}${url.hash}`, { replace: true });
+      }
+    } catch {}
+
     setShowReader(false);
     setModalStep(null);
     setErrorMsg("");
@@ -534,6 +611,22 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
               {accessStatus === "approved" ? "Read Ebook" : "Preview Ebook"}
             </span>
           </div>
+          {/* Quick Share Button */}
+          <button
+            type="button"
+            onClick={handleShareBook}
+            className={`absolute z-20 flex h-7 w-7 items-center justify-center rounded-full backdrop-blur-md transition-all shadow-md ${
+              book.comingSoon ? "top-10 right-2" : "top-2 right-2"
+            } ${
+              shareCopied
+                ? "bg-emerald-500 text-black scale-110"
+                : "bg-black/60 text-white/70 hover:bg-black/90 hover:text-cyan-300 hover:scale-110 border border-white/10"
+            }`}
+            title="Share book link"
+          >
+            {shareCopied ? <Check size={12} strokeWidth={2.5} /> : <Share2 size={12} />}
+          </button>
+
           {/* Coming Soon badge */}
           {book.comingSoon && (
             <div className="absolute top-2 right-2 z-10 rounded-full bg-amber-400/90 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-black shadow-lg">
@@ -628,16 +721,40 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
             >
               {/* Header */}
               <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-white">{book.title}</h3>
-                  <p className="text-xs text-white/50">by {book.author} — Preview Access</p>
+                <div className="min-w-0 pr-3">
+                  <h3 className="truncate text-xl font-bold text-white">{book.title}</h3>
+                  <p className="truncate text-xs text-white/50">by {book.author} — Preview Access</p>
                 </div>
-                <button
-                  onClick={handleCloseModal}
-                  className="rounded-full p-2 text-white/50 hover:bg-white/10 hover:text-white transition"
-                >
-                  <X size={18} />
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleShareBook}
+                    className={`relative rounded-full p-2 transition ${
+                      shareCopied
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : "text-white/50 hover:bg-white/10 hover:text-white"
+                    }`}
+                    title={shareCopied ? "Link Copied!" : "Share Book Link"}
+                  >
+                    {shareCopied ? (
+                      <Check size={18} className="text-emerald-400" />
+                    ) : (
+                      <Share2 size={18} />
+                    )}
+                    {shareCopied && (
+                      <span className="absolute -bottom-8 right-0 whitespace-nowrap rounded-md bg-emerald-950 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-300 shadow-lg z-30">
+                        Link Copied!
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleCloseModal}
+                    className="rounded-full p-2 text-white/50 hover:bg-white/10 hover:text-white transition"
+                    title="Close preview"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
               </div>
 
               {/* Error Alert */}
@@ -649,11 +766,11 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false }
               )}
 
               {/* Steps Container */}
-              <div className={`flex-1 min-h-0 ${modalStep === "pdf" ? "flex flex-col h-full" : "overflow-y-auto pr-2"}`} data-lenis-prevent>
+              <div className={`flex-1 min-h-0 overflow-x-hidden ${modalStep === "pdf" ? "flex flex-col h-full" : "overflow-y-auto overflow-x-hidden pr-1 custom-scrollbar"}`} data-lenis-prevent>
                 
                 {/* 0. BOOK DETAILS & ACTIONS */}
                 {modalStep === "details" && (
-                  <div className="flex flex-col md:flex-row gap-6 py-2">
+                  <div className="flex flex-col md:flex-row gap-6 py-2 overflow-x-hidden max-w-full">
                     {/* Cover */}
                     <div className="w-full md:w-1/3 shrink-0">
                       <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 shadow-2xl">

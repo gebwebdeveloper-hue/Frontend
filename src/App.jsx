@@ -132,10 +132,11 @@ export default function App() {
           <Route path="/terms-and-conditions" element={<Navigate to="/terms" replace />} />
 
           {/* Sitelinks & Legacy URL Alias Redirects */}
+          <Route path="/book/:id" element={<LibraryPage />} />
+          <Route path="/books" element={<LibraryPage />} />
           <Route path="/buy-books" element={<Navigate to="/library" replace />} />
           <Route path="/buy-book" element={<Navigate to="/library" replace />} />
           <Route path="/buy" element={<Navigate to="/library" replace />} />
-          <Route path="/books" element={<Navigate to="/library" replace />} />
           <Route path="/my-books" element={<Navigate to="/library" replace />} />
           <Route path="/mybooks" element={<Navigate to="/library" replace />} />
           <Route path="/about-us" element={<AboutPage />} />

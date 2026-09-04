@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useSearchParams, useParams } from "react-router-dom";
 import { BookOpen, Users, Download, Star, ShoppingCart } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
@@ -7,6 +8,7 @@ import ContinueReadingSection from "../sections/ContinueReadingSection.jsx";
 import PopularAuthorsSection from "../sections/PopularAuthorsSection.jsx";
 import PublicationsAuthorsSection from "../sections/PublicationsAuthorsSection.jsx";
 import LibraryFeaturedSection from "../sections/LibraryFeaturedSection.jsx";
+import BookCard from "../components/BookCard.jsx";
 import CartModal from "../components/CartModal.jsx";
 import MyOrdersModal from "../components/MyOrdersModal.jsx";
 import { getCart } from "../utils/cart.js";
@@ -37,12 +39,40 @@ function StatCard({ icon: Icon, value, label, index }) {
 }
 
 export default function LibraryPage() {
+  const [searchParams] = useSearchParams();
+  const { id: routeBookId } = useParams();
+  const targetBookParam = searchParams.get("book") || routeBookId;
+  const [sharedBook, setSharedBook] = useState(null);
   const [authUser, setAuthUser] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [stats, setStats] = useState(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [ordersOpen, setOrdersOpen] = useState(false);
+
+  useEffect(() => {
+    if (!targetBookParam) {
+      setSharedBook(null);
+      return;
+    }
+
+    let isMounted = true;
+    fetch(`${API_BASE}/books/${encodeURIComponent(targetBookParam)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!isMounted) return;
+        if (data.success && data.book) {
+          setSharedBook(data.book);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch shared book:", err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [targetBookParam]);
 
   const updateCartCount = () => {
     setCartCount(getCart().length);
@@ -216,6 +246,13 @@ export default function LibraryPage() {
 
         </div>
       </div>
+      {/* Shared Book Deep Link Modal Portal */}
+      {sharedBook && (
+        <div className="hidden" aria-hidden="true">
+          <BookCard book={sharedBook} autoOpen={true} />
+        </div>
+      )}
+
       <CartModal isOpen={cartOpen} onClose={() => setCartOpen(false)} onOpenOrders={() => setOrdersOpen(true)} />
       <MyOrdersModal isOpen={ordersOpen} onClose={() => setOrdersOpen(false)} />
       <FooterSection />
