@@ -193,7 +193,7 @@ export default function RentalCheckoutModal({ book, directCardMode = false, isOp
     year: "numeric",
   });
 
-  // Handle instant Library Card Purchase (₹1 Test Price)
+  // Handle instant Library Card Purchase (₹116.82: ₹99 + 18% GST)
   const handleBuyLibraryCard = async () => {
     setBuyingCard(true);
     setCardError("");
@@ -227,7 +227,7 @@ export default function RentalCheckoutModal({ book, directCardMode = false, isOp
         amount: orderData.amount,
         currency: "INR",
         name: "Lekhok Tripura Publishers",
-        description: "Library Membership Card (₹1)",
+        description: "Digital Library Card (₹99 + 18% GST = ₹116.82)",
         order_id: orderData.orderId,
         prefill: {
           name: renterName || user?.name || "",
@@ -564,8 +564,8 @@ export default function RentalCheckoutModal({ book, directCardMode = false, isOp
                     </div>
                     <p className="text-xs text-white/75 leading-relaxed">
                       {book
-                        ? "A valid Digital Library Card is required to rent books. Fill in your details below to purchase your lifetime valid Digital Library Card for ₹1, then proceed to rent your book."
-                        : "Fill in your member details below to issue your lifetime valid Digital Library Card for ₹1."}
+                        ? "A valid Digital Library Card is required to rent books. Fill in your details below to purchase your lifetime valid Digital Library Card for ₹116.82 (₹99 + 18% GST), then proceed to rent your book."
+                        : "Fill in your member details below to issue your lifetime valid Digital Library Card for ₹116.82 (₹99 + 18% GST)."}
                     </p>
                   </div>
 
@@ -813,7 +813,7 @@ export default function RentalCheckoutModal({ book, directCardMode = false, isOp
                       </>
                     ) : (
                       <>
-                        <CreditCard size={16} /> Buy Digital Library Card (₹1)
+                        <CreditCard size={16} /> Buy Digital Library Card (₹116.82)
                       </>
                     )}
                   </button>
