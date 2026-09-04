@@ -1,16 +1,54 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Clock, ArrowRight, BookOpen, Loader2, ChevronDown, User, Search, X, Lock } from "lucide-react";
+import { Calendar, Clock, ArrowRight, BookOpen, Loader2, ChevronDown, User, Search, X, Lock, Share2, Check } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import PayToReadModal from "../components/PayToReadModal.jsx";
 import AuthModal from "../components/AuthModal.jsx";
-import { API_BASE, SERVER_URL } from "../config.js";
+import { API_BASE, SERVER_URL, SITE_URL } from "../config.js";
 
 function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal, authUser, onOpenAuthModal }) {
   const [showAllTags, setShowAllTags] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const navigate = useNavigate();
+
+  const handleShareStory = async (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const shareUrl = `${SITE_URL}/short-stories/${story.slug}`;
+    const shareTitle = story.title || "Story";
+    const shareAuthor = story.author ? ` by ${story.author}` : "";
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: `Check out "${shareTitle}"${shareAuthor} on Lekhak Tripura`,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = shareUrl;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2500);
+    } catch {
+      // ignore
+    }
+  };
 
   const categories = story.categories || [];
   const firstCategory = categories[0];
@@ -141,7 +179,7 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal, auth
           {story.description}
         </p>
 
-        {/* Read More button */}
+        {/* Read More button & Share Button */}
         <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
           <button
             type="button"
@@ -153,6 +191,24 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal, auth
           >
             Read Full Story
             <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+          </button>
+
+          <button
+            type="button"
+            onClick={handleShareStory}
+            className={`relative flex items-center justify-center h-8 w-8 rounded-full border transition ${
+              shareCopied
+                ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 scale-105"
+                : "border-white/10 bg-white/5 text-white/60 hover:text-cyan-300 hover:bg-white/10 hover:border-cyan-400/30"
+            }`}
+            title={shareCopied ? "Link Copied!" : "Share Story Link"}
+          >
+            {shareCopied ? <Check size={14} className="text-emerald-400" /> : <Share2 size={14} />}
+            {shareCopied && (
+              <span className="absolute -top-7 right-0 whitespace-nowrap rounded-md bg-emerald-950 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-300 shadow-lg z-30">
+                Copied!
+              </span>
+            )}
           </button>
         </div>
       </div>

@@ -119,6 +119,7 @@ export default function App() {
           <Route path="/club" element={<ClubPage />} />
           <Route path="/short-stories" element={<NewsletterListingPage />} />
           <Route path="/short-stories/:slug" element={<NewsletterReaderPage />} />
+          <Route path="/story/:slug" element={<NewsletterReaderPage />} />
           {/* Publisher & Author Dashboard */}
           <Route path="/publisher_dashboard" element={<PublisherDashboardPage />} />
           <Route path="/publisher-dashboard" element={<PublisherDashboardPage />} />

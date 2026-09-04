@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, Clock, ArrowLeft, Loader2, Sparkles, User, Sun, Moon, Lock } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, Loader2, Sparkles, User, Sun, Moon, Lock, Share2, Check } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import PayToReadModal from "../components/PayToReadModal.jsx";
 import AuthModal from "../components/AuthModal.jsx";
-import { API_BASE, SERVER_URL } from "../config.js";
+import { API_BASE, SERVER_URL, SITE_URL } from "../config.js";
 
 export default function NewsletterReaderPage() {
   const { slug } = useParams();
@@ -16,6 +16,7 @@ export default function NewsletterReaderPage() {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [authUser, setAuthUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const checkSession = async () => {
     try {
@@ -125,6 +126,44 @@ export default function NewsletterReaderPage() {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const handleShareStory = async (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    if (!story) return;
+    const shareUrl = `${SITE_URL}/short-stories/${story.slug || slug}`;
+    const shareTitle = story.title || "Story";
+    const shareAuthor = story.author ? ` by ${story.author}` : "";
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: `Check out "${shareTitle}"${shareAuthor} on Lekhak Tripura`,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = shareUrl;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2500);
+    } catch {
+      // ignore
+    }
   };
 
   return (
@@ -238,26 +277,62 @@ export default function NewsletterReaderPage() {
               Back to Short Stories
             </Link>
 
-            <button
-              onClick={() => setIsLightMode(!isLightMode)}
-              className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-                isLightMode 
-                  ? "border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50" 
-                  : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              {isLightMode ? (
-                <>
-                  <Moon size={13} className="text-indigo-500" />
-                  <span>Dark Mode</span>
-                </>
-              ) : (
-                <>
-                  <Sun size={13} className="text-yellow-400 animate-spin-slow" />
-                  <span>Light Mode</span>
-                </>
+            <div className="flex items-center gap-2.5">
+              {story && (
+                <div className="relative">
+                  <button
+                    onClick={handleShareStory}
+                    className={`flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                      shareCopied
+                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                        : isLightMode
+                        ? "border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50"
+                        : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
+                    }`}
+                    title="Share story"
+                  >
+                    {shareCopied ? (
+                      <>
+                        <Check size={13} className="text-emerald-400" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Share2 size={13} />
+                        <span className="hidden sm:inline">Share</span>
+                      </>
+                    )}
+                  </button>
+
+                  {shareCopied && (
+                    <div className="absolute top-full right-0 mt-1.5 whitespace-nowrap rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-medium text-white shadow-lg animate-in fade-in zoom-in-95 duration-150 z-20">
+                      Link Copied!
+                    </div>
+                  )}
+                </div>
               )}
-            </button>
+
+              <button
+                onClick={() => setIsLightMode(!isLightMode)}
+                className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                  isLightMode 
+                    ? "border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50" 
+                    : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {isLightMode ? (
+                  <>
+                    <Moon size={13} className="text-indigo-500" />
+                    <span>Dark Mode</span>
+                  </>
+                ) : (
+                  <>
+                    <Sun size={13} className="text-yellow-400 animate-spin-slow" />
+                    <span>Light Mode</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Loader */}

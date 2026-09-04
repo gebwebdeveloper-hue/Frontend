@@ -5,6 +5,21 @@
       "destination": "https://lekhok.onrender.com/api/books/:slug/og"
     },
     {
+      "source": "/story/:slug",
+      "destination": "https://lekhok.onrender.com/api/newsletter/:slug/og"
+    },
+    {
+      "source": "/short-stories/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|Twitterbot|TelegramBot|Slackbot|LinkedInBot|Discordbot).*"
+        }
+      ],
+      "destination": "https://lekhok.onrender.com/api/newsletter/:slug/og"
+    },
+    {
       "source": "/library",
       "has": [
         {
