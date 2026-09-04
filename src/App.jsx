@@ -111,9 +111,12 @@ export default function App() {
           <Route path="/admin/invoice" element={<Navigate to="/admin/invoices" replace />} />
           <Route path="/admin/crm" element={<AdminCrmPage />} />
           <Route path="/news" element={<NewsPage />} />
+          <Route path="/news/:slug" element={<NewsPage />} />
           {/* <Route path="/blogs" element={<NewsPage defaultTab="blogs" />} /> */}
           {/* <Route path="/blog" element={<NewsPage defaultTab="blogs" />} /> */}
           <Route path="/rentals" element={<BookRentPage />} />
+          <Route path="/rentals/:slug" element={<BookRentPage />} />
+          <Route path="/rent/:slug" element={<BookRentPage />} />
           <Route path="/book-rent" element={<Navigate to="/rentals" replace />} />
           <Route path="/rent" element={<Navigate to="/rentals" replace />} />
           <Route path="/club" element={<ClubPage />} />

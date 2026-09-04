@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Newspaper,
@@ -13,6 +13,7 @@ import {
   Loader2,
   X,
   Share2,
+  Check,
   Flame,
   CheckCircle2,
   Megaphone,
@@ -24,7 +25,7 @@ import {
 import PageTransition from "../components/PageTransition.jsx";
 import Navbar from "../components/Navbar.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
-import { API_BASE, SERVER_URL } from "../config.js";
+import { API_BASE, SERVER_URL, SITE_URL } from "../config.js";
 
 const CATEGORY_STYLES = {
   "Platform Update": "bg-cyan-500/10 text-cyan-300 border-cyan-500/30",
@@ -36,6 +37,9 @@ const CATEGORY_STYLES = {
 
 export default function NewsPage({ defaultTab = "news" }) {
   const [activeTab, setActiveTab] = useState("news");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { slug } = useParams();
+  const targetArticleSlug = searchParams.get("article") || slug;
 
   // Sync tab with URL
   const handleTabChange = (tab) => {
@@ -61,6 +65,7 @@ export default function NewsPage({ defaultTab = "news" }) {
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedArticleId, setCopiedArticleId] = useState(null);
 
   useEffect(() => {
     setLoadingNews(true);
@@ -85,6 +90,18 @@ export default function NewsPage({ defaultTab = "news" }) {
       .catch((err) => console.error("Error fetching blogs:", err))
       .finally(() => setLoadingBlogs(false));
   }, []);
+
+  // Automatically open article modal if linked directly via ?article=slug or /news/:slug
+  useEffect(() => {
+    if (targetArticleSlug && newsList.length > 0) {
+      const found = newsList.find(
+        (item) => item.slug === targetArticleSlug || item._id === targetArticleSlug
+      );
+      if (found) {
+        setSelectedArticle(found);
+      }
+    }
+  }, [targetArticleSlug, newsList]);
 
   // News categories
   const newsCategoriesList = useMemo(() => {
@@ -152,18 +169,49 @@ export default function NewsPage({ defaultTab = "news" }) {
     return `${SERVER_URL}${coverImage.url}`;
   };
 
-  const handleShare = (article, e) => {
-    if (e) e.stopPropagation();
-    if (navigator.share) {
-      navigator.share({
-        title: article.title,
-        text: article.summary,
-        url: window.location.href,
-      }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(window.location.href);
+  const getArticleShareUrl = (item) => {
+    const identifier = item?.slug || item?._id || "";
+    return `${SITE_URL}/news?article=${identifier}`;
+  };
+
+  const handleShare = async (article, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    if (!article) return;
+    const shareUrl = getArticleShareUrl(article);
+    const shareTitle = article?.title || "News Announcement";
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: article?.summary ? `${shareTitle} — ${article.summary}` : shareTitle,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = shareUrl;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopiedArticleId(article._id);
       setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
+      setTimeout(() => {
+        setCopiedArticleId(null);
+        setCopiedLink(false);
+      }, 2500);
+    } catch {
+      // ignore
     }
   };
 
@@ -283,10 +331,11 @@ export default function NewsPage({ defaultTab = "news" }) {
                           {pinnedNewsArticle.summary}
                         </p>
 
-                        <div className="pt-2 flex items-center gap-4">
+                        <div className="pt-2 flex items-center gap-3">
                           <button
                             type="button"
-                            className="flex items-center gap-2 rounded-full bg-white px-6 py-3 text-xs font-extrabold text-black group-hover:bg-amber-300 transition shadow-lg"
+                            onClick={() => setSelectedArticle(pinnedNewsArticle)}
+                            className="flex items-center gap-2 rounded-full bg-white px-6 py-3 text-xs font-extrabold text-black group-hover:bg-amber-300 transition shadow-lg cursor-pointer"
                           >
                             <span>Read Full Release</span>
                             <ArrowRight size={14} />
@@ -295,9 +344,19 @@ export default function NewsPage({ defaultTab = "news" }) {
                           <button
                             type="button"
                             onClick={(e) => handleShare(pinnedNewsArticle, e)}
-                            className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-3 text-xs font-semibold text-white/70 hover:bg-white/10 transition"
+                            className={`relative flex items-center justify-center h-10 w-10 rounded-full border transition-all duration-200 cursor-pointer ${
+                              copiedArticleId === pinnedNewsArticle._id
+                                ? "border-emerald-400/50 bg-emerald-400/20 text-emerald-300 scale-105"
+                                : "border-white/15 bg-white/5 text-white/70 hover:border-amber-400/40 hover:bg-white/10 hover:text-amber-300 hover:scale-105"
+                            }`}
+                            title={copiedArticleId === pinnedNewsArticle._id ? "Link Copied!" : "Share announcement"}
                           >
-                            <Share2 size={13} />
+                            {copiedArticleId === pinnedNewsArticle._id ? <Check size={16} className="text-emerald-400" /> : <Share2 size={16} />}
+                            {copiedArticleId === pinnedNewsArticle._id && (
+                              <span className="absolute -top-8 right-0 whitespace-nowrap rounded-md bg-emerald-950 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-300 shadow-lg z-30">
+                                Copied!
+                              </span>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -413,9 +472,28 @@ export default function NewsPage({ defaultTab = "news" }) {
                                   <span className="flex items-center gap-1 text-[10px]">
                                     <User size={10} className="text-cyan-400" /> {article.author || "Lekhok Tripura Team"}
                                   </span>
-                                  <span className="font-bold text-cyan-400 group-hover:translate-x-1 transition-transform flex items-center gap-1 text-xs">
-                                    Read Announcement <ArrowRight size={13} />
-                                  </span>
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="font-bold text-cyan-400 group-hover:translate-x-1 transition-transform flex items-center gap-1 text-xs">
+                                      Read Announcement <ArrowRight size={13} />
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => handleShare(article, e)}
+                                      className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-all duration-200 cursor-pointer ${
+                                        copiedArticleId === article._id
+                                          ? "border-emerald-400/50 bg-emerald-400/20 text-emerald-300 scale-105"
+                                          : "border-white/15 bg-white/5 text-white/70 hover:border-cyan-400/40 hover:bg-white/10 hover:text-cyan-300 hover:scale-105"
+                                      }`}
+                                      title={copiedArticleId === article._id ? "Link Copied!" : "Share announcement"}
+                                    >
+                                      {copiedArticleId === article._id ? <Check size={13} className="text-emerald-400" /> : <Share2 size={13} />}
+                                      {copiedArticleId === article._id && (
+                                        <span className="absolute -top-7 right-0 whitespace-nowrap rounded-md bg-emerald-950 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-300 shadow-lg z-30">
+                                          Copied!
+                                        </span>
+                                      )}
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             </motion.div>

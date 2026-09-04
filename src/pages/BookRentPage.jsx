@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
+import { useSearchParams, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Clock, AlertTriangle, ShieldCheck, Search, Filter, CheckCircle2, ArrowRight, Sparkles, CreditCard, FileText, Eye } from "lucide-react";
+import { BookOpen, Clock, AlertTriangle, ShieldCheck, Search, Filter, CheckCircle2, ArrowRight, Sparkles, CreditCard, FileText, Eye, Share2, Check } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import RentalCheckoutModal from "../components/RentalCheckoutModal.jsx";
 import AuthModal from "../components/AuthModal.jsx";
-import { API_BASE, SERVER_URL } from "../config.js";
+import { API_BASE, SERVER_URL, SITE_URL } from "../config.js";
 
 export default function BookRentPage() {
   const [books, setBooks] = useState([]);
@@ -19,6 +20,11 @@ export default function BookRentPage() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [user, setUser] = useState(null);
   const [notification, setNotification] = useState("");
+  const [copiedBookId, setCopiedBookId] = useState(null);
+
+  const [searchParams] = useSearchParams();
+  const { slug } = useParams();
+  const targetIdentifier = searchParams.get("book") || slug;
 
   const fetchRentalCatalog = async () => {
     try {
@@ -26,13 +32,16 @@ export default function BookRentPage() {
       const res = await fetch(`${API_BASE}/rentals/catalog`);
       const data = await res.json();
       if (data.success) {
-        setBooks(data.books || []);
+        const catalogBooks = data.books || [];
+        setBooks(catalogBooks);
+        return catalogBooks;
       }
     } catch {
       console.error("Failed to load rental catalog.");
     } finally {
       setLoading(false);
     }
+    return [];
   };
 
   const checkUserSession = async () => {
@@ -89,11 +98,67 @@ export default function BookRentPage() {
   };
 
   useEffect(() => {
-    fetchRentalCatalog();
+    fetchRentalCatalog().then((catalogBooks) => {
+      if (targetIdentifier && catalogBooks && catalogBooks.length > 0) {
+        const matched = catalogBooks.find(
+          (b) => b.slug === targetIdentifier || b._id === targetIdentifier
+        );
+        if (matched) {
+          setTimeout(() => {
+            const el = document.getElementById(`rental-book-${matched._id}`);
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }, 350);
+          if (matched.rentalStatus === "available") {
+            handleOpenRental(matched);
+          }
+        }
+      }
+    });
     checkUserSession().then((u) => {
       checkUserLibraryCard(u);
     });
-  }, []);
+  }, [targetIdentifier]);
+
+  const handleShareRentalBook = async (targetBook, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const identifier = targetBook?.slug || targetBook?._id || "";
+    const shareUrl = `${SITE_URL}/rentals?book=${identifier}`;
+    const shareTitle = targetBook?.title || "Rental Book";
+    const shareAuthor = targetBook?.author ? ` by ${targetBook.author}` : "";
+    const rentalFee = targetBook?.rentalPrice ? ` for ₹${targetBook.rentalPrice}/15 days` : "";
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: `Rent "${shareTitle}"${shareAuthor}${rentalFee} on Lekhok Tripura`,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = shareUrl;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopiedBookId(targetBook._id);
+      setTimeout(() => setCopiedBookId(null), 2500);
+    } catch {
+      // ignore
+    }
+  };
 
   const handleOpenRental = async (book) => {
     const currentUser = await checkUserSession();
@@ -428,13 +493,20 @@ export default function BookRentPage() {
                     });
                   }
 
+                  const isTarget = targetIdentifier && (book.slug === targetIdentifier || book._id === targetIdentifier);
+
                   return (
                     <motion.div
                       key={book._id}
+                      id={`rental-book-${book._id}`}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       whileHover={{ y: -6 }}
-                      className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-zinc-950 p-5 shadow-xl backdrop-blur-md transition hover:border-emerald-400/40"
+                      className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl border bg-gradient-to-b from-white/[0.07] to-zinc-950 p-5 shadow-xl backdrop-blur-md transition ${
+                        isTarget 
+                          ? "ring-2 ring-emerald-400 border-emerald-400/80 shadow-emerald-500/20" 
+                          : "border-white/10 hover:border-emerald-400/40"
+                      }`}
                     >
                       {/* STATUS BADGE AT TOP */}
                       <div className="mb-4 flex items-center justify-between">
@@ -506,13 +578,33 @@ export default function BookRentPage() {
                       {/* RENTAL DETAILS / STATUS SUMMARY */}
                       <div className="mt-5 border-t border-white/10 pt-4">
                         {isAvailable ? (
-                          <button
-                            type="button"
-                            onClick={() => handleOpenRental(book)}
-                            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-400 py-3 text-xs font-black uppercase tracking-wider text-black shadow-lg shadow-emerald-400/20 transition hover:bg-emerald-300 cursor-pointer"
-                          >
-                            Rent This Book <ArrowRight size={14} />
-                          </button>
+                          <div className="flex items-center gap-2.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenRental(book)}
+                              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-400 py-3 text-xs font-black uppercase tracking-wider text-black shadow-lg shadow-emerald-400/20 transition hover:bg-emerald-300 cursor-pointer"
+                            >
+                              Rent This Book <ArrowRight size={14} />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => handleShareRentalBook(book, e)}
+                              className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 cursor-pointer ${
+                                copiedBookId === book._id
+                                  ? "border-emerald-400/50 bg-emerald-400/20 text-emerald-300 scale-105"
+                                  : "border-white/15 bg-white/5 text-white/70 hover:border-emerald-400/40 hover:bg-white/10 hover:text-emerald-300 hover:scale-105"
+                              }`}
+                              title={copiedBookId === book._id ? "Link Copied!" : "Share rental book link"}
+                            >
+                              {copiedBookId === book._id ? <Check size={16} className="text-emerald-400" /> : <Share2 size={16} />}
+                              {copiedBookId === book._id && (
+                                <span className="absolute -top-7 right-0 whitespace-nowrap rounded-md bg-emerald-950 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-300 shadow-lg z-30">
+                                  Copied!
+                                </span>
+                              )}
+                            </button>
+                          </div>
                         ) : isOnRent ? (
                           <div className="rounded-2xl border border-red-500/20 bg-red-950/20 p-3 text-xs space-y-1">
                             <div className="flex items-center justify-between text-red-300 font-extrabold">
@@ -524,23 +616,51 @@ export default function BookRentPage() {
                                 Expected Return: <span className="text-white font-medium">{expectedReturnFormatted}</span>
                               </p>
                             )}
-                            <button
-                              disabled
-                              className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 py-2 text-[11px] font-bold text-white/40 cursor-not-allowed"
-                            >
-                              Currently Unavailable
-                            </button>
+                            <div className="mt-2 flex items-center gap-2">
+                              <button
+                                disabled
+                                className="flex-1 rounded-xl border border-white/10 bg-white/5 py-2 text-[11px] font-bold text-white/40 cursor-not-allowed"
+                              >
+                                Currently Unavailable
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => handleShareRentalBook(book, e)}
+                                className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-all duration-200 cursor-pointer ${
+                                  copiedBookId === book._id
+                                    ? "border-emerald-400/50 bg-emerald-400/20 text-emerald-300 scale-105"
+                                    : "border-white/15 bg-white/5 text-white/70 hover:border-emerald-400/40 hover:bg-white/10 hover:text-emerald-300"
+                                }`}
+                                title={copiedBookId === book._id ? "Link Copied!" : "Share rental book link"}
+                              >
+                                {copiedBookId === book._id ? <Check size={14} className="text-emerald-400" /> : <Share2 size={14} />}
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <div className="rounded-2xl border border-amber-500/20 bg-amber-950/20 p-3 text-xs space-y-1">
                             <p className="font-extrabold text-amber-300">Return Verification Pending</p>
                             <p className="text-[11px] text-white/60">Being inspected by admin for re-listing.</p>
-                            <button
-                              disabled
-                              className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 py-2 text-[11px] font-bold text-white/40 cursor-not-allowed"
-                            >
-                              Return Pending
-                            </button>
+                            <div className="mt-2 flex items-center gap-2">
+                              <button
+                                disabled
+                                className="flex-1 rounded-xl border border-white/10 bg-white/5 py-2 text-[11px] font-bold text-white/40 cursor-not-allowed"
+                              >
+                                Return Pending
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => handleShareRentalBook(book, e)}
+                                className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-all duration-200 cursor-pointer ${
+                                  copiedBookId === book._id
+                                    ? "border-emerald-400/50 bg-emerald-400/20 text-emerald-300 scale-105"
+                                    : "border-white/15 bg-white/5 text-white/70 hover:border-emerald-400/40 hover:bg-white/10 hover:text-emerald-300"
+                                }`}
+                                title={copiedBookId === book._id ? "Link Copied!" : "Share rental book link"}
+                              >
+                                {copiedBookId === book._id ? <Check size={14} className="text-emerald-400" /> : <Share2 size={14} />}
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>

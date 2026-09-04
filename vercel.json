@@ -5,6 +5,10 @@
       "destination": "https://lekhok.onrender.com/api/books/:slug/og"
     },
     {
+      "source": "/rent/:slug",
+      "destination": "https://lekhok.onrender.com/api/books/:slug/og?from=rent"
+    },
+    {
       "source": "/story/:slug",
       "destination": "https://lekhok.onrender.com/api/newsletter/:slug/og"
     },
@@ -18,6 +22,42 @@
         }
       ],
       "destination": "https://lekhok.onrender.com/api/newsletter/:slug/og"
+    },
+    {
+      "source": "/news/:slug",
+      "destination": "https://lekhok.onrender.com/api/news/:slug/og"
+    },
+    {
+      "source": "/news",
+      "has": [
+        {
+          "type": "query",
+          "key": "article",
+          "value": "(?<slug>[^&]+)"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|Twitterbot|TelegramBot|Slackbot|LinkedInBot|Discordbot).*"
+        }
+      ],
+      "destination": "https://lekhok.onrender.com/api/news/:slug/og"
+    },
+    {
+      "source": "/rentals",
+      "has": [
+        {
+          "type": "query",
+          "key": "book",
+          "value": "(?<slug>[^&]+)"
+        },
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|Twitterbot|TelegramBot|Slackbot|LinkedInBot|Discordbot).*"
+        }
+      ],
+      "destination": "https://lekhok.onrender.com/api/books/:slug/og?from=rent"
     },
     {
       "source": "/library",
