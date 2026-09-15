@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   BookOpen, CreditCard, Newspaper, FileText, Users, UserCheck,
   BookMarked, LogOut, Menu, X, Feather, ChevronRight,
-  PanelLeftClose, PanelLeft, Receipt
+  PanelLeftClose, PanelLeft, Receipt, ClipboardList, Briefcase
 } from "lucide-react";
 import { API_BASE } from "../config.js";
 
@@ -138,6 +138,18 @@ export default function AdminNavbar({ activeTab, onSelectTab, onLogoutSuccess })
       label: "Invoices",
       path: "/admin/invoices",
       icon: Receipt,
+    },
+    {
+      id: "pwu_responses",
+      label: "PWU Form Response",
+      path: "/admin/pwu-responses",
+      icon: ClipboardList,
+    },
+    {
+      id: "careers_responses",
+      label: "Careers Responses",
+      path: "/admin/careers",
+      icon: Briefcase,
     },
   ];
 

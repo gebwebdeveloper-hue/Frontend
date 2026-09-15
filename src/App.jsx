@@ -32,6 +32,9 @@ import AdminLibraryCardsPage from "./pages/AdminLibraryCardsPage.jsx";
 import AdminClubTransactionsPage from "./pages/AdminClubTransactionsPage.jsx";
 import AdminInvoicePage from "./pages/AdminInvoicePage.jsx";
 import AdminCrmPage from "./pages/AdminCrmPage.jsx";
+import AdminPwuResponsesPage from "./pages/AdminPwuResponsesPage.jsx";
+import CareersPage from "./pages/CareersPage.jsx";
+import AdminCareerResponsesPage from "./pages/AdminCareerResponsesPage.jsx";
 import BookRentPage from "./pages/BookRentPage.jsx";
 import CafeLayout from "./cafe/CafeLayout.jsx";
 import CafeHomePage from "./cafe/pages/CafeHomePage.jsx";
@@ -110,6 +113,13 @@ export default function App() {
           <Route path="/admin/invoices" element={<AdminInvoicePage />} />
           <Route path="/admin/invoice" element={<Navigate to="/admin/invoices" replace />} />
           <Route path="/admin/crm" element={<AdminCrmPage />} />
+          <Route path="/admin/pwu-responses" element={<AdminPwuResponsesPage />} />
+          <Route path="/admin/pwu" element={<Navigate to="/admin/pwu-responses" replace />} />
+          <Route path="/admin/careers" element={<AdminCareerResponsesPage />} />
+          <Route path="/admin/career-responses" element={<Navigate to="/admin/careers" replace />} />
+          <Route path="/admin/career" element={<Navigate to="/admin/careers" replace />} />
+          <Route path="/careers" element={<CareersPage />} />
+          <Route path="/career" element={<Navigate to="/careers" replace />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/news/:slug" element={<NewsPage />} />
           {/* <Route path="/blogs" element={<NewsPage defaultTab="blogs" />} /> */}

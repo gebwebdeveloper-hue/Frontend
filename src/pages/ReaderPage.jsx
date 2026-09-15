@@ -217,6 +217,37 @@ const processSteps = [
 
 const advantages = ["Transparent publishing process", "Print and digital support", "Author-first guidance", "Local literary community", "Marketing-ready launch material", "Professional book presentation"];
 
+export const basicPlanFeatures = [
+  "Paperback / Hardcover (Depand on budget)",
+  "Amazon Listing",
+  "Flipkart Listing",
+  "Messho Listing",
+  "Website Listing",
+  "E-Book",
+  "Kindle Listing",
+  "Playbook Listing",
+  "Website Ebook listing",
+  "ISBN Registration",
+  "Book Formatting",
+  "Book Editing",
+  "Basic Book Cover design",
+  "2 Promotional mockup",
+  "Author Certificate",
+  "10 Copies should be printed (2 free author copy)",
+];
+
+export const addonServicesList = [
+  "Proof Reading",
+  "Book Typing",
+  "Professional Book Cover design",
+  "Book Trailer / Promotional Video",
+  "Author Website",
+  "Press Release",
+  "Book Review Campaign",
+  "Audiobook Publishing",
+  "AD runs",
+];
+
 const initialForm = {
   name: "",
   phone: "",
@@ -246,7 +277,7 @@ function Input({ label, className = "", ...props }) {
   return (
     <label className={`block text-sm font-bold text-white/70 ${className}`}>
       {label}
-      <input {...props} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
+      <input {...props} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-cyan-400/40 focus:bg-white/10" />
     </label>
   );
 }
@@ -273,6 +304,109 @@ export default function ReaderPage() {
   const [message, setMessage] = useState({ type: "", text: "" });
   const [currentUser, setCurrentUser] = useState(null);
 
+  // PWU (Publish With Us) states
+  const [showBasicDetails, setShowBasicDetails] = useState(false);
+  const [pwuForm, setPwuForm] = useState({
+    authorName: "",
+    authorNumber: "",
+    authorEmail: "",
+    authorAddress: "",
+    bookName: "",
+    bookLanguage: "Bengali",
+    bookPageCount: "",
+    copiesNeeded: "",
+    notes: "",
+  });
+  const [pwuSelectedAddons, setPwuSelectedAddons] = useState([]);
+  const [pwuSubmitting, setPwuSubmitting] = useState(false);
+  const [pwuMessage, setPwuMessage] = useState({ type: "", text: "" });
+
+  const togglePwuAddon = (addon) => {
+    setPwuSelectedAddons((prev) =>
+      prev.includes(addon) ? prev.filter((a) => a !== addon) : [...prev, addon]
+    );
+  };
+
+  const handlePwuSubmit = async (e) => {
+    e.preventDefault();
+    setPwuMessage({ type: "", text: "" });
+
+    if (!pwuForm.authorName.trim()) {
+      setPwuMessage({ type: "error", text: "Please enter Author Name." });
+      return;
+    }
+    if (!pwuForm.authorNumber.trim() || pwuForm.authorNumber.replace(/\D/g, "").length < 10) {
+      setPwuMessage({ type: "error", text: "Please enter a valid 10-digit Author Number." });
+      return;
+    }
+    if (!pwuForm.authorEmail.trim()) {
+      setPwuMessage({ type: "error", text: "Please enter Author Mail ID." });
+      return;
+    }
+    if (!pwuForm.authorAddress.trim()) {
+      setPwuMessage({ type: "error", text: "Please enter Author Address." });
+      return;
+    }
+    if (!pwuForm.bookName.trim()) {
+      setPwuMessage({ type: "error", text: "Please enter Book Name." });
+      return;
+    }
+    if (!pwuForm.bookLanguage.trim()) {
+      setPwuMessage({ type: "error", text: "Please enter Book Language." });
+      return;
+    }
+    const pagesInt = parseInt(pwuForm.bookPageCount, 10);
+    if (!pwuForm.bookPageCount || isNaN(pagesInt) || pagesInt <= 0) {
+      setPwuMessage({ type: "error", text: "Please enter a valid positive integer for Book Page Count (A5)." });
+      return;
+    }
+    const copiesInt = parseInt(pwuForm.copiesNeeded, 10);
+    if (!pwuForm.copiesNeeded || isNaN(copiesInt) || copiesInt <= 0) {
+      setPwuMessage({ type: "error", text: "Please enter a valid positive integer for book copies to be printed." });
+      return;
+    }
+
+    setPwuSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE}/pwu/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          ...pwuForm,
+          selectedAddons: pwuSelectedAddons,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setPwuMessage({
+          type: "success",
+          text: data.message || "Thank you! Your details have been submitted. Our team will contact you shortly with the quotation.",
+        });
+        setPwuForm((prev) => ({
+          ...prev,
+          bookName: "",
+          bookPageCount: "",
+          copiesNeeded: "",
+          notes: "",
+        }));
+        setPwuSelectedAddons([]);
+      } else {
+        setPwuMessage({
+          type: "error",
+          text: data.message || "Failed to submit quotation details. Please try again.",
+        });
+      }
+    } catch {
+      setPwuMessage({
+        type: "error",
+        text: "Could not connect to server. Please check your network connection.",
+      });
+    } finally {
+      setPwuSubmitting(false);
+    }
+  };
+
   const isClubMember = !!(currentUser?.memberId && String(currentUser.memberId).startsWith("LTCLUB-"));
 
   useEffect(() => {
@@ -286,6 +420,12 @@ export default function ReaderPage() {
           name: current.name || data.user.name || "",
           phone: current.phone || data.user.phone || "",
           email: current.email || data.user.email || "",
+        }));
+        setPwuForm((current) => ({
+          ...current,
+          authorName: current.authorName || data.user.name || "",
+          authorNumber: current.authorNumber || data.user.phone || "",
+          authorEmail: current.authorEmail || data.user.email || "",
         }));
       })
       .catch(() => {});
@@ -598,218 +738,343 @@ export default function ReaderPage() {
               {/* Header Banner */}
               <div className="text-center">
                 <span className="inline-block rounded-full border border-cyan-400/30 bg-cyan-400/10 px-5 py-2 text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">
-                  Book Publishing Plans – 2026 · Professional · Transparent · Author-Centric
+                  Self Publishing · Transparent Quotations · Author Centric
                 </span>
                 <h2 data-reveal className="mt-4 text-4xl font-black text-white md:text-5xl">
                   Self Publishing at Lekhok Tripura
                 </h2>
                 <p data-reveal className="mx-auto mt-4 max-w-2xl text-white/60">
-                  Simple, transparent publishing plans with no hidden fees. Choose the package that fits your vision.
+                  Review what we provide in our publishing packages and share your book details below to receive a custom tailored quotation.
                 </p>
               </div>
 
-              {/* PLAN CARDS - SINGLE ROW */}
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-                {publishingPlans.map((plan, idx) => (
-                  <motion.div
-                    key={plan.id}
-                    data-reveal
-                    whileHover={{ y: -6, scale: 1.02 }}
-                    className={`relative flex flex-col rounded-3xl border ${plan.border} bg-gradient-to-b ${plan.color} p-6 backdrop-blur-xl shadow-card`}
-                  >
-                    {/* Badge */}
-                    <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-xl whitespace-nowrap">
-                      {plan.badge}
-                    </span>
-
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${plan.iconBg} mb-4`}>
-                      <plan.Icon className={`h-5 w-5 ${plan.iconColor}`} />
+              {/* CARD: WHAT WE PROVIDE IN BASIC */}
+              <div data-reveal className="rounded-3xl border border-emerald-400/30 bg-gradient-to-b from-emerald-950/30 via-zinc-950 to-zinc-950 p-6 md:p-8 backdrop-blur-xl shadow-card">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-6">
+                  <div className="flex items-start gap-4">
+                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-emerald-400/40 bg-emerald-400/10 text-emerald-300">
+                      <BookOpen size={24} />
                     </div>
-                    <h3 className="text-lg font-black text-white leading-tight">{plan.name}</h3>
-                    {(() => {
-                      const cardPricing = calculateTotalPricing(plan.name, [], 1, isClubMember);
-                      return (
-                        <div className="mt-1">
-                          {isClubMember ? (
-                            <div className="flex items-baseline gap-1.5 flex-wrap">
-                              <span className="text-lg font-bold text-white/40 line-through">{plan.price}</span>
-                              <span className="text-2xl font-black text-emerald-300">₹{cardPricing.basePrice.toLocaleString("en-IN")}</span>
-                              <span className="rounded-md bg-emerald-400/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-emerald-300 border border-emerald-400/30">10% Off</span>
-                              {plan.pages && (
-                                <span className="text-xs font-semibold text-white/70">({plan.pages})</span>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="flex items-baseline gap-2 flex-wrap">
-                              <p className="text-2xl font-black text-white">{plan.price}</p>
-                              {plan.pages && (
-                                <span className="text-xs font-semibold text-white/70">({plan.pages})</span>
-                              )}
-                            </div>
-                          )}
+                    <div>
+                      <span className="rounded-full border border-emerald-400/30 bg-emerald-400/15 px-3 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-300">
+                        PUBLISHING PACKAGE
+                      </span>
+                      <h3 className="mt-1.5 text-2xl md:text-3xl font-black text-white">
+                        What we provide in basic
+                      </h3>
+                      <p className="mt-1 text-xs md:text-sm text-white/60">
+                        A complete professional foundation covering formatting, design, multi-channel distribution, ISBN registration, and printed author copies.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowBasicDetails((prev) => !prev)}
+                    className="self-start md:self-center inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/15 px-6 py-3 text-xs font-black uppercase tracking-wider text-emerald-200 transition hover:scale-105 hover:bg-emerald-400/25 hover:border-emerald-400/70 shadow-lg shadow-emerald-400/10 cursor-pointer shrink-0"
+                  >
+                    <span>{showBasicDetails ? "Hide Details" : "Click to know more"}</span>
+                    <PlusCircle size={16} className={`transition-transform duration-300 ${showBasicDetails ? "rotate-45" : ""}`} />
+                  </button>
+                </div>
+
+                {/* EXPANDABLE LIST: BASIC PLAN & ADD ON */}
+                <AnimatePresence>
+                  {showBasicDetails && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="overflow-hidden pt-6 space-y-8"
+                    >
+                      {/* Basic Plan Section */}
+                      <div className="rounded-2xl border border-emerald-400/20 bg-emerald-950/20 p-5 md:p-6">
+                        <div className="flex items-center gap-2 mb-4 text-emerald-300 font-black text-base md:text-lg">
+                          <CheckCircle2 size={20} className="text-emerald-400" />
+                          <h4>Basic Plan Includes:</h4>
                         </div>
-                      );
-                    })()}
-                    <p className="mt-2 text-xs text-white/60 leading-relaxed flex-1">{plan.description}</p>
+                        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {basicPlanFeatures.map((item, idx) => (
+                            <li
+                              key={idx}
+                              className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-xs md:text-sm text-white/85"
+                            >
+                              <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                              <span className="leading-snug">{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
 
-                    {plan.base && (
-                      <p className="mt-4 text-[10px] font-black uppercase tracking-wider text-cyan-300">{plan.base}</p>
+                      {/* Add On Section */}
+                      <div className="rounded-2xl border border-cyan-400/20 bg-cyan-950/20 p-5 md:p-6">
+                        <div className="flex items-center gap-2 mb-4 text-cyan-300 font-black text-base md:text-lg">
+                          <Sparkles size={20} className="text-cyan-400" />
+                          <h4>Next ADD ON -</h4>
+                        </div>
+                        <p className="text-xs text-white/60 mb-4">
+                          Enhance your book release with optional specialized production, marketing, and promotional boosters:
+                        </p>
+                        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {addonServicesList.map((item, idx) => (
+                            <li
+                              key={idx}
+                              className="flex items-center gap-2.5 rounded-xl border border-cyan-400/20 bg-cyan-400/5 p-3 text-xs md:text-sm text-cyan-100 font-medium"
+                            >
+                              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-400/20 text-cyan-300 text-[11px] font-black">
+                                +
+                              </span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* QUOTATION FORM CARD (Hidden unless "Click to know more" is clicked) */}
+              <AnimatePresence>
+                {showBasicDetails && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 24 }}
+                    transition={{ duration: 0.4 }}
+                    className="rounded-3xl border border-white/15 bg-white/[0.04] p-6 md:p-10 backdrop-blur-xl shadow-card space-y-6"
+                  >
+                <div className="border-b border-white/10 pb-5">
+                  <span className="inline-block rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-1 text-[10px] font-black uppercase tracking-widest text-cyan-300">
+                    REQUEST A QUOTE
+                  </span>
+                  <h3 className="mt-2 text-2xl md:text-3xl font-black text-white">
+                    Share these details for quotation .
+                  </h3>
+                  <p className="mt-1 text-xs md:text-sm text-white/60">
+                    Please submit your manuscript information below. Our publishing editorial team will review your specifications and send you an official custom quotation.
+                  </p>
+                </div>
+
+                {pwuMessage.text && (
+                  <div
+                    className={`rounded-2xl p-4 text-xs md:text-sm font-semibold flex items-start gap-3 border ${
+                      pwuMessage.type === "success"
+                        ? "border-emerald-400/40 bg-emerald-950/60 text-emerald-200"
+                        : "border-red-400/40 bg-red-950/60 text-red-200"
+                    }`}
+                  >
+                    {pwuMessage.type === "success" ? (
+                      <CheckCircle2 size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
                     )}
+                    <span className="leading-relaxed">{pwuMessage.text}</span>
+                  </div>
+                )}
 
-                    <ul className="mt-3 space-y-1.5 flex-1">
-                      {plan.features.map((f) => {
-                        const isHighlight = typeof f === "object" && f.highlight;
-                        const label = typeof f === "object" ? f.label : f;
-                        return isHighlight ? (
-                          <li key={label} className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/50 bg-amber-400/10 px-2.5 py-1 text-xs font-black text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.15)]">
-                              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-amber-400" />
-                              {label}
-                              <span className="rounded-full bg-amber-400/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-300">Included</span>
-                            </span>
-                          </li>
-                        ) : (
-                          <li key={label} className="flex items-start gap-2 text-xs text-white/75">
-                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400 mt-0.5" />
-                            <span>{label}</span>
-                          </li>
+                <form onSubmit={handlePwuSubmit} className="space-y-6">
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-white/70 mb-2">
+                        AUTHOR NAME <span className="text-rose-400">*</span> :
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        placeholder="Enter Author Full Name"
+                        value={pwuForm.authorName}
+                        onChange={(e) => setPwuForm({ ...pwuForm, authorName: e.target.value })}
+                        className="w-full rounded-2xl border border-white/15 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-cyan-400 focus:bg-black/60 transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-white/70 mb-2">
+                        AUTHOR NUMBER <span className="text-rose-400">*</span> :
+                      </label>
+                      <input
+                        required
+                        type="tel"
+                        maxLength={10}
+                        placeholder="10-digit mobile number"
+                        value={pwuForm.authorNumber}
+                        onChange={(e) =>
+                          setPwuForm({ ...pwuForm, authorNumber: e.target.value.replace(/\D/g, "").slice(0, 10) })
+                        }
+                        className="w-full rounded-2xl border border-white/15 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-cyan-400 focus:bg-black/60 transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-white/70 mb-2">
+                        AUTHOR MAIL ID <span className="text-rose-400">*</span> :
+                      </label>
+                      <input
+                        required
+                        type="email"
+                        placeholder="e.g. author@example.com"
+                        value={pwuForm.authorEmail}
+                        onChange={(e) => setPwuForm({ ...pwuForm, authorEmail: e.target.value })}
+                        className="w-full rounded-2xl border border-white/15 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-cyan-400 focus:bg-black/60 transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-white/70 mb-2">
+                        BOOK LANGUAGE <span className="text-rose-400">*</span> :
+                      </label>
+                      <select
+                        value={pwuForm.bookLanguage}
+                        onChange={(e) => setPwuForm({ ...pwuForm, bookLanguage: e.target.value })}
+                        className="w-full rounded-2xl border border-white/15 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-cyan-400 focus:bg-black/60 transition cursor-pointer"
+                      >
+                        <option value="Bengali" className="bg-zinc-900 text-white">Bengali (বাংলা)</option>
+                        <option value="English" className="bg-zinc-900 text-white">English</option>
+                        <option value="Kokborok" className="bg-zinc-900 text-white">Kokborok</option>
+                        <option value="Hindi" className="bg-zinc-900 text-white">Hindi (हिंदी)</option>
+                        <option value="Other" className="bg-zinc-900 text-white">Other</option>
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-black uppercase tracking-wider text-white/70 mb-2">
+                        AUTHOR ADDRESS <span className="text-rose-400">*</span> :
+                      </label>
+                      <textarea
+                        required
+                        rows={2}
+                        placeholder="Enter full postal address (Village/City, Post Office, Police Station, District, State, PIN Code)"
+                        value={pwuForm.authorAddress}
+                        onChange={(e) => setPwuForm({ ...pwuForm, authorAddress: e.target.value })}
+                        className="w-full rounded-2xl border border-white/15 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-cyan-400 focus:bg-black/60 transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-white/70 mb-2">
+                        BOOK NAME <span className="text-rose-400">*</span> :
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        placeholder="Enter title / working title of book"
+                        value={pwuForm.bookName}
+                        onChange={(e) => setPwuForm({ ...pwuForm, bookName: e.target.value })}
+                        className="w-full rounded-2xl border border-white/15 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-cyan-400 focus:bg-black/60 transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-white/70 mb-2">
+                        BOOK PAGE COUNT (A5) <span className="text-rose-400">*</span> :
+                      </label>
+                      <input
+                        required
+                        type="number"
+                        min="1"
+                        step="1"
+                        placeholder="e.g. 120"
+                        value={pwuForm.bookPageCount}
+                        onChange={(e) => setPwuForm({ ...pwuForm, bookPageCount: e.target.value.replace(/\D/g, "") })}
+                        onKeyDown={(e) => {
+                          if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                        }}
+                        className="w-full rounded-2xl border border-white/15 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-cyan-400 focus:bg-black/60 transition"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-black uppercase tracking-wider text-white/70 mb-2">
+                        NEED BOOK COPIES TO BE PRINTED <span className="text-rose-400">*</span> :
+                      </label>
+                      <input
+                        required
+                        type="number"
+                        min="1"
+                        step="1"
+                        placeholder="e.g. 50"
+                        value={pwuForm.copiesNeeded}
+                        onChange={(e) => setPwuForm({ ...pwuForm, copiesNeeded: e.target.value.replace(/\D/g, "") })}
+                        onKeyDown={(e) => {
+                          if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                        }}
+                        className="w-full rounded-2xl border border-white/15 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-cyan-400 focus:bg-black/60 transition"
+                      />
+                    </div>
+                  </div>
+
+                  {/* OPTIONAL ADD ONS CHECKBOXES */}
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-cyan-300">
+                      <Sparkles size={14} /> Optional Add-on Services:
+                    </div>
+                    <p className="text-xs text-white/50">
+                      Select any add-on services you would like us to price into your quotation:
+                    </p>
+                    <div className="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 pt-2">
+                      {addonServicesList.map((addon) => {
+                        const checked = pwuSelectedAddons.includes(addon);
+                        return (
+                          <button
+                            key={addon}
+                            type="button"
+                            onClick={() => togglePwuAddon(addon)}
+                            className={`flex items-center gap-2.5 rounded-xl border p-3 text-left transition cursor-pointer ${
+                              checked
+                                ? "border-cyan-400 bg-cyan-500/15 text-white"
+                                : "border-white/10 bg-white/[0.03] text-white/70 hover:bg-white/[0.06] hover:text-white"
+                            }`}
+                          >
+                            <div
+                              className={`grid h-4 w-4 shrink-0 place-items-center rounded border ${
+                                checked ? "border-cyan-400 bg-cyan-400 text-black" : "border-white/30"
+                              }`}
+                            >
+                              {checked && <CheckCircle2 size={12} className="text-black stroke-[3]" />}
+                            </div>
+                            <span className="text-xs font-semibold leading-tight">{addon}</span>
+                          </button>
                         );
                       })}
-                    </ul>
+                    </div>
+                  </div>
 
-                    <button
-                      type="button"
-                      onClick={() => openPlanModal(`${plan.name}`)}
-                      className="mt-6 w-full rounded-full bg-white py-3 text-xs font-black text-black transition hover:scale-105 hover:bg-cyan-50 shadow-md"
-                    >
-                      Choose {plan.name.split(" ")[0]} Plan
-                    </button>
+                  {/* OPTIONAL NOTES */}
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-white/70 mb-2">
+                      ANY SPECIAL NOTES / INSTRUCTIONS (OPTIONAL):
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Add any specific requirements (e.g. hardcover preference, timeline, etc.)..."
+                      value={pwuForm.notes}
+                      onChange={(e) => setPwuForm({ ...pwuForm, notes: e.target.value })}
+                      className="w-full rounded-2xl border border-white/15 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-cyan-400 focus:bg-black/60 transition"
+                    />
+                  </div>
+
+                  {/* SUBMIT BUTTON */}
+                  <button
+                    type="submit"
+                    disabled={pwuSubmitting}
+                    className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 py-4 text-xs md:text-sm font-black uppercase tracking-wider text-black shadow-xl shadow-emerald-400/20 hover:scale-[1.01] transition disabled:opacity-60 cursor-pointer"
+                  >
+                    {pwuSubmitting ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} /> Submitting Quotation Request...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={18} /> Submit Details For Quotation
+                      </>
+                    )}
+                  </button>
+                </form>
                   </motion.div>
-                ))}
-              </div>
-
-              {/* PLAN COMPARISON TABLE */}
-              <div data-reveal className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 md:p-10 backdrop-blur-xl shadow-card">
-                <div className="flex items-center gap-3 border-b border-white/10 pb-4 mb-6">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
-                    <BarChart3 className="h-5 w-5 text-white/70" />
-                  </div>
-                  <h3 className="text-xl md:text-2xl font-black text-white">Plan Comparison</h3>
-                </div>
-                <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/30">
-                  <table className="w-full text-sm">
-                    <thead className="bg-white/5 border-b border-white/10">
-                      <tr>
-                        <th className="p-4 text-left text-xs font-black uppercase tracking-wider text-white/60">Features</th>
-                        <th className="p-4 text-center text-xs font-black uppercase tracking-wider text-cyan-300">Basic</th>
-                        <th className="p-4 text-center text-xs font-black uppercase tracking-wider text-violet-300">Essential</th>
-                        <th className="p-4 text-center text-xs font-black uppercase tracking-wider text-amber-300">Popular</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {[
-                        { feature: "ISBN Allocation", basic: true, essential: true, popular: true },
-                        { feature: "Basic Book Cover Design", basic: true, essential: true, popular: true },
-                        { feature: "Paperback Edition", basic: true, essential: true, popular: true },
-                        { feature: "E-book Edition", basic: true, essential: true, popular: true },
-                        { feature: "Amazon Listing", basic: true, essential: true, popular: true },
-                        { feature: "Flipkart Listing", basic: true, essential: true, popular: true },
-                        { feature: "Meesho Listing", basic: true, essential: true, popular: true },
-                        { feature: "Lekhok Tripura Website Listing", basic: true, essential: true, popular: true },
-                        { feature: "Certificate of Publishing", basic: true, essential: true, popular: true },
-                        { feature: "Free Club Membership", basic: true, essential: true, popular: true },
-                        { feature: "Promotional Posters", basic: "2", essential: "4", popular: "4" },
-                        { feature: "Author Profile on Publisher Website", basic: false, essential: true, popular: true },
-                        { feature: "Dedicated Author Website", basic: false, essential: false, popular: true },
-                        { feature: "Meta Advertisement Budget", basic: "—", essential: "₹1,000", popular: "₹2,000" },
-                        { feature: "Complimentary Author Copies", basic: "2", essential: "6", popular: "10" },
-                        { feature: "Total Printed Copies", basic: "10", essential: "26", popular: "50" },
-                      ].map((row) => (
-                        <tr key={row.feature} className="hover:bg-white/[0.02]">
-                          <td className="p-4 text-white/75 font-medium">{row.feature}</td>
-                          {[row.basic, row.essential, row.popular].map((val, i) => (
-                            <td key={i} className="p-4 text-center">
-                              {val === true ? (
-                                <CheckCircle2 className="h-4 w-4 text-emerald-400 mx-auto" />
-                              ) : val === false ? (
-                                <span className="text-white/25 text-lg">—</span>
-                              ) : (
-                                <span className="text-xs font-black text-white/80">{val}</span>
-                              )}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* ADD-ON SERVICES */}
-              <div data-reveal className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 md:p-10 backdrop-blur-xl shadow-card">
-                <div className="flex items-center gap-3 border-b border-white/10 pb-4 mb-6">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-400/15">
-                    <PlusCircle className="h-5 w-5 text-violet-300" />
-                  </div>
-                  <h3 className="text-xl md:text-2xl font-black text-white">Add-on Services <span className="text-sm font-semibold text-white/50">(Optional)</span></h3>
-                </div>
-                <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/30">
-                  <table className="w-full text-left text-sm text-white/80">
-                    <thead className="bg-white/5 text-xs font-bold uppercase tracking-wider text-cyan-300 border-b border-white/10">
-                      <tr>
-                        <th className="p-4">Service</th>
-                        <th className="p-4 text-right whitespace-nowrap">Charges</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {ADDONS_MASTER_LIST.map((s) => (
-                        <tr key={s.name} className="hover:bg-white/[0.02]">
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/[0.06]">
-                                <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
-                              </div>
-                              <div>
-                                <span className="font-medium text-white/85 block">{s.name}</span>
-                                {s.desc && <span className="text-[11px] text-white/45 block mt-0.5">{s.desc}</span>}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-4 font-extrabold text-cyan-300 text-right whitespace-nowrap text-xs">{s.price}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* TERMS & CONDITIONS */}
-              <div data-reveal className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 md:p-10 backdrop-blur-xl shadow-card">
-                <div className="flex items-center gap-3 border-b border-white/10 pb-4 mb-6">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400/10">
-                    <ScrollText className="h-5 w-5 text-cyan-300" />
-                  </div>
-                  <h3 className="text-xl md:text-2xl font-black text-white">Terms & Conditions</h3>
-                </div>
-                <ol className="space-y-4 list-none">
-                  {[
-                    "The advertisement budget included in each publishing plan is part of the package. Authors may increase the advertising budget at any time by purchasing additional Meta (Facebook & Instagram) advertising services.",
-                    "Additional Meta advertising campaigns will be charged according to the author's preferred budget, along with a 30% Marketing Management Fee for campaign planning, audience targeting, optimization, monitoring, and performance reporting.",
-                    "Complimentary author copies are included only as specified under each publishing plan. Additional printed copies may be ordered at the prevailing printing charges.",
-                    "Prices for optional add-on services may vary depending on the complexity and specific requirements of the project.",
-                    "Royalty & Sales: For all Paperback and E-book sales through Amazon, Flipkart, Meesho, the Lekhok Tripura Publishers website, and other distribution platforms, the author will receive 100% of the net royalty/profit after deduction of all applicable platform fees, payment gateway charges, printing costs (where applicable), taxes (including GST/TDS, if applicable), shipping charges (where applicable), and any mandatory third-party service fees.",
-                    "Royalties are calculated based on the actual amount received by the publisher from the respective sales platform after all deductions made by the platform or service provider.",
-                    "The publisher reserves the right to modify platform listings, distribution channels, or promotional strategies whenever necessary to improve the book's reach and availability.",
-                    "Submission of a manuscript does not guarantee publication. All manuscripts are subject to editorial and quality review before acceptance.",
-                    "By enrolling in any publishing plan, the author acknowledges that they have read, understood, and agreed to all the terms and conditions of Lekhok Tripura Publishers.",
-                  ].map((term, i) => (
-                    <li key={i} className="flex gap-4">
-                      <span className="shrink-0 flex h-6 w-6 items-center justify-center rounded-full bg-cyan-400/10 text-cyan-300 text-xs font-black">{i + 1}</span>
-                      <p className="text-sm text-white/70 leading-relaxed">{term}</p>
-                    </li>
-                  ))}
-                </ol>
-              </div>
+                )}
+              </AnimatePresence>
 
               {/* WHY PUBLISH WITH US */}
               <div data-reveal className="rounded-3xl border border-cyan-400/30 bg-gradient-to-r from-cyan-950/40 via-cyan-900/20 to-zinc-950 p-8 md:p-10 text-left shadow-card backdrop-blur-xl">

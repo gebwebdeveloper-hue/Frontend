@@ -1,0 +1,699 @@
+import { useState, useRef } from "react";
+import { motion } from "framer-motion";
+import {
+  Briefcase,
+  TrendingUp,
+  Megaphone,
+  Palette,
+  FileEdit,
+  Calculator,
+  Layers,
+  MapPin,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  ArrowRight,
+  Send,
+  Sparkles,
+  Phone,
+  Mail,
+  Home,
+  User,
+  ExternalLink,
+  ChevronDown
+} from "lucide-react";
+import PageTransition from "../components/PageTransition.jsx";
+import FooterSection from "../sections/FooterSection.jsx";
+import { API_BASE } from "../config.js";
+
+const openRoles = [
+  {
+    id: "sales",
+    title: "Sales",
+    badge: "Growth & Partnerships",
+    icon: TrendingUp,
+    iconColor: "text-amber-400",
+    iconBg: "bg-amber-400/10 border-amber-400/20",
+    gradient: "from-amber-500/10 via-amber-500/5 to-transparent",
+    border: "hover:border-amber-400/40",
+    location: "Tripura / Hybrid",
+    type: "Full-Time / Part-Time",
+    summary:
+      "Drive book distribution, school and library outreach, book fair networks, and strategic publishing sales across Northeast India and beyond.",
+    responsibilities: [
+      "Expand book distribution to bookstores, educational institutions, and libraries.",
+      "Engage with authors and publishers for publishing packages and custom orders.",
+      "Coordinate with logistics and inventory for timely book deliveries.",
+      "Achieve monthly outreach and revenue goals.",
+    ],
+  },
+  {
+    id: "marketing",
+    title: "Marketing",
+    badge: "Digital & Campaigns",
+    icon: Megaphone,
+    iconColor: "text-cyan-400",
+    iconBg: "bg-cyan-400/10 border-cyan-400/20",
+    gradient: "from-cyan-500/10 via-cyan-500/5 to-transparent",
+    border: "hover:border-cyan-400/40",
+    location: "Tripura / Remote",
+    type: "Full-Time / Remote",
+    summary:
+      "Spearhead creative promotional campaigns, author spotlight series, book launch trailers, and social media storytelling for our growing catalog.",
+    responsibilities: [
+      "Manage social media channels, book release campaigns, and press releases.",
+      "Run targeted ad campaigns across Meta, Amazon, and regional literary communities.",
+      "Collaborate with literary reviewers, influencers, and media houses.",
+      "Craft engaging newsletters, trailers, and promotional copy.",
+    ],
+  },
+  {
+    id: "cover-artist",
+    title: "Cover artist",
+    badge: "Visual Art & Illustration",
+    icon: Palette,
+    iconColor: "text-fuchsia-400",
+    iconBg: "bg-fuchsia-400/10 border-fuchsia-400/20",
+    gradient: "from-fuchsia-500/10 via-fuchsia-500/5 to-transparent",
+    border: "hover:border-fuchsia-400/40",
+    location: "Remote / Hybrid",
+    type: "Creative / Project-Based",
+    summary:
+      "Design visually stunning, emotionally resonant book covers across fiction, poetry, historical treatises, and regional regional literature.",
+    responsibilities: [
+      "Design front, spine, and back covers optimized for print and digital listings.",
+      "Create original artwork, digital paintings, or typography-led cover concepts.",
+      "Prepare CMYK print-ready files adhering to Amazon KDP, Ingram, and local press standards.",
+      "Produce 3D promotional mockups for author marketing.",
+    ],
+  },
+  {
+    id: "book-editor",
+    title: "Book editor",
+    badge: "Editorial & Content",
+    icon: FileEdit,
+    iconColor: "text-emerald-400",
+    iconBg: "bg-emerald-400/10 border-emerald-400/20",
+    gradient: "from-emerald-500/10 via-emerald-500/5 to-transparent",
+    border: "hover:border-emerald-400/40",
+    location: "Tripura / Remote",
+    type: "Full-Time / Contract",
+    summary:
+      "Review manuscripts in Bengali, English, Kokborok, or Hindi. Shape narrative coherence, grammar, pacing, and overall literary finesse.",
+    responsibilities: [
+      "Perform developmental editing, line editing, and rigorous proofreading.",
+      "Provide constructive, respectful feedback to seasoned and debut authors.",
+      "Ensure cultural sensitivity, linguistic accuracy, and typographical perfection.",
+      "Oversee book blurb drafting and preliminary front/back matter.",
+    ],
+  },
+  {
+    id: "accountant",
+    title: "Accountant",
+    badge: "Finance & Compliance",
+    icon: Calculator,
+    iconColor: "text-violet-400",
+    iconBg: "bg-violet-400/10 border-violet-400/20",
+    gradient: "from-violet-500/10 via-violet-500/5 to-transparent",
+    border: "hover:border-violet-400/40",
+    location: "Agartala, Tripura",
+    type: "Full-Time",
+    summary:
+      "Manage publishing ledgers, author royalty computations, billing, tax compliance (GST & TDS), and financial records of publishing operations.",
+    responsibilities: [
+      "Maintain day-to-day accounts, payment vouchers, and vendor balances.",
+      "Calculate quarterly author royalties and issue royalty statements.",
+      "Process invoices, GST filings, and reconcile bank / gateway statements.",
+      "Assist management with budgeting, printing cost sheets, and audit reports.",
+    ],
+  },
+  {
+    id: "designer",
+    title: "Designer role",
+    badge: "Layout & Typesetting",
+    icon: Layers,
+    iconColor: "text-rose-400",
+    iconBg: "bg-rose-400/10 border-rose-400/20",
+    gradient: "from-rose-500/10 via-rose-500/5 to-transparent",
+    border: "hover:border-rose-400/40",
+    location: "Tripura / Remote",
+    type: "Full-Time / Contract",
+    summary:
+      "Format book interiors (A5, Royal, Crown sizes), design elegant typography grids, chapter headers, bookmarks, certificates, and marketing banners.",
+    responsibilities: [
+      "Typeset complex multilingual manuscripts (Bengali, English, Hindi).",
+      "Format interior pages conforming to international print and ePUB standards.",
+      "Design banners, posters, brochures, author certificates, and merchandise.",
+      "Ensure high quality control prior to sending to press.",
+    ],
+  },
+];
+
+const roleOptions = [
+  "Sales",
+  "Marketing",
+  "Cover artist",
+  "Book editor",
+  "Accountant",
+  "Designer role",
+];
+
+export default function CareersPage() {
+  const formRef = useRef(null);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    number: "",
+    email: "",
+    state: "",
+    hometown: "",
+    pin: "",
+    address: "",
+    role: "Sales",
+    experience: "",
+    portfolioUrl: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
+
+  const handleSelectRole = (roleTitle) => {
+    setFormData((prev) => ({ ...prev, role: roleTitle }));
+    if (formRef.current) {
+      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "number") {
+      const cleanVal = value.replace(/\D/g, "").slice(0, 10);
+      setFormData((prev) => ({ ...prev, number: cleanVal }));
+    } else if (name === "pin") {
+      const cleanVal = value.replace(/\D/g, "").slice(0, 6);
+      setFormData((prev) => ({ ...prev, pin: cleanVal }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitStatus({ type: "", message: "" });
+
+    // Validations
+    if (!formData.name.trim()) {
+      setSubmitStatus({ type: "error", message: "Please enter your Name." });
+      return;
+    }
+    if (formData.number.length < 10) {
+      setSubmitStatus({
+        type: "error",
+        message: "Please enter a valid 10-digit mobile number.",
+      });
+      return;
+    }
+    if (!formData.email.trim() || !/^\S+@\S+\.\S+$/.test(formData.email)) {
+      setSubmitStatus({
+        type: "error",
+        message: "Please enter a valid Mail ID.",
+      });
+      return;
+    }
+    if (!formData.state.trim()) {
+      setSubmitStatus({ type: "error", message: "Please enter your State." });
+      return;
+    }
+    if (!formData.hometown.trim()) {
+      setSubmitStatus({ type: "error", message: "Please enter your Hometown." });
+      return;
+    }
+    if (formData.pin.length !== 6) {
+      setSubmitStatus({
+        type: "error",
+        message: "Please enter a valid 6-digit Pin code.",
+      });
+      return;
+    }
+    if (!formData.address.trim()) {
+      setSubmitStatus({ type: "error", message: "Please enter your Address." });
+      return;
+    }
+    if (!formData.role) {
+      setSubmitStatus({
+        type: "error",
+        message: "Please select the role you wish to join as.",
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/careers/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setSubmitStatus({
+          type: "success",
+          message:
+            "Thank you! Your application has been submitted successfully. Our team will review your profile and contact you soon.",
+        });
+        setFormData({
+          name: "",
+          number: "",
+          email: "",
+          state: "",
+          hometown: "",
+          pin: "",
+          address: "",
+          role: "Sales",
+          experience: "",
+          portfolioUrl: "",
+        });
+      } else {
+        setSubmitStatus({
+          type: "error",
+          message: data.message || "Failed to submit application. Please try again.",
+        });
+      }
+    } catch (err) {
+      setSubmitStatus({
+        type: "error",
+        message: "Network error occurred. Please check your connection and try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <PageTransition>
+      <div className="min-h-screen bg-[#06080d] text-white pt-36 sm:pt-40 lg:pt-44 pb-20 selection:bg-cyan-500/30">
+        {/* Background glow effects */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-gradient-to-tr from-cyan-500/10 via-violet-500/10 to-transparent blur-[140px] rounded-full" />
+          <div className="absolute bottom-1/3 right-10 w-[500px] h-[400px] bg-emerald-500/10 blur-[130px] rounded-full" />
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Hero Header */}
+          <div className="text-center max-w-3xl mx-auto mb-16 sm:mb-20">
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs sm:text-sm font-medium mb-6 backdrop-blur-md"
+            >
+              <Sparkles size={15} className="text-cyan-400" />
+              <span>Join Team Lekhok Tripura</span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6"
+            >
+              Shape the Future of{" "}
+              <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
+                Publishing & Literature
+              </span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-base sm:text-lg text-slate-300 leading-relaxed"
+            >
+              We are expanding our vibrant family of storytellers, creative artists,
+              editorial perfectionists, and strategic operators. Explore our open
+              positions below and send us your application!
+            </motion.p>
+          </div>
+
+          {/* Open Roles Section */}
+          <div className="mb-20">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-4 border-b border-white/10">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+                  <Briefcase className="text-cyan-400" size={28} />
+                  Open Positions
+                </h2>
+                <p className="text-sm text-slate-400 mt-1">
+                  Click &ldquo;Apply Now&rdquo; on any role to pre-select it in the application form.
+                </p>
+              </div>
+              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 mt-3 sm:mt-0 self-start sm:self-auto">
+                {openRoles.length} Open Roles
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {openRoles.map((role, idx) => {
+                const IconComponent = role.icon;
+                return (
+                  <motion.div
+                    key={role.id}
+                    initial={{ opacity: 0, y: 25 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: idx * 0.08 }}
+                    className={`group relative rounded-2xl bg-gradient-to-b ${role.gradient} bg-[#0c121e]/80 border border-white/10 ${role.border} p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/10 hover:-translate-y-1 backdrop-blur-sm`}
+                  >
+                    <div>
+                      {/* Top Header */}
+                      <div className="flex items-start justify-between gap-3 mb-4">
+                        <div
+                          className={`w-12 h-12 rounded-xl flex items-center justify-center border ${role.iconBg}`}
+                        >
+                          <IconComponent className={role.iconColor} size={24} />
+                        </div>
+                        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/5 text-slate-300 border border-white/10">
+                          {role.badge}
+                        </span>
+                      </div>
+
+                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">
+                        {role.title}
+                      </h3>
+
+                      <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-400 mb-4">
+                        <span className="flex items-center gap-1">
+                          <MapPin size={13} className="text-slate-500" />
+                          {role.location}
+                        </span>
+                        <span>•</span>
+                        <span>{role.type}</span>
+                      </div>
+
+                      <p className="text-sm text-slate-300 leading-relaxed mb-5">
+                        {role.summary}
+                      </p>
+
+                      {/* Key highlights */}
+                      <div className="space-y-2 mb-6 pt-3 border-t border-white/5">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                          Key Focus Areas:
+                        </p>
+                        {role.responsibilities.slice(0, 3).map((resp, i) => (
+                          <div
+                            key={i}
+                            className="flex items-start gap-2 text-xs text-slate-300"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-1.5 flex-shrink-0" />
+                            <span>{resp}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectRole(role.title)}
+                      className="w-full mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-cyan-500 text-white hover:text-black font-semibold text-sm border border-white/10 hover:border-cyan-400 transition-all duration-200 group-hover:shadow-lg group-hover:shadow-cyan-500/20"
+                    >
+                      <span>Apply for {role.title}</span>
+                      <ArrowRight size={15} />
+                    </button>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Application Form Section */}
+          <div ref={formRef} className="max-w-3xl mx-auto pt-6 scroll-mt-28">
+            <div className="relative rounded-3xl bg-gradient-to-b from-[#0e1626] to-[#0a0f1a] border border-cyan-500/20 p-6 sm:p-10 shadow-2xl shadow-cyan-950/40 backdrop-blur-xl">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 mb-3">
+                  <Send size={22} />
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+                  Submit Your Application
+                </h2>
+                <p className="text-sm text-slate-300 mt-2 max-w-md mx-auto">
+                  Fill in your details below. Our team reviews every application
+                  and responds promptly.
+                </p>
+              </div>
+
+              {/* Status Alert */}
+              {submitStatus.message && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`mb-6 p-4 rounded-xl flex items-start gap-3 border ${
+                    submitStatus.type === "success"
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                      : "bg-rose-500/10 border-rose-500/30 text-rose-300"
+                  }`}
+                >
+                  {submitStatus.type === "success" ? (
+                    <CheckCircle2 size={20} className="flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
+                  )}
+                  <div className="text-sm leading-relaxed">
+                    {submitStatus.message}
+                  </div>
+                </motion.div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* 1. Name */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                    Name <span className="text-rose-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <User
+                      size={18}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="e.g. Debashis Roy"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
+                    />
+                  </div>
+                </div>
+
+                {/* 2 & 3. Number & Mail id */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                      Number <span className="text-rose-400">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone
+                        size={18}
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      />
+                      <input
+                        type="tel"
+                        name="number"
+                        value={formData.number}
+                        onChange={handleInputChange}
+                        required
+                        maxLength={10}
+                        placeholder="10-digit mobile number"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                      Mail id <span className="text-rose-400">*</span>
+                    </label>
+                    <div className="relative">
+                      <Mail
+                        size={18}
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                      />
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="yourname@gmail.com"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4, 5, 6. State, Hometown, Pin */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                      State <span className="text-rose-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="e.g. Tripura"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                      Hometown <span className="text-rose-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="hometown"
+                      value={formData.hometown}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="e.g. Agartala"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                      Pin <span className="text-rose-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="pin"
+                      value={formData.pin}
+                      onChange={handleInputChange}
+                      required
+                      maxLength={6}
+                      placeholder="6-digit PIN"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
+                    />
+                  </div>
+                </div>
+
+                {/* 7. Address */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                    Address <span className="text-rose-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <Home
+                      size={18}
+                      className="absolute left-3.5 top-3.5 text-slate-400"
+                    />
+                    <textarea
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      required
+                      rows={2}
+                      placeholder="Street, locality, landmark, house number..."
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* 8. I want to join as */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-cyan-300 mb-2">
+                    I want to join as <span className="text-rose-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="role"
+                      value={formData.role}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-cyan-500/40 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 text-white text-sm outline-none transition appearance-none cursor-pointer font-medium"
+                    >
+                      {roleOptions.map((opt) => (
+                        <option key={opt} value={opt} className="bg-slate-900 text-white">
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      size={18}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-cyan-400 pointer-events-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Optional Portfolio / Resume URL */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                    Portfolio / Resume Link / Behance / LinkedIn{" "}
+                    <span className="text-slate-500 lowercase font-normal">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <ExternalLink
+                      size={18}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      type="url"
+                      name="portfolioUrl"
+                      value={formData.portfolioUrl}
+                      onChange={handleInputChange}
+                      placeholder="https://behance.net/yourprofile or Google Drive link"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
+                    />
+                  </div>
+                </div>
+
+                {/* Optional Experience / Bio */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                    Brief Experience / Why you want to join{" "}
+                    <span className="text-slate-500 lowercase font-normal">(optional)</span>
+                  </label>
+                  <textarea
+                    name="experience"
+                    value={formData.experience}
+                    onChange={handleInputChange}
+                    rows={3}
+                    placeholder="Tell us about your previous experience, software skills, or projects..."
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition resize-none"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 hover:from-cyan-400 hover:to-teal-300 text-black font-bold text-base shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      <span>Submitting Application...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={18} />
+                      <span>Submit Application</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <FooterSection />
+    </PageTransition>
+  );
+}
