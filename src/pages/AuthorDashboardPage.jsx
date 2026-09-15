@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { API_BASE } from "../config.js";
 import {
   LayoutDashboard,
@@ -7,7 +8,8 @@ import {
   DollarSign,
   CreditCard,
   LogOut,
-  CheckCircle
+  CheckCircle,
+  ShieldCheck
 } from "lucide-react";
 
 import AuthorOverviewSection from "../author/components/AuthorOverviewSection.jsx";
@@ -23,6 +25,11 @@ export default function AuthorDashboardPage() {
   const [loginError, setLoginError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Admin & author switching states
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [allAuthors, setAllAuthors] = useState([]);
+  const [selectedAuthorEmail, setSelectedAuthorEmail] = useState("");
+
   // Sidebar Tab: "dashboard" | "sales" | "books" | "earnings" | "payments"
   const [authorSidebarTab, setAuthorSidebarTab] = useState("dashboard");
 
@@ -37,10 +44,11 @@ export default function AuthorDashboardPage() {
     }
   }, [token]);
 
-  const fetchAuthorData = async () => {
+  const fetchAuthorData = async (targetEmail) => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/publisher/author/my-stats`, {
+      const queryParam = targetEmail ? `?authorEmail=${encodeURIComponent(targetEmail)}` : "";
+      const res = await fetch(`${API_BASE}/publisher/author/my-stats${queryParam}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -48,12 +56,22 @@ export default function AuthorDashboardPage() {
         setAuthorData(data.author);
         setAuthorSales(data.sales || []);
         setSummaryMetrics(data.summaryMetrics || null);
+        if (data.isAdmin) {
+          setIsAdmin(true);
+          if (data.allAuthors) setAllAuthors(data.allAuthors);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch author stats:", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAuthorSwitch = (e) => {
+    const val = e.target.value;
+    setSelectedAuthorEmail(val);
+    fetchAuthorData(val);
   };
 
   const handleLogin = async (e) => {
@@ -280,23 +298,53 @@ export default function AuthorDashboardPage() {
 
       {/* MAIN CONTENT AREA */}
       <div className="min-h-screen flex flex-col">
-        <header className="border-b border-[#1c1c28] bg-[#09090d] px-6 py-3.5 flex justify-between items-center sticky top-0 z-30">
+        <header className="border-b border-[#1c1c28] bg-[#09090d] px-6 py-3.5 flex justify-between items-center sticky top-0 z-30 flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#14141d] border border-[#c8923a]/40 p-1 flex items-center justify-center md:hidden">
               <img src="/logo.png" alt="Lekhok Tripura Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h1 className="font-serif text-lg font-extrabold text-white tracking-wide">LEKHOK TRIPURA</h1>
-              <p className="text-xs text-gray-400">Author Portal</p>
+              <p className="text-xs text-gray-400">Author Royalties Portal</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-1.5 border border-[#2d2d3a] hover:bg-[#1a1a24] text-xs font-bold rounded-xl text-gray-300 transition flex items-center gap-2"
-          >
-            <LogOut className="w-3.5 h-3.5 text-gray-400" />
-            <span>Logout</span>
-          </button>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {isAdmin && allAuthors.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-gray-400 font-semibold hidden lg:inline">Author Profile:</span>
+                <select
+                  value={selectedAuthorEmail}
+                  onChange={handleAuthorSwitch}
+                  className="bg-[#14141e] border border-[#c8923a]/40 text-[#f3c06b] text-xs font-bold px-3 py-1.5 rounded-xl outline-none cursor-pointer"
+                >
+                  <option value="">My Profile (Admin Author)</option>
+                  {allAuthors.map((a) => (
+                    <option key={a.email} value={a.email}>
+                      {a.name} ({a.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {(isAdmin || localStorage.getItem("lekhok_publisher_role") === "publisher") && (
+              <Link
+                to="/publisher_dashboard"
+                className="px-3.5 py-1.5 bg-[#14141e] hover:bg-[#1e1e2c] border border-[#c8923a]/40 text-xs font-bold rounded-xl text-[#f3c06b] transition flex items-center gap-1.5 shadow"
+              >
+                <span>Publisher Portal →</span>
+              </Link>
+            )}
+
+            <button
+              onClick={handleLogout}
+              className="px-4 py-1.5 border border-[#2d2d3a] hover:bg-[#1a1a24] text-xs font-bold rounded-xl text-gray-300 transition flex items-center gap-2"
+            >
+              <LogOut className="w-3.5 h-3.5 text-gray-400" />
+              <span>Logout</span>
+            </button>
+          </div>
         </header>
 
         <main className="p-6 md:p-8 space-y-8 flex-1">

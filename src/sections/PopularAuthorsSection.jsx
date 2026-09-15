@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, BookOpen, ChevronRight, X } from "lucide-react";
+import { User, BookOpen, ChevronRight, X, ExternalLink } from "lucide-react";
 import BookCard from "../components/BookCard.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
+
 
 function AuthorCard({ author, isSelected, onViewBooks }) {
   const thumbUrl = author.thumbnail?.url
@@ -173,10 +175,25 @@ export default function PopularAuthorsSection() {
                     {selectedAuthor.name}
                   </span>
                 </span>
+                <Link
+                  to={`/author/${encodeURIComponent(selectedAuthor.name)}`}
+                  className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-[#f3c06b] hover:text-white transition ml-2 px-2 py-0.5 rounded-lg bg-[#c8923a]/10 border border-[#c8923a]/30"
+                >
+                  <span>View Author Page</span>
+                  <ExternalLink size={10} />
+                </Link>
               </div>
-              <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-semibold text-white/50">
-                {authorBooks.length} {authorBooks.length === 1 ? "title" : "titles"}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-semibold text-white/50">
+                  {authorBooks.length} {authorBooks.length === 1 ? "title" : "titles"}
+                </span>
+                <Link
+                  to={`/author/${encodeURIComponent(selectedAuthor.name)}`}
+                  className="sm:hidden inline-flex items-center gap-1 text-[11px] font-semibold text-[#f3c06b] hover:text-white transition px-2 py-1 rounded-lg bg-[#c8923a]/10 border border-[#c8923a]/30"
+                >
+                  <ExternalLink size={11} />
+                </Link>
+              </div>
             </div>
 
             {loadingBooks ? (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Star, Loader2, AlertCircle, CheckCircle2, Copy, Smartphone, Mail, KeyRound, ShieldCheck, Coins, X, ShoppingCart, Share2, Check } from "lucide-react";
+import { Star, Loader2, AlertCircle, CheckCircle2, Copy, Smartphone, Mail, KeyRound, ShieldCheck, Coins, X, ShoppingCart, Share2, Check, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE, SERVER_URL, SITE_URL } from "../config.js";
@@ -660,7 +660,11 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onAuthorClick?.(book.author);
+                if (onAuthorClick) {
+                  onAuthorClick(book.author);
+                } else if (book.author) {
+                  navigate(`/author/${encodeURIComponent(book.author)}`);
+                }
               }}
               className={`mt-1 max-w-full truncate text-left text-xs font-semibold transition ${
                 isAuthorActive
@@ -983,6 +987,36 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
                             </button>
                           )}
                         </div>
+
+                        {/* Online Store & Marketplace Preview Links */}
+                        {book.previewLinks && Array.isArray(book.previewLinks) && book.previewLinks.length > 0 && (
+                          <div className="mt-4 pt-3 border-t border-white/5 space-y-2">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 flex items-center justify-between">
+                              <span>Also Available On / Preview Links</span>
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {book.previewLinks.map((pl, pIdx) => (
+                                <a
+                                  key={pIdx}
+                                  href={pl.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-cyan-400/40 text-xs font-semibold text-white/90 hover:text-white transition group"
+                                >
+                                  <span className={`w-2 h-2 rounded-full shrink-0 ${
+                                    pl.platform === 'amazon' ? 'bg-[#ff9900]' :
+                                    pl.platform === 'kindle' ? 'bg-[#f0c14b]' :
+                                    pl.platform === 'flipkart' ? 'bg-[#2874f0]' :
+                                    pl.platform === 'google_play' ? 'bg-[#0086f8]' :
+                                    'bg-cyan-400'
+                                  }`}></span>
+                                  <span>{pl.title || pl.platform}</span>
+                                  <ExternalLink size={12} className="text-white/40 group-hover:text-cyan-300" />
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Cart Feedback Toast */}
                         {cartFeedback.text && (

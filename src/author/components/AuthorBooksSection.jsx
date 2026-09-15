@@ -47,8 +47,8 @@ export default function AuthorBooksSection({ books = [], primaryBook, handleRequ
                           className="w-9 h-12 object-cover rounded-md border border-[#2d2d3e] shadow-sm"
                         />
                       ) : (
-                        <div className="w-9 h-12 bg-[#1c1c28] border border-[#2d2d3e] rounded-md flex items-center justify-center text-[#f3c06b] font-serif text-xs font-bold">
-                          📖
+                        <div className="w-9 h-12 bg-[#1c1c28] border border-[#2d2d3e] rounded-md flex items-center justify-center text-[#f3c06b]">
+                          <BookOpen className="w-4 h-4 text-[#f3c06b]" />
                         </div>
                       )}
                       <div>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, BookOpen, BookMarked, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X, CheckCircle2, Truck, Box, Package, MapPin } from "lucide-react";
+import { Sparkles, BookOpen, BookMarked, KeyRound, ArrowRight, Upload, Trash2, ShieldCheck, LogOut, Loader2, AlertCircle, User, Pencil, PlusCircle, X, CheckCircle2, Truck, Box, Package, MapPin, Search, ExternalLink, Star, SlidersHorizontal, Check } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import PageTransition from "../components/PageTransition.jsx";
 import AdminNavbar from "../components/AdminNavbar.jsx";
@@ -126,9 +126,26 @@ export default function AdminBooksPage() {
   const [authorForm, setAuthorForm] = useState({ name: "", bio: "", featured: true, ourPublicationAuthor: false, order: 0 });
   const [authorThumbnail, setAuthorThumbnail] = useState(null);
   const [editingAuthor, setEditingAuthor] = useState(null);
+  const [authorSearchQuery, setAuthorSearchQuery] = useState("");
+  const [authorFilterTab, setAuthorFilterTab] = useState("all"); // 'all' | 'popular' | 'publication'
   const [authorFormError, setAuthorFormError] = useState("");
   const [authorFormSuccess, setAuthorFormSuccess] = useState("");
   const [submittingAuthor, setSubmittingAuthor] = useState(false);
+
+  // Filtered authors list based on search and active filter tab
+  const filteredAuthors = useMemo(() => {
+    return (authorsList || []).filter((a) => {
+      const q = authorSearchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        (a.name && a.name.toLowerCase().includes(q)) ||
+        (a.bio && a.bio.toLowerCase().includes(q));
+      if (!matchesSearch) return false;
+      if (authorFilterTab === "popular") return !!a.featured;
+      if (authorFilterTab === "publication") return !!a.ourPublicationAuthor;
+      return true;
+    });
+  }, [authorsList, authorSearchQuery, authorFilterTab]);
 
   // Book form state
   const [title, setTitle] = useState("");
@@ -686,6 +703,8 @@ export default function AdminBooksPage() {
   useEffect(() => {
     if (activeTab === "users") {
       fetchAdminUsers();
+    } else if (activeTab === "authors") {
+      fetchAuthors();
     }
   }, [activeTab]);
 
@@ -1909,213 +1928,494 @@ export default function AdminBooksPage() {
 
           {/* TAB 3: AUTHORS */}
           {activeTab === "authors" && (
-            <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-              {/* LEFT: Author Form */}
-              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
-                <div className="border-b border-white/10 pb-6 mb-8 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">
-                      {editingAuthor ? "Edit Author" : "Add Author"}
-                    </h2>
-                    <p className="mt-1 text-sm text-white/55">
-                      {editingAuthor ? `Editing: ${editingAuthor.name}` : "Create a new popular author profile."}
-                    </p>
-                  </div>
-                  {editingAuthor && (
-                    <button
-                      type="button"
-                      onClick={resetAuthorForm}
-                      className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/60 hover:text-white transition"
-                    >
-                      <X size={13} /> Cancel Edit
-                    </button>
-                  )}
+            <div className="space-y-6">
+              {/* Top Quick Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-white/40">Total Authors</p>
+                  <p className="mt-1 text-2xl font-black text-white">{authorsList.length}</p>
                 </div>
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-4 backdrop-blur-xl">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-amber-300/60">Popular / Featured</p>
+                  <p className="mt-1 text-2xl font-black text-amber-300">
+                    {authorsList.filter((a) => a.featured).length}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.04] p-4 backdrop-blur-xl">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-cyan-300/60">Publication Authors</p>
+                  <p className="mt-1 text-2xl font-black text-cyan-300">
+                    {authorsList.filter((a) => a.ourPublicationAuthor).length}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-white/40">Filtered Results</p>
+                  <p className="mt-1 text-2xl font-black text-white/80">{filteredAuthors.length}</p>
+                </div>
+              </div>
 
-                {authorFormError && (
-                  <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-300">
-                    <AlertCircle className="h-5 w-5 shrink-0" />
-                    <span>{authorFormError}</span>
-                  </div>
-                )}
-                {authorFormSuccess && (
-                  <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-300">
-                    {authorFormSuccess}
-                  </div>
-                )}
-
-                <form onSubmit={handleAuthorSubmit} className="space-y-5">
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Author Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={authorForm.name}
-                      onChange={(e) => handleAuthorFormChange("name", e.target.value)}
-                      placeholder="Rabindranath Tagore"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Short Bio</label>
-                    <textarea
-                      rows="3"
-                      value={authorForm.bio}
-                      onChange={(e) => handleAuthorFormChange("bio", e.target.value)}
-                      placeholder="A brief description about the author..."
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none resize-none"
-                    />
-                  </div>
-
-                  <div className="grid gap-5 md:grid-cols-3">
+              {/* Main Content Grid */}
+              <div className="grid gap-8 lg:grid-cols-[1.1fr_1.4fr] items-start">
+                {/* LEFT: Author Form */}
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-7 backdrop-blur-xl lg:sticky lg:top-24 shadow-2xl">
+                  <div className="border-b border-white/10 pb-5 mb-6 flex items-center justify-between">
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Display Order</label>
+                      <div className="flex items-center gap-2">
+                        {editingAuthor ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-300">
+                            <Pencil size={11} /> Editing Mode
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-cyan-300">
+                            <PlusCircle size={11} /> New Author
+                          </span>
+                        )}
+                      </div>
+                      <h2 className="mt-1 text-xl font-bold text-white">
+                        {editingAuthor ? `Edit "${editingAuthor.name}"` : "Add Author Profile"}
+                      </h2>
+                      <p className="text-xs text-white/50">
+                        {editingAuthor
+                          ? "Update author information, bio, badges, and photo."
+                          : "Create a dedicated author profile with storefront book listing."}
+                      </p>
+                    </div>
+                    {editingAuthor && (
+                      <button
+                        type="button"
+                        onClick={resetAuthorForm}
+                        className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/60 hover:text-white hover:bg-white/10 transition"
+                      >
+                        <X size={13} /> Cancel
+                      </button>
+                    )}
+                  </div>
+
+                  {authorFormError && (
+                    <div className="mb-5 flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+                      <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                      <span>{authorFormError}</span>
+                    </div>
+                  )}
+                  {authorFormSuccess && (
+                    <div className="mb-5 flex items-center gap-2.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+                      <CheckCircle2 className="h-5 w-5 shrink-0" />
+                      <span>{authorFormSuccess}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleAuthorSubmit} className="space-y-5">
+                    {/* Author Name */}
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/60 mb-2">
+                        Author Name *
+                      </label>
+                      <div className="relative">
+                        <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+                        <input
+                          type="text"
+                          required
+                          value={authorForm.name}
+                          onChange={(e) => handleAuthorFormChange("name", e.target.value)}
+                          placeholder="e.g. Rabindranath Tagore"
+                          className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-cyan-400 focus:bg-white/10 focus:outline-none transition"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Short Bio */}
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/60 mb-2">
+                        Short Bio / Description
+                      </label>
+                      <textarea
+                        rows="3"
+                        value={authorForm.bio}
+                        onChange={(e) => handleAuthorFormChange("bio", e.target.value)}
+                        placeholder="A brief introduction or summary about the author..."
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-cyan-400 focus:bg-white/10 focus:outline-none resize-none transition"
+                      />
+                    </div>
+
+                    {/* Feature & Category Badges Toggle Cards */}
+                    <div className="space-y-2.5">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">
+                        Author Visibility & Tags
+                      </label>
+                      <div className="grid gap-2.5 sm:grid-cols-2">
+                        {/* Popular / Featured */}
+                        <div
+                          onClick={() => handleAuthorFormChange("featured", !authorForm.featured)}
+                          className={`cursor-pointer rounded-2xl border p-3.5 transition flex items-start gap-3 select-none ${
+                            authorForm.featured
+                              ? "border-amber-500/40 bg-amber-500/10 text-amber-200"
+                              : "border-white/10 bg-white/[0.02] text-white/50 hover:border-white/20"
+                          }`}
+                        >
+                          <div className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border ${
+                            authorForm.featured ? "border-amber-400 bg-amber-400 text-black" : "border-white/30 bg-transparent"
+                          }`}>
+                            {authorForm.featured && <Check size={12} strokeWidth={3} />}
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                              <Star size={12} className={authorForm.featured ? "text-amber-400 fill-amber-400" : "text-white/40"} />
+                              Popular Author
+                            </p>
+                            <p className="text-[11px] text-white/40 mt-0.5 leading-tight">
+                              Highlight in Popular Authors section
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Publication Author */}
+                        <div
+                          onClick={() => handleAuthorFormChange("ourPublicationAuthor", !authorForm.ourPublicationAuthor)}
+                          className={`cursor-pointer rounded-2xl border p-3.5 transition flex items-start gap-3 select-none ${
+                            authorForm.ourPublicationAuthor
+                              ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-200"
+                              : "border-white/10 bg-white/[0.02] text-white/50 hover:border-white/20"
+                          }`}
+                        >
+                          <div className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border ${
+                            authorForm.ourPublicationAuthor ? "border-cyan-400 bg-cyan-400 text-black" : "border-white/30 bg-transparent"
+                          }`}>
+                            {authorForm.ourPublicationAuthor && <Check size={12} strokeWidth={3} />}
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                              <ShieldCheck size={12} className={authorForm.ourPublicationAuthor ? "text-cyan-400" : "text-white/40"} />
+                              Publication Author
+                            </p>
+                            <p className="text-[11px] text-white/40 mt-0.5 leading-tight">
+                              Show in Publication Authors list
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Display Order */}
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/60 mb-2">
+                        Display Order Priority
+                      </label>
                       <input
                         type="number"
                         min="0"
                         value={authorForm.order}
                         onChange={(e) => handleAuthorFormChange("order", e.target.value)}
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-cyan-400/40 focus:bg-white/10 focus:outline-none"
+                        placeholder="0"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-cyan-400 focus:bg-white/10 focus:outline-none transition"
                       />
+                      <p className="mt-1 text-[11px] text-white/35">Lower numbers (e.g. 0, 1, 2) appear first in listings.</p>
                     </div>
-                    <div className="flex items-center gap-3 pt-7">
-                      <input
-                        type="checkbox"
-                        id="author-featured"
-                        checked={authorForm.featured}
-                        onChange={(e) => handleAuthorFormChange("featured", e.target.checked)}
-                        className="h-4 w-4 accent-cyan-400"
-                      />
-                      <label htmlFor="author-featured" className="text-sm text-white/70">Show in Popular Authors</label>
-                    </div>
-                    <div className="flex items-center gap-3 pt-7">
-                      <input
-                        type="checkbox"
-                        id="author-ourPublicationAuthor"
-                        checked={authorForm.ourPublicationAuthor}
-                        onChange={(e) => handleAuthorFormChange("ourPublicationAuthor", e.target.checked)}
-                        className="h-4 w-4 accent-cyan-400"
-                      />
-                      <label htmlFor="author-ourPublicationAuthor" className="text-sm text-white/70">Show in Publication's Authors</label>
-                    </div>
-                  </div>
 
-                  {/* Thumbnail Upload */}
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/50 mb-2">Author Photo</label>
-                    <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-white/10 p-6 transition hover:border-cyan-400/30 hover:bg-white/[0.03]">
-                      {authorThumbnail ? (
+                    {/* Thumbnail Upload */}
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/60 mb-2">
+                        Author Profile Photo
+                      </label>
+                      <label className="group flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/10 bg-white/[0.02] p-5 transition hover:border-cyan-400/40 hover:bg-cyan-400/[0.02]">
+                        {authorThumbnail ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <img
+                              src={URL.createObjectURL(authorThumbnail)}
+                              alt="Preview"
+                              className="h-20 w-20 rounded-full object-cover border-2 border-cyan-400 ring-4 ring-cyan-400/20 shadow-lg"
+                            />
+                            <div className="text-center">
+                              <span className="text-xs font-medium text-cyan-300 block truncate max-w-[200px]">
+                                {authorThumbnail.name}
+                              </span>
+                              <span className="text-[10px] text-white/40 hover:underline">Click to change photo</span>
+                            </div>
+                          </div>
+                        ) : editingAuthor?.thumbnail?.url ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <img
+                              src={
+                                editingAuthor.thumbnail.url.startsWith("/")
+                                  ? `${API_BASE.replace("/api", "")}${editingAuthor.thumbnail.url}`
+                                  : editingAuthor.thumbnail.url
+                              }
+                              alt="Current"
+                              className="h-20 w-20 rounded-full object-cover border-2 border-white/20 ring-4 ring-white/5 shadow-lg"
+                            />
+                            <div className="text-center">
+                              <span className="text-xs text-white/60 block">Current Photo</span>
+                              <span className="text-[10px] text-cyan-300 font-medium group-hover:underline">Click to change photo</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center text-center">
+                            <div className="grid h-12 w-12 place-items-center rounded-full bg-white/5 border border-white/10 mb-2 group-hover:border-cyan-400/30 group-hover:bg-cyan-400/10 transition">
+                              <Upload size={20} className="text-white/40 group-hover:text-cyan-300 transition" />
+                            </div>
+                            <span className="text-xs font-medium text-white/80">Click to upload photo</span>
+                            <span className="text-[10px] text-white/40 mt-0.5">JPG, PNG, WebP up to 10MB</span>
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={(e) => setAuthorThumbnail(e.target.files[0] || null)}
+                        />
+                      </label>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={submittingAuthor}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-500 px-5 py-3.5 text-sm font-bold text-black shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {submittingAuthor ? (
                         <>
-                          <img
-                            src={URL.createObjectURL(authorThumbnail)}
-                            alt="Preview"
-                            className="h-24 w-24 rounded-full object-cover border-2 border-cyan-400/30"
-                          />
-                          <span className="text-xs text-cyan-300">{authorThumbnail.name}</span>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Saving Author...</span>
                         </>
-                      ) : editingAuthor?.thumbnail?.url ? (
+                      ) : editingAuthor ? (
                         <>
-                          <img
-                            src={editingAuthor.thumbnail.url.startsWith("/") ? `${API_BASE.replace("/api","")}${editingAuthor.thumbnail.url}` : editingAuthor.thumbnail.url}
-                            alt="Current"
-                            className="h-24 w-24 rounded-full object-cover border-2 border-white/20"
-                          />
-                          <span className="text-xs text-white/40">Click to change photo</span>
+                          <Check size={16} strokeWidth={2.5} />
+                          <span>Update Author Profile</span>
                         </>
                       ) : (
                         <>
-                          <Upload size={24} className="text-white/30" />
-                          <span className="text-xs text-white/40">Click to upload author photo (JPG, PNG, WebP)</span>
+                          <PlusCircle size={16} />
+                          <span>Create Author Profile</span>
                         </>
                       )}
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={(e) => setAuthorThumbnail(e.target.files[0] || null)}
-                      />
-                    </label>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={submittingAuthor}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-semibold text-black transition-all hover:scale-[1.02] disabled:opacity-50"
-                  >
-                    {submittingAuthor ? <Loader2 className="h-5 w-5 animate-spin" /> : editingAuthor ? "Update Author" : "Create Author"}
-                  </button>
-                </form>
-              </div>
-
-              {/* RIGHT: Authors List */}
-              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
-                <div className="border-b border-white/10 pb-6 mb-6">
-                  <h2 className="text-xl font-bold text-white">All Authors</h2>
-                  <p className="mt-1 text-sm text-white/55">{authorsList.length} author{authorsList.length !== 1 ? "s" : ""} on the platform.</p>
+                    </button>
+                  </form>
                 </div>
 
-                {loadingAuthors ? (
-                  <div className="flex justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
-                  </div>
-                ) : authorsList.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <User size={36} className="mb-3 text-white/20" />
-                    <p className="text-sm text-white/40">No authors added yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {authorsList.map((author) => {
-                      const thumb = author.thumbnail?.url
-                        ? author.thumbnail.url.startsWith("/")
-                          ? `${API_BASE.replace("/api","")}${author.thumbnail.url}`
-                          : author.thumbnail.url
-                        : null;
-                      return (
-                        <div
-                          key={author._id}
-                          className="flex items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4"
-                        >
-                          {/* Thumb */}
-                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-white/10">
-                            {thumb ? (
-                              <img src={thumb} alt={author.name} className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-white/5">
-                                <User size={18} className="text-white/30" />
-                              </div>
-                            )}
-                          </div>
-                          {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <p className="truncate text-sm font-semibold text-white">{author.name}</p>
-                            <p className="text-[10px] text-white/40">
-                              Order: {author.order ?? 0} &bull; {author.featured ? "Featured" : "Hidden"}
-                            </p>
-                          </div>
-                          {/* Actions */}
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleEditAuthor(author)}
-                              className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:border-cyan-400/30 hover:bg-cyan-400/10 hover:text-cyan-300"
-                            >
-                              <Pencil size={13} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteAuthor(author._id)}
-                              className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
+                {/* RIGHT: Authors Directory */}
+                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-7 backdrop-blur-xl shadow-2xl flex flex-col">
+                  {/* Directory Header */}
+                  <div className="border-b border-white/10 pb-5 mb-5 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-xl font-bold text-white">Authors Directory</h2>
+                          <span className="rounded-full bg-white/10 border border-white/10 px-2.5 py-0.5 text-xs font-semibold text-white/80">
+                            {authorsList.length}
+                          </span>
                         </div>
-                      );
-                    })}
+                        <p className="text-xs text-white/50 mt-0.5">
+                          Browse, search, and manage all public author profiles.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Search Bar */}
+                    <div className="relative">
+                      <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                      <input
+                        type="text"
+                        value={authorSearchQuery}
+                        onChange={(e) => setAuthorSearchQuery(e.target.value)}
+                        placeholder="Search author by name or bio..."
+                        className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-9 py-2.5 text-xs text-white placeholder:text-white/30 focus:border-cyan-400 focus:bg-white/10 focus:outline-none transition"
+                      />
+                      {authorSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setAuthorSearchQuery("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filter Tabs */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                      <button
+                        type="button"
+                        onClick={() => setAuthorFilterTab("all")}
+                        className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition shrink-0 ${
+                          authorFilterTab === "all"
+                            ? "bg-cyan-400 text-black font-bold"
+                            : "border border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        All ({authorsList.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAuthorFilterTab("popular")}
+                        className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition shrink-0 ${
+                          authorFilterTab === "popular"
+                            ? "bg-amber-400 text-black font-bold"
+                            : "border border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        <Star size={12} className={authorFilterTab === "popular" ? "fill-black" : ""} />
+                        Popular ({authorsList.filter((a) => a.featured).length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAuthorFilterTab("publication")}
+                        className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition shrink-0 ${
+                          authorFilterTab === "publication"
+                            ? "bg-cyan-400 text-black font-bold"
+                            : "border border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        <ShieldCheck size={12} />
+                        Publication ({authorsList.filter((a) => a.ourPublicationAuthor).length})
+                      </button>
+                    </div>
                   </div>
-                )}
+
+                  {/* Scrollable Author List */}
+                  {loadingAuthors ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-cyan-400 mb-3" />
+                      <p className="text-xs text-white/50">Loading authors catalog...</p>
+                    </div>
+                  ) : filteredAuthors.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/5 border border-white/10 mb-3">
+                        <User size={24} className="text-white/30" />
+                      </div>
+                      <p className="text-sm font-semibold text-white/80">No authors found</p>
+                      <p className="text-xs text-white/40 mt-1 max-w-xs">
+                        {authorSearchQuery || authorFilterTab !== "all"
+                          ? "Try changing your search terms or active filter."
+                          : "Start by creating your first author profile on the left."}
+                      </p>
+                      {(authorSearchQuery || authorFilterTab !== "all") && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAuthorSearchQuery("");
+                            setAuthorFilterTab("all");
+                          }}
+                          className="mt-3 text-xs text-cyan-300 hover:underline"
+                        >
+                          Clear filters
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      className="max-h-[660px] overflow-y-auto space-y-3 pr-1.5 custom-scrollbar overscroll-contain touch-pan-y"
+                      data-lenis-prevent="true"
+                    >
+                      {filteredAuthors.map((author) => {
+                        const thumb = author.thumbnail?.url
+                          ? author.thumbnail.url.startsWith("/")
+                            ? `${API_BASE.replace("/api", "")}${author.thumbnail.url}`
+                            : author.thumbnail.url
+                          : null;
+                        const isEditingThis = editingAuthor?._id === author._id;
+
+                        return (
+                          <div
+                            key={author._id}
+                            className={`group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border p-4 transition-all duration-200 ${
+                              isEditingThis
+                                ? "border-amber-400/50 bg-amber-400/[0.08] shadow-lg shadow-amber-500/10"
+                                : "border-white/8 bg-white/[0.025] hover:border-white/20 hover:bg-white/[0.05]"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3.5 min-w-0">
+                              {/* Avatar */}
+                              <div className="relative h-12 w-12 min-w-[48px] min-h-[48px] max-w-[48px] max-h-[48px] shrink-0 overflow-hidden rounded-full border border-white/15 bg-white/5 shadow-md flex items-center justify-center">
+                                {thumb ? (
+                                  <img
+                                    src={thumb}
+                                    alt={author.name}
+                                    className="h-full w-full object-cover rounded-full"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 text-sm font-bold text-white/70">
+                                    {author.name ? author.name.charAt(0).toUpperCase() : <User size={18} />}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Author Details */}
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="truncate text-sm font-bold text-white group-hover:text-cyan-300 transition">
+                                    {author.name}
+                                  </h3>
+                                  {isEditingThis && (
+                                    <span className="rounded-md bg-amber-400/20 border border-amber-400/40 px-1.5 py-0.2 text-[9px] font-bold uppercase text-amber-300">
+                                      Editing
+                                    </span>
+                                  )}
+                                </div>
+
+                                {author.bio && (
+                                  <p className="mt-0.5 line-clamp-1 text-xs text-white/45" title={author.bio}>
+                                    {author.bio}
+                                  </p>
+                                )}
+
+                                {/* Badges */}
+                                <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                                  <span className="rounded-md border border-white/5 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-white/50">
+                                    Order: #{author.order ?? 0}
+                                  </span>
+                                  {author.featured && (
+                                    <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                                      <Star size={10} className="fill-amber-300" /> Popular
+                                    </span>
+                                  )}
+                                  {author.ourPublicationAuthor && (
+                                    <span className="inline-flex items-center gap-1 rounded-md border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold text-cyan-300">
+                                      <ShieldCheck size={10} /> Publication
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-2 self-end sm:self-center shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5 w-full sm:w-auto justify-end">
+                              {/* Public Author Page */}
+                              <Link
+                                to={`/author/${encodeURIComponent(author.name)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Open public author storefront page"
+                                className="flex items-center gap-1.5 rounded-xl border border-cyan-500/25 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-500/40 transition"
+                              >
+                                <ExternalLink size={12} />
+                                <span>Store</span>
+                              </Link>
+
+                              {/* Edit Button */}
+                              <button
+                                type="button"
+                                onClick={() => handleEditAuthor(author)}
+                                title="Edit author"
+                                className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/70 hover:border-amber-400/40 hover:bg-amber-400/10 hover:text-amber-300 transition"
+                              >
+                                <Pencil size={13} />
+                              </button>
+
+                              {/* Delete Button */}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAuthor(author._id)}
+                                title="Delete author"
+                                className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/70 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 transition"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

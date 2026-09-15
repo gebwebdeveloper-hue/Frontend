@@ -45,6 +45,8 @@ import CafeBooksPage from "./cafe/pages/CafeBooksPage.jsx";
 import CafeUpdatesPage from "./cafe/pages/CafeUpdatesPage.jsx";
 import PublisherDashboardPage from "./pages/PublisherDashboardPage.jsx";
 import AuthorDashboardPage from "./pages/AuthorDashboardPage.jsx";
+import AuthorPage from "./pages/AuthorPage.jsx";
+
 
 
 // Helper component to normalize URLs (strip trailing slashes, decode spaces/encoded URIs)
@@ -83,8 +85,9 @@ export default function App() {
   const location = useLocation();
   useLenis();
 
-  // Hide global Navbar on /cafe/* and dashboard pages
-  const hideNavbar = location.pathname.startsWith("/cafe") || location.pathname.includes("dashboard");
+  // Hide global Navbar and floating elements on /cafe/* and dashboard/admin pages
+  const isDashboardOrAdmin = location.pathname.includes("dashboard") || location.pathname.startsWith("/admin") || location.pathname.startsWith("/cafe/admin");
+  const hideNavbar = location.pathname.startsWith("/cafe") || isDashboardOrAdmin;
 
   return (
     <>
@@ -139,6 +142,13 @@ export default function App() {
           <Route path="/author_dashboard" element={<AuthorDashboardPage />} />
           <Route path="/author-dashboard" element={<AuthorDashboardPage />} />
 
+          {/* Author Public Profile & Books Page */}
+          <Route path="/author/:name" element={<AuthorPage />} />
+          <Route path="/authors/:name" element={<AuthorPage />} />
+          <Route path="/author" element={<Navigate to="/library" replace />} />
+          <Route path="/authors" element={<Navigate to="/library" replace />} />
+
+
           <Route path="/help" element={<HelpPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/privacy-policy" element={<Navigate to="/privacy" replace />} />
@@ -181,7 +191,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>
-      <WhatsAppFloat />
+      {!isDashboardOrAdmin && <WhatsAppFloat />}
       <BackToTop />
     </>
   );
