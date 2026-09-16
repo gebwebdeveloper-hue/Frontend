@@ -75,8 +75,8 @@ const faqs = [
         a: "All eBooks are delivered through our secure online reader. PDF download is available for approved purchases via the Invoice or Download button on your order.",
       },
       {
-        q: "Are there free books available?",
-        a: "Yes! Visit Read Stories (Short Stories) from the navigation bar to enjoy free short stories and excerpts from our authors.",
+        q: "Are there free books and stories available?",
+        a: "Yes! Visit Read Stories from the navigation bar to enjoy stories, essays, and excerpts from our authors.",
       },
     ],
   },
@@ -168,7 +168,7 @@ const faqs = [
 
 const quickLinks = [
   { label: "Buy Books", to: "/library", icon: BookOpen },
-  { label: "Read Stories", to: "/short-stories", icon: FileText },
+  { label: "Read Stories", to: "/read-stories", icon: FileText },
   { label: "Publish with Us", to: "/reader", icon: Zap },
   { label: "Join Club", to: "/club", icon: HeadphonesIcon },
 ];

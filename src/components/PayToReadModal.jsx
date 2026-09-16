@@ -276,7 +276,7 @@ export default function PayToReadModal({ story, isOpen, onClose, onSuccess, onOp
                     onClick={() => {
                       onClose();
                       if (onSuccess) onSuccess();
-                      if (story?.slug) navigate(`/short-stories/${story.slug}`);
+                      if (story?.slug) navigate(`/read-stories/${story.slug}`);
                     }}
                     className="w-full rounded-2xl bg-emerald-400 px-6 py-3.5 text-sm font-black text-black hover:bg-emerald-300 transition uppercase tracking-wider shadow-lg shadow-emerald-400/20"
                   >

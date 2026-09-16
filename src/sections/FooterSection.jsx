@@ -275,7 +275,7 @@ export default function FooterSection() {
               {[
                 { name: "About Us", to: "/about-us" },
                 { name: "Buy Books", to: "/library" },
-                { name: "Read Stories", to: "/short-stories" },
+                { name: "Read Stories", to: "/read-stories" },
                 { name: "Publish with Us", to: "/reader" },
                 { name: "Careers", to: "/careers" }
               ].map((item) => (

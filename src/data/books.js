@@ -103,7 +103,7 @@ export const faqItems = [
     answer: "It is a literary community for readers and writers in Tripura. Members receive custom ID cards, club diaries, invitations to book discussions, workshops, and publication opportunities. You can apply to join via the Club page."
   },
   {
-    question: "Are there free stories to read on the platform?",
-    answer: "Yes! In our 'Free Stories' section, we publish weekly stories, essays, and literary discussions every Friday and Sunday, available for everyone to read."
+    question: "Are there stories to read on the platform?",
+    answer: "Yes! In our 'Read Stories' section, we publish weekly stories, essays, and literary discussions every Friday and Sunday, available for everyone to read."
   }
 ];

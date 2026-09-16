@@ -97,7 +97,7 @@ export default function AdminNavbar({ activeTab, onSelectTab, onLogoutSuccess })
     },
     {
       id: "newsletter",
-      label: "Free Stories",
+      label: "Read Stories",
       path: "/admin",
       icon: BookMarked,
       isTab: true,

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube, ShieldCheck, ShoppingCart, PackageCheck, User, Coffee, BookOpen, ShoppingBag, Feather, Bell, Users, PenTool } from "lucide-react";
+import { Menu, X, Sparkles, LogOut, Facebook, Instagram, Youtube, ShieldCheck, ShoppingCart, PackageCheck, User, Coffee, BookOpen, ShoppingBag, Feather, Bell, Users, PenTool, Briefcase } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import AuthModal from "./AuthModal.jsx";
 import CartModal from "./CartModal.jsx";
@@ -12,7 +12,7 @@ import { API_BASE } from "../config.js";
 const baseLinks = [
   { label: "Buy Books", to: "/library" },
   { label: "Book Rent", to: "/rentals" },
-  { label: "Read Stories", to: "/short-stories" },
+  { label: "Read Stories", to: "/read-stories" },
   { label: "News & Updates", to: "/news" },
   { label: "About Us", to: "/about-us" },
 ];
@@ -314,14 +314,34 @@ export default function Navbar() {
                           <p className="text-[10px] text-white/45 truncate mt-0.5">{authUser.email}</p>
                         </div>
 
-                        {authUser.role === "admin" && (
+                        {authUser.role === "admin" ? (
+                          <>
+                            <Link
+                              to="/admin"
+                              onClick={() => setProfileOpen(false)}
+                              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/10 transition mb-1"
+                            >
+                              <ShieldCheck size={14} />
+                              Admin Dashboard
+                            </Link>
+
+                            <Link
+                              to="/publisher_dashboard"
+                              onClick={() => setProfileOpen(false)}
+                              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-[#f3c06b] hover:bg-[#f3c06b]/10 transition mb-1"
+                            >
+                              <Briefcase size={14} />
+                              Publisher Dashboard
+                            </Link>
+                          </>
+                        ) : (
                           <Link
-                            to="/admin"
+                            to="/publisher_dashboard"
                             onClick={() => setProfileOpen(false)}
-                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/10 transition mb-1"
+                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-[#f3c06b] hover:bg-[#f3c06b]/10 transition mb-1"
                           >
-                            <ShieldCheck size={14} />
-                            Admin Dashboard
+                            <PenTool size={14} />
+                            Author Login
                           </Link>
                         )}
 
@@ -428,7 +448,7 @@ export default function Navbar() {
                   { label: "Home", to: "/", icon: BookOpen, subtitle: "E-Books & Literature Hub" },
                   { label: "Buy Books", to: "/library", icon: ShoppingBag, subtitle: "Digital & Physical Book Store" },
                   { label: "Book Rental Club", to: "/rentals", icon: Sparkles, subtitle: "Unlimited Reading Memberships" },
-                  { label: "Read Stories", to: "/short-stories", icon: Feather, subtitle: "Free Short Stories & Articles" },
+                  { label: "Read Stories", to: "/read-stories", icon: Feather, subtitle: "Stories, Essays & Articles" },
                   { label: "News & Updates", to: "/news", icon: Bell, subtitle: "Literary News & Announcements" },
                   { label: "Join VIP Club", to: "/club", icon: Users, subtitle: "Exclusive Membership Perks" },
                   { label: "Publish With Us", to: "/reader", icon: PenTool, subtitle: "Author Portal & Book Publishing" },
@@ -556,13 +576,32 @@ export default function Navbar() {
                       >
                         <User size={13} className="text-cyan-400" /> Edit Profile
                       </button>
-                      {authUser.role === "admin" && (
+
+                      {authUser.role === "admin" ? (
                         <Link
                           to="/admin"
                           onClick={() => setOpen(false)}
                           className="flex items-center justify-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 py-2 text-[11px] font-bold text-cyan-300"
                         >
                           <ShieldCheck size={13} /> Admin Panel
+                        </Link>
+                      ) : (
+                        <Link
+                          to="/publisher_dashboard"
+                          onClick={() => setOpen(false)}
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-[#c8923a]/40 bg-[#c8923a]/10 py-2 text-[11px] font-bold text-[#f3c06b]"
+                        >
+                          <PenTool size={13} /> Author Login
+                        </Link>
+                      )}
+
+                      {authUser.role === "admin" && (
+                        <Link
+                          to="/publisher_dashboard"
+                          onClick={() => setOpen(false)}
+                          className="col-span-2 flex items-center justify-center gap-1.5 rounded-xl border border-[#c8923a]/40 bg-[#c8923a]/10 py-2 text-[11px] font-bold text-[#f3c06b]"
+                        >
+                          <Briefcase size={13} /> Publisher Dashboard
                         </Link>
                       )}
                     </div>

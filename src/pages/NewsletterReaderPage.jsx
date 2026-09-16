@@ -131,7 +131,7 @@ export default function NewsletterReaderPage() {
   const handleShareStory = async (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
     if (!story) return;
-    const shareUrl = `${SITE_URL}/short-stories/${story.slug || slug}`;
+    const shareUrl = `${SITE_URL}/read-stories/${story.slug || slug}`;
     const shareTitle = story.title || "Story";
     const shareAuthor = story.author ? ` by ${story.author}` : "";
 
@@ -270,11 +270,11 @@ export default function NewsletterReaderPage() {
           {/* Back button & Reader mode toggle */}
           <div className="mb-8 flex items-center justify-between gap-4">
             <Link
-              to="/short-stories"
+              to="/read-stories"
               className={`group inline-flex items-center gap-2 text-sm font-medium transition-colors ${isLightMode ? "text-slate-500 hover:text-cyan-600" : "text-white/55 hover:text-cyan-400"}`}
             >
               <ArrowLeft size={16} className="transition-transform duration-250 group-hover:-translate-x-1" />
-              Back to Short Stories
+              Back to Stories
             </Link>
 
             <div className="flex items-center gap-2.5">
@@ -349,7 +349,7 @@ export default function NewsletterReaderPage() {
               <h2 className="text-xl font-bold text-red-400 mb-2">Error</h2>
               <p className={`mb-6 ${isLightMode ? "text-slate-600" : "text-white/60"}`}>{error}</p>
               <Link
-                to="/short-stories"
+                to="/read-stories"
                 className={`inline-flex items-center gap-2 rounded-full px-6 py-2.5 font-semibold transition hover:scale-105 ${
                   isLightMode ? "bg-slate-900 text-white hover:bg-slate-800" : "bg-white text-black hover:bg-cyan-50"
                 }`}

@@ -2890,7 +2890,7 @@ export default function AdminBooksPage() {
                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8 backdrop-blur-xl">
                   <div className="border-b border-white/10 pb-6 mb-6 flex items-center justify-between gap-4">
                     <div>
-                      <h2 className="text-xl font-bold text-white">All Short Stories</h2>
+                      <h2 className="text-xl font-bold text-white">All Read Stories</h2>
                       <p className="mt-1 text-sm text-white/55">{newsletterList.length} stor{newsletterList.length !== 1 ? "ies" : "y"} written.</p>
                     </div>
                     <Link
