@@ -33,6 +33,44 @@ import {
 
 import PublisherExecutionManager from "../publisher/components/PublisherExecutionManager.jsx";
 
+const DEFAULT_9_STEPS = [
+  { stepNumber: 1, name: "Payment", status: "PENDING" },
+  { stepNumber: 2, name: "ISBN Generated", status: "PENDING" },
+  { stepNumber: 3, name: "Book Page", status: "PENDING" },
+  { stepNumber: 4, name: "Book Cover", status: "PENDING" },
+  { stepNumber: 5, name: "Formatting", status: "PENDING" },
+  { stepNumber: 6, name: "Author Approval", status: "PENDING" },
+  { stepNumber: 7, name: "Ready to Print", status: "PENDING" },
+  { stepNumber: 8, name: "Printing", status: "PENDING" },
+  { stepNumber: 9, name: "Stock Ready", status: "PENDING" }
+];
+
+function getAuthorWorkflowSteps(auth) {
+  if (!auth) return DEFAULT_9_STEPS.map((s) => ({ ...s }));
+  const existing = Array.isArray(auth.workflowSteps) ? auth.workflowSteps : [];
+  return DEFAULT_9_STEPS.map((defStep) => {
+    const found = existing.find(
+      (s) => Number(s.stepNumber) === defStep.stepNumber || s.name?.toLowerCase() === defStep.name?.toLowerCase()
+    );
+    if (found) {
+      let st = String(found.status || "PENDING").toUpperCase();
+      if (st === "PENDING" && defStep.stepNumber === 1 && (auth.status === "PAID" || auth.publishingPaymentStatus === "PAID")) {
+        st = "COMPLETED";
+      }
+      return {
+        stepNumber: defStep.stepNumber,
+        name: defStep.name,
+        status: st,
+        value: found.value || ""
+      };
+    }
+    if (defStep.stepNumber === 1 && (auth.status === "PAID" || auth.publishingPaymentStatus === "PAID")) {
+      return { ...defStep, status: "COMPLETED" };
+    }
+    return { ...defStep };
+  });
+}
+
 export default function PublisherDashboardPage() {
   const navigate = useNavigate();
   const [token, setToken] = useState(() => localStorage.getItem("lekhok_publisher_token") || "");
@@ -447,10 +485,23 @@ export default function PublisherDashboardPage() {
     }
   };
 
+  const handleOpenWorkflowModal = (auth) => {
+    if (!auth) return;
+    setSelectedAuthor(auth);
+    setEditingWorkflow(getAuthorWorkflowSteps(auth));
+    setEditingPaymentStatus(auth.status || auth.publishingPaymentStatus || "PENDING");
+    setEditingAmountPaid(auth.planPaid !== undefined ? auth.planPaid : (auth.amountPaid || 0));
+  };
+
   const handleSaveWorkflow = async (authorId) => {
+    const targetId = authorId || selectedAuthor?.id || selectedAuthor?._id || selectedAuthor?.authorId;
+    if (!targetId) {
+      alert("No author selected.");
+      return;
+    }
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/publisher/authors/${authorId}/workflow`, {
+      const res = await fetch(`${API_BASE}/publisher/authors/${targetId}/workflow`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -464,12 +515,24 @@ export default function PublisherDashboardPage() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Author workflow status updated!");
+        alert(data.message || "Author workflow status updated successfully!");
+        // Update local viewingAuthor state immediately
+        if (viewingAuthor && (viewingAuthor.id === targetId || viewingAuthor._id === targetId || viewingAuthor.authorId === targetId)) {
+          setViewingAuthor((prev) => ({
+            ...prev,
+            workflowSteps: editingWorkflow,
+            status: editingPaymentStatus,
+            planPaid: Number(editingAmountPaid)
+          }));
+        }
         setSelectedAuthor(null);
-        fetchPublisherData();
+        await fetchPublisherData();
+      } else {
+        alert(data.message || "Failed to update workflow.");
       }
     } catch (err) {
-      alert("Error updating workflow.");
+      console.error("Error updating workflow:", err);
+      alert("Error updating workflow. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -1112,22 +1175,7 @@ export default function PublisherDashboardPage() {
 
                       <button
                         type="button"
-                        onClick={() => {
-                          setSelectedAuthor(viewingAuthor);
-                          setEditingWorkflow([
-                            { stepNumber: 1, name: "Payment", status: viewingAuthor.status === "PAID" ? "COMPLETED" : "PENDING" },
-                            { stepNumber: 2, name: "ISBN Generated", status: "PENDING" },
-                            { stepNumber: 3, name: "Book Page", status: "PENDING" },
-                            { stepNumber: 4, name: "Book Cover", status: "PENDING" },
-                            { stepNumber: 5, name: "Formatting", status: "PENDING" },
-                            { stepNumber: 6, name: "Author Approval", status: "PENDING" },
-                            { stepNumber: 7, name: "Ready to Print", status: "PENDING" },
-                            { stepNumber: 8, name: "Printing", status: "PENDING" },
-                            { stepNumber: 9, name: "Stock Ready", status: "PENDING" }
-                          ]);
-                          setEditingPaymentStatus(viewingAuthor.status || "PENDING");
-                          setEditingAmountPaid(viewingAuthor.planPaid || 0);
-                        }}
+                        onClick={() => handleOpenWorkflowModal(viewingAuthor)}
                         className="px-3.5 py-2 bg-[#161622] hover:bg-[#202030] border border-[#333348] text-xs text-gray-200 rounded-xl font-bold transition flex items-center gap-1.5"
                       >
                         <Edit3 className="w-3.5 h-3.5 text-[#f3c06b]" />
@@ -1187,6 +1235,61 @@ export default function PublisherDashboardPage() {
                         ₹{(viewingAuthor.totalPending || 0).toFixed(2)}
                       </h4>
                       <p className="text-[11px] text-amber-500/80 mt-0.5">Due to/from author</p>
+                    </div>
+                  </div>
+
+                  {/* 9-Step Publishing Workflow Progress Banner */}
+                  <div className="bg-[#0e0e14] border border-[#1f1f2e] rounded-3xl p-5 shadow-xl space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#1c1c28] pb-3">
+                      <div className="flex items-center gap-2">
+                        <PackageCheck className="w-4 h-4 text-[#f3c06b]" />
+                        <h4 className="font-serif text-sm font-bold text-white uppercase tracking-wider">
+                          9-Step Publishing Workflow Progress
+                        </h4>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenWorkflowModal(viewingAuthor)}
+                        className="text-xs font-bold text-[#f3c06b] hover:text-white flex items-center gap-1 transition"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Update Progress</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2 pt-1">
+                      {getAuthorWorkflowSteps(viewingAuthor).map((step) => {
+                        const isCompleted = step.status === "COMPLETED";
+                        const isInProgress = step.status === "IN_PROGRESS";
+                        return (
+                          <div
+                            key={step.stepNumber}
+                            className={`p-2.5 rounded-xl border text-center transition ${
+                              isCompleted
+                                ? "bg-emerald-950/30 border-emerald-500/40 text-emerald-300"
+                                : isInProgress
+                                ? "bg-cyan-950/30 border-cyan-500/40 text-cyan-300 animate-pulse"
+                                : "bg-[#08080c] border-[#1e1e2d] text-gray-400"
+                            }`}
+                          >
+                            <p className="text-[10px] font-bold opacity-75">{step.stepNumber}.</p>
+                            <p className="text-[11px] font-extrabold truncate mt-0.5" title={step.name}>
+                              {step.name}
+                            </p>
+                            <span
+                              className={`inline-block mt-1 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
+                                isCompleted
+                                  ? "bg-emerald-500/20 text-emerald-300"
+                                  : isInProgress
+                                  ? "bg-cyan-500/20 text-cyan-300"
+                                  : "bg-gray-800 text-gray-400"
+                              }`}
+                            >
+                              {step.status}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -1600,20 +1703,7 @@ export default function PublisherDashboardPage() {
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setSelectedAuthor(auth);
-                                  setEditingWorkflow([
-                                    { stepNumber: 1, name: "Payment", status: auth.status === "PAID" ? "COMPLETED" : "PENDING" },
-                                    { stepNumber: 2, name: "ISBN Generated", status: "PENDING" },
-                                    { stepNumber: 3, name: "Book Page", status: "PENDING" },
-                                    { stepNumber: 4, name: "Book Cover", status: "PENDING" },
-                                    { stepNumber: 5, name: "Formatting", status: "PENDING" },
-                                    { stepNumber: 6, name: "Author Approval", status: "PENDING" },
-                                    { stepNumber: 7, name: "Ready to Print", status: "PENDING" },
-                                    { stepNumber: 8, name: "Printing", status: "PENDING" },
-                                    { stepNumber: 9, name: "Stock Ready", status: "PENDING" }
-                                  ]);
-                                  setEditingPaymentStatus(auth.status || "PENDING");
-                                  setEditingAmountPaid(auth.planPaid || 0);
+                                  handleOpenWorkflowModal(auth);
                                 }}
                                 className="px-3.5 py-2 bg-[#161622] hover:bg-[#202030] border border-[#333348] text-xs text-gray-300 hover:text-white rounded-xl font-bold transition shadow flex items-center gap-1.5"
                               >
@@ -1789,11 +1879,12 @@ export default function PublisherDashboardPage() {
                     <select
                       value={st.status}
                       onChange={(e) => {
-                        const updated = [...editingWorkflow];
-                        updated[idx].status = e.target.value;
-                        setEditingWorkflow(updated);
+                        const newStatus = e.target.value;
+                        setEditingWorkflow((prev) =>
+                          prev.map((item, i) => (i === idx ? { ...item, status: newStatus } : item))
+                        );
                       }}
-                      className="w-full bg-[#12121c] border border-[#262636] px-2 py-1.5 rounded-lg text-white text-[11px]"
+                      className="w-full bg-[#12121c] border border-[#262636] px-2 py-1.5 rounded-lg text-white text-[11px] font-semibold focus:border-[#c8923a]"
                     >
                       <option value="PENDING">PENDING</option>
                       <option value="IN_PROGRESS">IN_PROGRESS</option>
@@ -1808,14 +1899,14 @@ export default function PublisherDashboardPage() {
               <button
                 type="button"
                 onClick={() => setSelectedAuthor(null)}
-                className="px-4 py-2 bg-gray-800 text-xs font-semibold rounded-xl text-gray-300"
+                className="px-4 py-2 bg-gray-800 text-xs font-semibold rounded-xl text-gray-300 hover:bg-gray-700 transition"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={() => handleSaveWorkflow(selectedAuthor.id)}
-                className="px-5 py-2.5 bg-gradient-to-r from-[#d99b38] to-[#f3c06b] text-xs font-extrabold rounded-xl text-black shadow"
+                onClick={() => handleSaveWorkflow(selectedAuthor.id || selectedAuthor._id || selectedAuthor.authorId)}
+                className="px-5 py-2.5 bg-gradient-to-r from-[#d99b38] to-[#f3c06b] hover:from-[#e5a845] hover:to-[#fbd080] text-xs font-extrabold rounded-xl text-black shadow transition"
               >
                 Save Progress
               </button>
