@@ -443,6 +443,28 @@ export default function AdminBooksPage() {
     setAuthorForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleAuthorTagToggle = (tag) => {
+    setAuthorForm((prev) => {
+      if (tag === "featured") {
+        const nextVal = !prev.featured;
+        return {
+          ...prev,
+          featured: nextVal,
+          ourPublicationAuthor: nextVal ? false : prev.ourPublicationAuthor
+        };
+      }
+      if (tag === "ourPublicationAuthor") {
+        const nextVal = !prev.ourPublicationAuthor;
+        return {
+          ...prev,
+          ourPublicationAuthor: nextVal,
+          featured: nextVal ? false : prev.featured
+        };
+      }
+      return prev;
+    });
+  };
+
   const resetAuthorForm = () => {
     setAuthorForm({ name: "", bio: "", featured: true, ourPublicationAuthor: false, order: 0 });
     setAuthorThumbnail(null);
@@ -2038,13 +2060,16 @@ export default function AdminBooksPage() {
 
                     {/* Feature & Category Badges Toggle Cards */}
                     <div className="space-y-2.5">
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">
-                        Author Visibility & Tags
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">
+                          Author Visibility & Tags
+                        </label>
+                        <span className="text-[10px] text-white/40 font-medium">Choose any one</span>
+                      </div>
                       <div className="grid gap-2.5 sm:grid-cols-2">
                         {/* Popular / Featured */}
                         <div
-                          onClick={() => handleAuthorFormChange("featured", !authorForm.featured)}
+                          onClick={() => handleAuthorTagToggle("featured")}
                           className={`cursor-pointer rounded-2xl border p-3.5 transition flex items-start gap-3 select-none ${
                             authorForm.featured
                               ? "border-amber-500/40 bg-amber-500/10 text-amber-200"
@@ -2069,7 +2094,7 @@ export default function AdminBooksPage() {
 
                         {/* Publication Author */}
                         <div
-                          onClick={() => handleAuthorFormChange("ourPublicationAuthor", !authorForm.ourPublicationAuthor)}
+                          onClick={() => handleAuthorTagToggle("ourPublicationAuthor")}
                           className={`cursor-pointer rounded-2xl border p-3.5 transition flex items-start gap-3 select-none ${
                             authorForm.ourPublicationAuthor
                               ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-200"

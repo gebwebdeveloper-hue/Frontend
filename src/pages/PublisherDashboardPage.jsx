@@ -394,7 +394,11 @@ export default function PublisherDashboardPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(editAuthorForm)
+        body: JSON.stringify({
+          ...editAuthorForm,
+          planAmount: editAuthorForm.planAmount === "" ? 0 : Number(editAuthorForm.planAmount),
+          amountPaid: editAuthorForm.amountPaid === "" ? 0 : Number(editAuthorForm.amountPaid)
+        })
       });
       const data = await res.json();
       if (data.success) {
@@ -935,7 +939,12 @@ export default function PublisherDashboardPage() {
         <main className="p-6 md:p-8 space-y-8 flex-1">
           {/* TAB 0: EXECUTION MANAGER */}
           {activeTab === "execution" && (
-            <PublisherExecutionManager authors={rawAuthors} token={token} onRefresh={fetchPublisherData} />
+            <PublisherExecutionManager
+              authors={rawAuthors}
+              token={token}
+              onRefresh={fetchPublisherData}
+              allCatalogBooks={allCatalogBooks}
+            />
           )}
 
           {/* ------------------------------------------------------------- */}
@@ -1936,7 +1945,7 @@ export default function PublisherDashboardPage() {
             <form onSubmit={handleAddSale} className="space-y-4">
               {/* AUTHOR SELECTION DROPDOWN */}
               <div>
-                <label className="block text-xs text-gray-400 mb-1 font-medium">Select Publication Author</label>
+                <label className="block text-xs text-gray-400 mb-1 font-medium">Select Author</label>
                 <select
                   required
                   value={saleForm.authorEmail}
@@ -2467,8 +2476,8 @@ export default function PublisherDashboardPage() {
                   <input
                     type="number"
                     min="0"
-                    value={editAuthorForm.planAmount}
-                    onChange={(e) => setEditAuthorForm({ ...editAuthorForm, planAmount: Number(e.target.value) })}
+                    value={editAuthorForm.planAmount ?? ""}
+                    onChange={(e) => setEditAuthorForm({ ...editAuthorForm, planAmount: e.target.value === "" ? "" : Number(e.target.value) })}
                     className="w-full bg-[#08080c] border border-[#262638] focus:border-[#c8923a] text-white px-3.5 py-2.5 rounded-xl outline-none"
                   />
                 </div>
@@ -2495,8 +2504,8 @@ export default function PublisherDashboardPage() {
                   <input
                     type="number"
                     min="0"
-                    value={editAuthorForm.amountPaid}
-                    onChange={(e) => setEditAuthorForm({ ...editAuthorForm, amountPaid: Number(e.target.value) })}
+                    value={editAuthorForm.amountPaid ?? ""}
+                    onChange={(e) => setEditAuthorForm({ ...editAuthorForm, amountPaid: e.target.value === "" ? "" : Number(e.target.value) })}
                     className="w-full bg-[#08080c] border border-[#262638] focus:border-[#c8923a] text-white px-3.5 py-2.5 rounded-xl outline-none"
                   />
                 </div>

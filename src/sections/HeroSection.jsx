@@ -44,7 +44,7 @@ export default function HeroSection() {
             
             <div className="py-1">
               <p className="text-2xl sm:text-3xl md:text-4xl text-white/90 font-serif-display leading-tight">
-                with <span className="font-bold text-white font-sans tracking-tight">India’s #1</span>
+                with <span className="font-bold text-white font-sans tracking-tight">NorthEast’s #1</span>
               </p>
               <p className="text-2xl sm:text-3xl md:text-4xl text-white/90 font-serif-display leading-tight mt-0.5">
                 Publishing Platform

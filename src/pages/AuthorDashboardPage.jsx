@@ -390,7 +390,12 @@ export default function AuthorDashboardPage() {
           )}
 
           {authorSidebarTab === "books" && (
-            <AuthorBooksSection books={authInfo.books} primaryBook={primaryBook} handleRequestReprint={handleRequestReprint} />
+            <AuthorBooksSection
+              books={authInfo.books}
+              primaryBook={primaryBook}
+              authInfo={authInfo}
+              handleRequestReprint={handleRequestReprint}
+            />
           )}
 
           {authorSidebarTab === "earnings" && (
