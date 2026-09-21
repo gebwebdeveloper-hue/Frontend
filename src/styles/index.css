@@ -458,6 +458,27 @@ a {
   box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
 }
 
+.gold-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(243, 192, 107, 0.6) rgba(15, 15, 22, 0.8);
+}
+.gold-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.gold-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 15, 22, 0.8);
+  border-radius: 99px;
+}
+.gold-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(200, 146, 58, 0.6), rgba(243, 192, 107, 0.8));
+  border-radius: 99px;
+  border: 1px solid rgba(243, 192, 107, 0.3);
+}
+.gold-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(200, 146, 58, 0.9), rgba(255, 215, 138, 1));
+  box-shadow: 0 0 10px rgba(243, 192, 107, 0.5);
+}
+
 /* Premium book cards */
 .premium-book-card {
   isolation: isolate;
