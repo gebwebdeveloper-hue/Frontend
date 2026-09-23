@@ -20,7 +20,8 @@ import {
   Home,
   User,
   ExternalLink,
-  ChevronDown
+  ChevronDown,
+  Building2,
 } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
@@ -147,6 +148,26 @@ const openRoles = [
       "Ensure high quality control prior to sending to press.",
     ],
   },
+  {
+    id: "office-assistant",
+    title: "Office assistant",
+    badge: "Administration & Operations",
+    icon: Building2,
+    iconColor: "text-teal-400",
+    iconBg: "bg-teal-400/10 border-teal-400/20",
+    gradient: "from-teal-500/10 via-teal-500/5 to-transparent",
+    border: "hover:border-teal-400/40",
+    location: "Agartala, Tripura",
+    type: "Full-Time",
+    summary:
+      "Manage front-office operations, handle book inventory, coordinate shipments & logistics, and provide administrative support to the publishing team.",
+    responsibilities: [
+      "Coordinate packaging, dispatch, and tracking of author copies and book orders.",
+      "Maintain physical stock, sample copies, stationery, and office documentation.",
+      "Handle front-desk inquiries, phone calls, and visitor assistance warmly.",
+      "Assist editorial, marketing, and sales departments with day-to-day administrative tasks.",
+    ],
+  },
 ];
 
 const roleOptions = [
@@ -156,6 +177,7 @@ const roleOptions = [
   "Book editor",
   "Accountant",
   "Designer role",
+  "Office assistant",
 ];
 
 export default function CareersPage() {
