@@ -27,19 +27,160 @@ import PageTransition from "../components/PageTransition.jsx";
 import AdminNavbar from "../components/AdminNavbar.jsx";
 import { API_BASE, SERVER_URL } from "../config.js";
 
-const getMediaUrl = (url) => {
+const getMediaUrl = (url, forDownload = false) => {
   if (!url) return "";
   let fullUrl = url.startsWith("http") ? url : `${SERVER_URL}${url}`;
-  if (
-    fullUrl.includes("res.cloudinary.com") &&
-    fullUrl.includes("/image/upload/") &&
-    fullUrl.toLowerCase().includes(".pdf") &&
-    !fullUrl.includes("/fl_attachment")
-  ) {
-    fullUrl = fullUrl.replace("/image/upload/", "/image/upload/fl_attachment/");
+  if (forDownload) {
+    if (
+      fullUrl.includes("res.cloudinary.com") &&
+      fullUrl.includes("/image/upload/") &&
+      !fullUrl.includes("/fl_attachment")
+    ) {
+      fullUrl = fullUrl.replace("/image/upload/", "/image/upload/fl_attachment/");
+    }
+  } else {
+    if (fullUrl.includes("/fl_attachment/")) {
+      fullUrl = fullUrl.replace("/fl_attachment/", "/");
+    }
   }
   return fullUrl;
 };
+
+function ResumePreviewModal({ candidate, onClose }) {
+  const [blobUrl, setBlobUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const directUrl = candidate?.resumeUrl ? getMediaUrl(candidate.resumeUrl, false) : "";
+  const downloadUrl = candidate?.resumeUrl ? getMediaUrl(candidate.resumeUrl, true) : "";
+
+  useEffect(() => {
+    if (!directUrl) {
+      setError("No resume URL found.");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError("");
+
+    let active = true;
+    fetch(directUrl)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        return res.blob();
+      })
+      .then((blob) => {
+        if (!active) return;
+        const url = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+        setBlobUrl(url);
+      })
+      .catch((err) => {
+        if (!active) return;
+        console.warn("[PDF Preview] Blob fetch fallback to direct URL:", err);
+        setBlobUrl(directUrl);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+      if (blobUrl && blobUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(blobUrl);
+      }
+    };
+  }, [directUrl]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[300] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-5xl h-[90vh] flex flex-col rounded-3xl border border-white/15 bg-[#0e1626] shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-900/90 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center flex-shrink-0">
+              <FileText size={20} />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-white truncate">
+                Resume Preview: {candidate?.name || "Applicant"}
+              </h3>
+              <p className="text-xs text-cyan-300 font-medium truncate">
+                {candidate?.role} • {candidate?.email}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <a
+              href={downloadUrl}
+              download={`${candidate?.name || "candidate"}-resume.pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs border border-emerald-500/30 transition shadow-sm"
+            >
+              <Download size={14} />
+              <span className="hidden sm:inline">Download PDF</span>
+            </a>
+
+            <a
+              href={directUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs border border-white/10 transition"
+              title="Open in new tab"
+            >
+              <ExternalLink size={14} />
+            </a>
+
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl border border-white/10 text-white/50 hover:text-white hover:bg-white/10 transition ml-1 cursor-pointer"
+              title="Close"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* PDF Viewer Body */}
+        <div className="flex-1 w-full bg-slate-950 relative flex items-center justify-center overflow-hidden">
+          {loading ? (
+            <div className="text-center p-8">
+              <Loader2 className="animate-spin text-cyan-400 mx-auto mb-3" size={36} />
+              <p className="text-sm text-slate-400">Loading Resume PDF Preview...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center p-8 max-w-md">
+              <AlertCircle className="text-rose-400 mx-auto mb-3" size={36} />
+              <p className="text-sm text-rose-300 mb-4">{error}</p>
+              <a
+                href={downloadUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 text-black font-bold text-xs"
+              >
+                <Download size={15} /> Download PDF Directly
+              </a>
+            </div>
+          ) : (
+            <iframe
+              src={`${blobUrl}#toolbar=1&navpanes=0`}
+              title="Resume PDF Preview"
+              className="w-full h-full border-0 bg-white"
+            />
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 const STATUS_COLORS = {
   Pending: "border-amber-500/40 bg-amber-500/10 text-amber-300",
@@ -81,6 +222,7 @@ export default function AdminCareerResponsesPage() {
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const [selectedResponse, setSelectedResponse] = useState(null);
+  const [previewResumeCandidate, setPreviewResumeCandidate] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [adminNoteInput, setAdminNoteInput] = useState("");
@@ -548,15 +690,17 @@ export default function AdminCareerResponsesPage() {
                         </span>
                         <div className="flex items-center gap-2.5">
                           {item.resumeUrl && (
-                            <a
-                              href={getMediaUrl(item.resumeUrl)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-semibold hover:underline"
-                              title="View Resume PDF"
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviewResumeCandidate(item);
+                              }}
+                              className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-semibold hover:underline cursor-pointer bg-transparent border-0 p-0"
+                              title="Preview Resume PDF"
                             >
                               <FileText size={12} /> Resume
-                            </a>
+                            </button>
                           )}
                           {item.portfolioUrl && (
                             <a
@@ -724,16 +868,27 @@ export default function AdminCareerResponsesPage() {
                           RESUME (PDF):
                         </span>
                         {selectedResponse.resumeUrl ? (
-                          <a
-                            href={getMediaUrl(selectedResponse.resumeUrl)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-emerald-300 hover:text-emerald-200 bg-emerald-500/10 border border-emerald-500/30 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-500/20 transition shadow-lg shadow-emerald-950/20"
-                          >
-                            <FileText size={16} className="text-emerald-400" />
-                            <span>View & Download Resume PDF</span>
-                            <ExternalLink size={13} className="opacity-70 ml-1" />
-                          </a>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewResumeCandidate(selectedResponse)}
+                              className="inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 bg-cyan-500/10 border border-cyan-500/30 px-4 py-2.5 rounded-xl font-bold hover:bg-cyan-500/20 transition shadow-lg shadow-cyan-950/20 cursor-pointer"
+                            >
+                              <Eye size={16} className="text-cyan-400" />
+                              <span>Preview Resume PDF</span>
+                            </button>
+
+                            <a
+                              href={getMediaUrl(selectedResponse.resumeUrl, true)}
+                              download={`${selectedResponse.name || "candidate"}-resume.pdf`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-emerald-300 hover:text-emerald-200 bg-emerald-500/10 border border-emerald-500/30 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-500/20 transition shadow-lg shadow-emerald-950/20 cursor-pointer"
+                            >
+                              <Download size={16} className="text-emerald-400" />
+                              <span>Download PDF</span>
+                            </a>
+                          </div>
                         ) : (
                           <p className="text-white/40 italic">No resume attached for this submission.</p>
                         )}
@@ -839,6 +994,14 @@ export default function AdminCareerResponsesPage() {
             </div>,
             document.body
           )}
+
+        {/* Dedicated Resume PDF Preview Modal */}
+        {previewResumeCandidate && (
+          <ResumePreviewModal
+            candidate={previewResumeCandidate}
+            onClose={() => setPreviewResumeCandidate(null)}
+          />
+        )}
       </div>
     </PageTransition>
   );
