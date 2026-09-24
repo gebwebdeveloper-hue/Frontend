@@ -687,24 +687,6 @@ export default function CareersPage() {
               </div>
             ) : (
               <div className="relative rounded-3xl bg-gradient-to-b from-[#0e1626] to-[#0a0f1a] border border-cyan-500/20 p-6 sm:p-10 shadow-2xl shadow-cyan-950/40 backdrop-blur-xl">
-                {/* User Session Bar */}
-                <div className="flex items-center justify-between p-3.5 mb-8 rounded-2xl bg-white/[0.04] border border-cyan-500/20 text-xs">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center flex-shrink-0">
-                      <UserCheck size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-white font-semibold truncate">
-                        Signed in as <span className="text-cyan-300 font-bold">{currentUser.name || currentUser.email?.split("@")[0]}</span>
-                      </p>
-                      <p className="text-[11px] text-slate-400 truncate">{currentUser.email}</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 shrink-0">
-                    Verified Account
-                  </span>
-                </div>
-
                 <div className="text-center mb-8">
                   <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 mb-3">
                     <Send size={22} />
