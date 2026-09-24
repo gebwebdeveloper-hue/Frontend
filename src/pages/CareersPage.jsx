@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Briefcase,
@@ -25,9 +25,14 @@ import {
   FileText,
   UploadCloud,
   X,
+  Lock,
+  LogIn,
+  UserPlus,
+  UserCheck,
 } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
+import AuthModal from "../components/AuthModal.jsx";
 import { API_BASE } from "../config.js";
 
 const openRoles = [
@@ -187,6 +192,10 @@ export default function CareersPage() {
   const formRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [authModal, setAuthModal] = useState({ isOpen: false, tab: "login" });
+
   const [formData, setFormData] = useState({
     name: "",
     number: "",
@@ -205,10 +214,46 @@ export default function CareersPage() {
   const [loading, setLoading] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
 
+  const checkAuth = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
+      const data = await res.json();
+      if (res.ok && data.success && data.user) {
+        setCurrentUser(data.user);
+        setFormData((prev) => ({
+          ...prev,
+          name: prev.name || data.user.name || "",
+          email: prev.email || data.user.email || "",
+          number: prev.number || (data.user.phone || data.user.number || ""),
+        }));
+      } else {
+        setCurrentUser(null);
+      }
+    } catch {
+      setCurrentUser(null);
+    } finally {
+      setAuthChecking(false);
+    }
+  };
+
+  useEffect(() => {
+    checkAuth();
+    const handleAuthEvent = () => checkAuth();
+    window.addEventListener("lekhok:login", handleAuthEvent);
+    window.addEventListener("lekhok:logout", handleAuthEvent);
+    return () => {
+      window.removeEventListener("lekhok:login", handleAuthEvent);
+      window.removeEventListener("lekhok:logout", handleAuthEvent);
+    };
+  }, []);
+
   const handleSelectRole = (roleTitle) => {
     setFormData((prev) => ({ ...prev, role: roleTitle }));
     if (formRef.current) {
       formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    if (!currentUser && !authChecking) {
+      setAuthModal({ isOpen: true, tab: "login" });
     }
   };
 
@@ -262,6 +307,15 @@ export default function CareersPage() {
     e.preventDefault();
     setSubmitStatus({ type: "", message: "" });
     setFileError("");
+
+    if (!currentUser) {
+      setAuthModal({ isOpen: true, tab: "login" });
+      setSubmitStatus({
+        type: "error",
+        message: "Please sign in or register your account to submit this application.",
+      });
+      return;
+    }
 
     // Validations
     if (!formData.name.trim()) {
@@ -347,6 +401,7 @@ export default function CareersPage() {
       const res = await fetch(`${API_BASE}/careers/apply`, {
         method: "POST",
         body: payload,
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -358,9 +413,9 @@ export default function CareersPage() {
             "Thank you! Your application and resume have been submitted successfully. Our team will review your profile and contact you soon.",
         });
         setFormData({
-          name: "",
-          number: "",
-          email: "",
+          name: currentUser?.name || "",
+          number: currentUser?.phone || currentUser?.number || "",
+          email: currentUser?.email || "",
           state: "",
           hometown: "",
           pin: "",
@@ -371,6 +426,10 @@ export default function CareersPage() {
         });
         handleRemoveFile();
       } else {
+        if (res.status === 401) {
+          setCurrentUser(null);
+          setAuthModal({ isOpen: true, tab: "login" });
+        }
         setSubmitStatus({
           type: "error",
           message: data.message || "Failed to submit application. Please try again.",
@@ -524,43 +583,110 @@ export default function CareersPage() {
 
           {/* Application Form Section */}
           <div ref={formRef} className="max-w-3xl mx-auto pt-6 scroll-mt-28">
-            <div className="relative rounded-3xl bg-gradient-to-b from-[#0e1626] to-[#0a0f1a] border border-cyan-500/20 p-6 sm:p-10 shadow-2xl shadow-cyan-950/40 backdrop-blur-xl">
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 mb-3">
-                  <Send size={22} />
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-                  Submit Your Application
-                </h2>
-                <p className="text-sm text-slate-300 mt-2 max-w-md mx-auto">
-                  Fill in your details below. Our team reviews every application
-                  and responds promptly.
-                </p>
+            {authChecking ? (
+              <div className="rounded-3xl bg-[#0e1626]/80 border border-cyan-500/20 p-12 text-center backdrop-blur-xl">
+                <Loader2 className="mx-auto mb-3 animate-spin text-cyan-400" size={36} />
+                <p className="text-sm text-slate-400">Verifying authentication status...</p>
               </div>
+            ) : !currentUser ? (
+              <div className="relative rounded-3xl bg-gradient-to-b from-[#0e1626] to-[#0a0f1a] border border-cyan-500/30 p-8 sm:p-12 shadow-2xl shadow-cyan-950/40 backdrop-blur-xl text-center">
+                <div className="mx-auto mb-5 inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-teal-500/20 border border-cyan-400/40 text-cyan-400 shadow-lg shadow-cyan-500/20">
+                  <Lock size={30} />
+                </div>
 
-              {/* Status Alert */}
-              {submitStatus.message && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`mb-6 p-4 rounded-xl flex items-start gap-3 border ${
-                    submitStatus.type === "success"
-                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-                      : "bg-rose-500/10 border-rose-500/30 text-rose-300"
-                  }`}
-                >
-                  {submitStatus.type === "success" ? (
-                    <CheckCircle2 size={20} className="flex-shrink-0 mt-0.5" />
-                  ) : (
-                    <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
-                  )}
-                  <div className="text-sm leading-relaxed">
-                    {submitStatus.message}
+                <span className="inline-block text-[11px] font-bold tracking-widest uppercase px-3.5 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 mb-3">
+                  Authentication Required
+                </span>
+
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-3">
+                  Sign In to Submit Your Application
+                </h2>
+
+                <p className="text-sm text-slate-300 max-w-lg mx-auto mb-8 leading-relaxed">
+                  To apply for open positions at Lekhok Tripura and securely upload your resume PDF, please sign in or register your account first.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
+                  <button
+                    type="button"
+                    onClick={() => setAuthModal({ isOpen: true, tab: "login" })}
+                    className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-400 hover:from-cyan-400 hover:to-teal-300 text-black font-bold text-sm shadow-lg shadow-cyan-500/25 transition-all duration-200 cursor-pointer"
+                  >
+                    <LogIn size={17} />
+                    <span>Login to Apply</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAuthModal({ isOpen: true, tab: "register" })}
+                    className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm border border-white/15 hover:border-white/30 transition-all duration-200 cursor-pointer"
+                  >
+                    <UserPlus size={17} />
+                    <span>Create Account</span>
+                  </button>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-center gap-2 text-xs text-slate-400">
+                  <Sparkles size={14} className="text-cyan-400" />
+                  <span>Target Role Selected: <strong className="text-white">{formData.role}</strong></span>
+                </div>
+              </div>
+            ) : (
+              <div className="relative rounded-3xl bg-gradient-to-b from-[#0e1626] to-[#0a0f1a] border border-cyan-500/20 p-6 sm:p-10 shadow-2xl shadow-cyan-950/40 backdrop-blur-xl">
+                {/* User Session Bar */}
+                <div className="flex items-center justify-between p-3.5 mb-8 rounded-2xl bg-white/[0.04] border border-cyan-500/20 text-xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center flex-shrink-0">
+                      <UserCheck size={16} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white font-semibold truncate">
+                        Signed in as <span className="text-cyan-300 font-bold">{currentUser.name || currentUser.email?.split("@")[0]}</span>
+                      </p>
+                      <p className="text-[11px] text-slate-400 truncate">{currentUser.email}</p>
+                    </div>
                   </div>
-                </motion.div>
-              )}
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 shrink-0">
+                    Verified Account
+                  </span>
+                </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 mb-3">
+                    <Send size={22} />
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+                    Submit Your Application
+                  </h2>
+                  <p className="text-sm text-slate-300 mt-2 max-w-md mx-auto">
+                    Fill in your details below. Our recruitment team reviews every application
+                    and responds promptly.
+                  </p>
+                </div>
+
+                {/* Status Alert */}
+                {submitStatus.message && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`mb-6 p-4 rounded-xl flex items-start gap-3 border ${
+                      submitStatus.type === "success"
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                        : "bg-rose-500/10 border-rose-500/30 text-rose-300"
+                    }`}
+                  >
+                    {submitStatus.type === "success" ? (
+                      <CheckCircle2 size={20} className="flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
+                    )}
+                    <div className="text-sm leading-relaxed">
+                      {submitStatus.message}
+                    </div>
+                  </motion.div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
                 {/* 1. Name */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
@@ -856,9 +982,31 @@ export default function CareersPage() {
                 </button>
               </form>
             </div>
+            )}
           </div>
         </div>
       </div>
+
+      {authModal.isOpen && (
+        <AuthModal
+          initialTab={authModal.tab}
+          onClose={(user) => {
+            setAuthModal({ isOpen: false, tab: "login" });
+            if (user) {
+              setCurrentUser(user);
+              setFormData((prev) => ({
+                ...prev,
+                name: prev.name || user.name || "",
+                email: prev.email || user.email || "",
+                number: prev.number || (user.phone || user.number || ""),
+              }));
+            } else {
+              checkAuth();
+            }
+          }}
+        />
+      )}
+
       <FooterSection />
     </PageTransition>
   );
