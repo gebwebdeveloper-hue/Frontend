@@ -681,7 +681,7 @@ export default function AdminCareerResponsesPage() {
                         <div className="flex items-center gap-1.5 text-white/60">
                           <MapPin size={13} className="text-cyan-400 flex-shrink-0" />
                           <span className="truncate">
-                            {item.hometown}{item.district ? `, ${item.district}` : ""}, {item.state} ({item.pin})
+                            {item.block || item.hometown}{item.district ? `, ${item.district}` : ""}, {item.state} ({item.pin})
                           </span>
                         </div>
                       </div>
@@ -851,8 +851,8 @@ export default function AdminCareerResponsesPage() {
                         </div>
                       )}
                       <div>
-                        <span className="text-white/40 block">HOMETOWN:</span>
-                        <strong className="text-white">{selectedResponse.hometown}</strong>
+                        <span className="text-white/40 block">BLOCK / MUNICIPALITY:</span>
+                        <strong className="text-white">{selectedResponse.block || selectedResponse.hometown}</strong>
                       </div>
                       <div>
                         <span className="text-white/40 block">PIN CODE:</span>

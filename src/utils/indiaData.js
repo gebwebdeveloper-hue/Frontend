@@ -240,3 +240,113 @@ export const DISTRICTS_BY_STATE = {
   "Lakshadweep": ["Lakshadweep"],
   "Puducherry": ["Karaikal", "Mahe", "Puducherry", "Yanam"]
 };
+
+export const BLOCKS_BY_DISTRICT = {
+  // Tripura
+  "West Tripura": [
+    "Agartala Municipal Corporation (AMC)",
+    "Mohanpur Municipal Council",
+    "Ranirbazar Municipal Council",
+    "Jirania Nagar Panchayat",
+    "Dukli RD Block",
+    "Lefunga RD Block",
+    "Hezamara RD Block",
+    "Jirania RD Block",
+    "Mandwi RD Block",
+    "Mohanpur RD Block",
+    "Belbari RD Block",
+    "Old Agartala RD Block",
+    "Bamutia RD Block"
+  ],
+  "Sepahijala": [
+    "Bishalgarh Municipal Council",
+    "Sonamura Nagar Panchayat",
+    "Melaghar Municipal Council",
+    "Bishalgarh RD Block",
+    "Charilam RD Block",
+    "Nalchar RD Block",
+    "Mohanbhog RD Block",
+    "Boxanagar RD Block",
+    "Kathalia RD Block",
+    "Jampuijala RD Block"
+  ],
+  "Khowai": [
+    "Khowai Municipal Council",
+    "Teliamura Municipal Council",
+    "Khowai RD Block",
+    "Padmabil RD Block",
+    "Tulashikhar RD Block",
+    "Kalyanpur RD Block",
+    "Teliamura RD Block",
+    "Mungiakami RD Block"
+  ],
+  "Gomati": [
+    "Udaipur Municipal Council",
+    "Amarpur Nagar Panchayat",
+    "Matabari RD Block",
+    "Kakraban RD Block",
+    "Killa RD Block",
+    "Tepania RD Block",
+    "Amarpur RD Block",
+    "Ompi RD Block",
+    "Karbook RD Block",
+    "Silachhari RD Block"
+  ],
+  "South Tripura": [
+    "Belonia Municipal Council",
+    "Santirbazar Municipal Council",
+    "Sabroom Nagar Panchayat",
+    "Bogafa RD Block",
+    "Rajnagar RD Block",
+    "Hrishyamukh RD Block",
+    "Bharat Chandra Nagar (BC Nagar) RD Block",
+    "Satchand RD Block",
+    "Rupaichhari RD Block",
+    "Jolaibari RD Block",
+    "Poangbari RD Block"
+  ],
+  "Dhalai": [
+    "Ambassa Municipal Council",
+    "Kamalpur Nagar Panchayat",
+    "Ambassa RD Block",
+    "Salema RD Block",
+    "Manu RD Block",
+    "Chawmanu RD Block",
+    "Dumburnagar RD Block",
+    "Ganganagar RD Block",
+    "Durga Chawmuhani RD Block",
+    "Raisyabari RD Block"
+  ],
+  "Unakoti": [
+    "Kailashahar Municipal Council",
+    "Kumarghat Municipal Council",
+    "Gournagar RD Block",
+    "Chandipur RD Block",
+    "Kumarghat RD Block",
+    "Pecharthal RD Block"
+  ],
+  "North Tripura": [
+    "Dharmanagar Municipal Council",
+    "Panisagar Nagar Panchayat",
+    "Kanchanpur Nagar Panchayat",
+    "Kadamtala RD Block",
+    "Kalacherra RD Block",
+    "Panisagar RD Block",
+    "Damcherra RD Block",
+    "Dasda RD Block",
+    "Kanchanpur RD Block",
+    "Jampui Hills RD Block",
+    "Laljuri RD Block"
+  ],
+
+  // Assam
+  "Cachar": ["Silchar Municipal Board", "Lakhipur Municipal Board", "Banskandi Block", "Katigorah Block", "Narsingpur Block", "Sonai Block", "Udarbond Block", "Raja Bazar Block", "Salchapra Block"],
+  "Kamrup Metropolitan": ["Guwahati Municipal Corporation (GMC)", "Chandrapur Block", "Dimoria Block", "Rani Block"],
+  "Karimganj": ["Karimganj Municipal Board", "Badarpur Municipal Board", "Ramkrishna Nagar Block", "Patharkandi Block", "Badarpur Block", "North Karimganj Block", "South Karimganj Block"],
+
+  // West Bengal
+  "Kolkata": ["Kolkata Municipal Corporation (KMC)"],
+  "North 24 Parganas": ["Bidhannagar Municipal Corporation", "Barasat Municipality", "Barrackpore Municipality", "Habra Municipality", "Naihati Municipality", "Panihati Municipality", "Amdanga Block", "Barasat I Block", "Barasat II Block", "Rajarhat Block"],
+  "South 24 Parganas": ["South Dumdum Municipality", "Rajpur Sonarpur Municipality", "Baruipur Municipality", "Budge Budge Municipality", "Diamond Harbour Municipality", "Baruipur Block", "Bhangar Block", "Canning Block"],
+  "Howrah": ["Howrah Municipal Corporation", "Bally Municipality", "Amta I Block", "Amta II Block", "Bagnan I Block", "Bagnan II Block", "Domjur Block", "Panchla Block", "Uluberia I Block"]
+};
