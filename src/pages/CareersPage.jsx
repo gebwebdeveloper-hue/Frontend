@@ -34,6 +34,7 @@ import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import AuthModal from "../components/AuthModal.jsx";
 import { API_BASE } from "../config.js";
+import { INDIA_STATES } from "../utils/indiaData.js";
 
 const openRoles = [
   {
@@ -797,15 +798,28 @@ export default function CareersPage() {
                     <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
                       State <span className="text-rose-400">*</span>
                     </label>
-                    <input
-                      type="text"
-                      name="state"
-                      value={formData.state}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="e.g. Tripura"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
-                    />
+                    <div className="relative">
+                      <select
+                        name="state"
+                        value={formData.state}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white text-sm outline-none transition appearance-none cursor-pointer pr-10 font-medium"
+                      >
+                        <option value="" disabled className="bg-slate-900 text-slate-500">
+                          Select State / UT
+                        </option>
+                        {INDIA_STATES.map((st) => (
+                          <option key={st} value={st} className="bg-slate-900 text-white">
+                            {st}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown
+                        size={16}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                      />
+                    </div>
                   </div>
 
                   <div>
