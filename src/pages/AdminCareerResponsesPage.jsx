@@ -25,9 +25,19 @@ import {
 } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import AdminNavbar from "../components/AdminNavbar.jsx";
-import { API_BASE, SERVER_URL } from "../config.js";
-
-const getMediaUrl = (url) => (!url ? "" : url.startsWith("http") ? url : `${SERVER_URL}${url}`);
+const getMediaUrl = (url) => {
+  if (!url) return "";
+  let fullUrl = url.startsWith("http") ? url : `${SERVER_URL}${url}`;
+  if (
+    fullUrl.includes("res.cloudinary.com") &&
+    fullUrl.includes("/image/upload/") &&
+    fullUrl.toLowerCase().includes(".pdf") &&
+    !fullUrl.includes("/fl_attachment")
+  ) {
+    fullUrl = fullUrl.replace("/image/upload/", "/image/upload/fl_attachment/");
+  }
+  return fullUrl;
+};
 
 const STATUS_COLORS = {
   Pending: "border-amber-500/40 bg-amber-500/10 text-amber-300",
