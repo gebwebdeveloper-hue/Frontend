@@ -1131,16 +1131,6 @@ export default function CareersPage() {
                         </div>
                       )}
                     </div>
-                    {pinFetchedInfo && !pinFetchedInfo.notFound && (
-                      <p className="mt-1 text-[11px] text-emerald-400 font-medium truncate">
-                        ✓ {pinFetchedInfo.primaryPo || pinFetchedInfo.district}, {pinFetchedInfo.state}
-                      </p>
-                    )}
-                    {pinFetchedInfo?.notFound && (
-                      <p className="mt-1 text-[11px] text-amber-400 font-medium">
-                        Postal PIN not found. Please enter address manually.
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -1159,11 +1149,22 @@ export default function CareersPage() {
 
                   {/* Post Office Suggestion Pills */}
                   {availablePostOffices.length > 1 && (
-                    <div className="mb-2.5 p-2.5 rounded-xl bg-cyan-950/30 border border-cyan-500/20">
-                      <div className="text-[11px] text-cyan-300 font-medium mb-1.5 flex items-center gap-1">
+                    <div
+                      data-lenis-prevent="true"
+                      className="mb-2.5 p-2.5 rounded-xl bg-cyan-950/30 border border-cyan-500/20"
+                    >
+                      <div className="text-[11px] text-cyan-300 font-medium mb-1.5 flex items-center justify-between">
                         <span>Select your Post Office / Area:</span>
+                        <span className="text-[10px] text-slate-400">
+                          {availablePostOffices.length} areas found
+                        </span>
                       </div>
-                      <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                      <div
+                        data-lenis-prevent="true"
+                        onWheel={(e) => e.stopPropagation()}
+                        onTouchMove={(e) => e.stopPropagation()}
+                        className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto overscroll-contain pr-1 custom-scrollbar"
+                      >
                         {availablePostOffices.map((po) => {
                           const isSelected = formData.address.toLowerCase().includes(po.Name.toLowerCase());
                           return (
