@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import AdminNavbar from "../components/AdminNavbar.jsx";
+import { API_BASE, SERVER_URL } from "../config.js";
+
 const getMediaUrl = (url) => {
   if (!url) return "";
   let fullUrl = url.startsWith("http") ? url : `${SERVER_URL}${url}`;
