@@ -22,6 +22,9 @@ import {
   ExternalLink,
   ChevronDown,
   Building2,
+  FileText,
+  UploadCloud,
+  X,
 } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
@@ -182,6 +185,7 @@ const roleOptions = [
 
 export default function CareersPage() {
   const formRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -196,6 +200,8 @@ export default function CareersPage() {
     portfolioUrl: "",
   });
 
+  const [resumeFile, setResumeFile] = useState(null);
+  const [fileError, setFileError] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
 
@@ -219,9 +225,43 @@ export default function CareersPage() {
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    setFileError("");
+    if (!file) return;
+
+    const isPdf =
+      file.name.toLowerCase().endsWith(".pdf") ||
+      file.type === "application/pdf" ||
+      file.type === "application/x-pdf";
+
+    if (!isPdf) {
+      setFileError("Only PDF files (.pdf) are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 15 * 1024 * 1024) {
+      setFileError("PDF file size must be less than 15MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setResumeFile(file);
+  };
+
+  const handleRemoveFile = () => {
+    setResumeFile(null);
+    setFileError("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitStatus({ type: "", message: "" });
+    setFileError("");
 
     // Validations
     if (!formData.name.trim()) {
@@ -268,14 +308,45 @@ export default function CareersPage() {
       });
       return;
     }
+    if (!resumeFile) {
+      setFileError("Please upload your Resume in PDF format.");
+      setSubmitStatus({
+        type: "error",
+        message: "Resume PDF upload is mandatory. Please attach your resume.",
+      });
+      return;
+    }
+    if (!formData.experience.trim()) {
+      setSubmitStatus({
+        type: "error",
+        message: "Please fill in your Experience / Why you want to join.",
+      });
+      return;
+    }
 
     setLoading(true);
 
     try {
+      const payload = new FormData();
+      payload.append("name", formData.name.trim());
+      payload.append("number", formData.number.trim());
+      payload.append("email", formData.email.trim().toLowerCase());
+      payload.append("state", formData.state.trim());
+      payload.append("hometown", formData.hometown.trim());
+      payload.append("pin", formData.pin.trim());
+      payload.append("address", formData.address.trim());
+      payload.append("role", formData.role);
+      payload.append("experience", formData.experience.trim());
+      if (formData.portfolioUrl.trim()) {
+        payload.append("portfolioUrl", formData.portfolioUrl.trim());
+      }
+      if (resumeFile) {
+        payload.append("resume", resumeFile);
+      }
+
       const res = await fetch(`${API_BASE}/careers/apply`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: payload,
       });
 
       const data = await res.json();
@@ -284,7 +355,7 @@ export default function CareersPage() {
         setSubmitStatus({
           type: "success",
           message:
-            "Thank you! Your application has been submitted successfully. Our team will review your profile and contact you soon.",
+            "Thank you! Your application and resume have been submitted successfully. Our team will review your profile and contact you soon.",
         });
         setFormData({
           name: "",
@@ -298,6 +369,7 @@ export default function CareersPage() {
           experience: "",
           portfolioUrl: "",
         });
+        handleRemoveFile();
       } else {
         setSubmitStatus({
           type: "error",
@@ -654,10 +726,81 @@ export default function CareersPage() {
                   </div>
                 </div>
 
-                {/* Optional Portfolio / Resume URL */}
+                {/* 9. Resume PDF Upload (Mandatory) */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                      Upload Resume (PDF) <span className="text-rose-400">*</span>
+                    </label>
+                    <span className="text-[11px] font-medium text-slate-400">PDF only, max 15MB</span>
+                  </div>
+
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept=".pdf,application/pdf"
+                    className="hidden"
+                    id="resume-pdf-upload"
+                  />
+
+                  {!resumeFile ? (
+                    <label
+                      htmlFor="resume-pdf-upload"
+                      className={`group flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200 ${
+                        fileError
+                          ? "border-rose-500/60 bg-rose-500/5"
+                          : "border-slate-700/80 hover:border-cyan-400/80 bg-slate-900/60 hover:bg-slate-900/90"
+                      }`}
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <UploadCloud size={24} />
+                      </div>
+                      <p className="text-sm font-semibold text-white group-hover:text-cyan-300 transition-colors">
+                        Click to upload your Resume PDF
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Supports .pdf format up to 15MB
+                      </p>
+                    </label>
+                  ) : (
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-900/90 border border-cyan-500/40 text-sm">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center flex-shrink-0">
+                          <FileText size={20} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-white truncate text-xs sm:text-sm">
+                            {resumeFile.name}
+                          </p>
+                          <p className="text-[11px] text-emerald-400 flex items-center gap-1 mt-0.5">
+                            <CheckCircle2 size={12} />
+                            <span>{(resumeFile.size / (1024 * 1024)).toFixed(2)} MB • Ready to upload</span>
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveFile}
+                        className="p-2 rounded-lg bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/10 transition-colors ml-3 flex-shrink-0"
+                        title="Remove file"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  )}
+
+                  {fileError && (
+                    <p className="text-xs text-rose-400 mt-1.5 flex items-center gap-1">
+                      <AlertCircle size={13} /> {fileError}
+                    </p>
+                  )}
+                </div>
+
+                {/* 10. Optional Portfolio / Behance / LinkedIn */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
-                    Portfolio / Resume Link / Behance / LinkedIn{" "}
+                    Portfolio / Behance / LinkedIn / Website{" "}
                     <span className="text-slate-500 lowercase font-normal">(optional)</span>
                   </label>
                   <div className="relative">
@@ -670,22 +813,23 @@ export default function CareersPage() {
                       name="portfolioUrl"
                       value={formData.portfolioUrl}
                       onChange={handleInputChange}
-                      placeholder="https://behance.net/yourprofile or Google Drive link"
+                      placeholder="https://behance.net/yourprofile or LinkedIn profile"
                       className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
                     />
                   </div>
                 </div>
 
-                {/* Optional Experience / Bio */}
+                {/* 11. Mandatory Experience / Bio */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
                     Brief Experience / Why you want to join{" "}
-                    <span className="text-slate-500 lowercase font-normal">(optional)</span>
+                    <span className="text-rose-400">*</span>
                   </label>
                   <textarea
                     name="experience"
                     value={formData.experience}
                     onChange={handleInputChange}
+                    required
                     rows={3}
                     placeholder="Tell us about your previous experience, software skills, or projects..."
                     className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition resize-none"

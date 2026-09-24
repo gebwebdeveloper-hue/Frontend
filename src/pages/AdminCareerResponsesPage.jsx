@@ -25,7 +25,9 @@ import {
 } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import AdminNavbar from "../components/AdminNavbar.jsx";
-import { API_BASE } from "../config.js";
+import { API_BASE, SERVER_URL } from "../config.js";
+
+const getMediaUrl = (url) => (!url ? "" : url.startsWith("http") ? url : `${SERVER_URL}${url}`);
 
 const STATUS_COLORS = {
   Pending: "border-amber-500/40 bg-amber-500/10 text-amber-300",
@@ -527,21 +529,34 @@ export default function AdminCareerResponsesPage() {
                         </div>
                       </div>
 
-                      {/* Date */}
+                      {/* Date & Links */}
                       <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-white/40">
                         <span>
                           Applied: {new Date(item.createdAt).toLocaleDateString("en-IN")}
                         </span>
-                        {item.portfolioUrl && (
-                          <a
-                            href={item.portfolioUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-cyan-400 hover:underline"
-                          >
-                            <ExternalLink size={12} /> Portfolio
-                          </a>
-                        )}
+                        <div className="flex items-center gap-2.5">
+                          {item.resumeUrl && (
+                            <a
+                              href={getMediaUrl(item.resumeUrl)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-semibold hover:underline"
+                              title="View Resume PDF"
+                            >
+                              <FileText size={12} /> Resume
+                            </a>
+                          )}
+                          {item.portfolioUrl && (
+                            <a
+                              href={item.portfolioUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-cyan-400 hover:underline"
+                            >
+                              <ExternalLink size={12} /> Link
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -685,15 +700,39 @@ export default function AdminCareerResponsesPage() {
                     </div>
                   </div>
 
-                  {/* Portfolio / Links / Experience */}
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-3">
+                  {/* Resume, Portfolio & Experience */}
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
                     <h4 className="text-xs font-black uppercase tracking-wider text-cyan-300">
-                      PORTFOLIO & EXPERIENCE
+                      RESUME & APPLICATION PROFILE
                     </h4>
-                    <div className="space-y-3 text-xs">
-                      {selectedResponse.portfolioUrl ? (
-                        <div>
-                          <span className="text-white/40 block mb-1">PORTFOLIO LINK:</span>
+                    <div className="space-y-4 text-xs">
+                      {/* Resume PDF */}
+                      <div>
+                        <span className="text-white/40 block mb-1.5 font-bold uppercase tracking-wider text-[10px]">
+                          RESUME (PDF):
+                        </span>
+                        {selectedResponse.resumeUrl ? (
+                          <a
+                            href={getMediaUrl(selectedResponse.resumeUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-emerald-300 hover:text-emerald-200 bg-emerald-500/10 border border-emerald-500/30 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-500/20 transition shadow-lg shadow-emerald-950/20"
+                          >
+                            <FileText size={16} className="text-emerald-400" />
+                            <span>View & Download Resume PDF</span>
+                            <ExternalLink size={13} className="opacity-70 ml-1" />
+                          </a>
+                        ) : (
+                          <p className="text-white/40 italic">No resume attached for this submission.</p>
+                        )}
+                      </div>
+
+                      {/* Portfolio Link */}
+                      <div>
+                        <span className="text-white/40 block mb-1.5 font-bold uppercase tracking-wider text-[10px]">
+                          PORTFOLIO / PROFILE LINK:
+                        </span>
+                        {selectedResponse.portfolioUrl ? (
                           <a
                             href={selectedResponse.portfolioUrl}
                             target="_blank"
@@ -703,15 +742,18 @@ export default function AdminCareerResponsesPage() {
                             <ExternalLink size={14} />
                             {selectedResponse.portfolioUrl}
                           </a>
-                        </div>
-                      ) : (
-                        <p className="text-white/40 italic">No portfolio link provided.</p>
-                      )}
+                        ) : (
+                          <p className="text-white/40 italic">No portfolio link provided.</p>
+                        )}
+                      </div>
 
+                      {/* Experience */}
                       {selectedResponse.experience && (
                         <div>
-                          <span className="text-white/40 block mb-1">EXPERIENCE / BIO:</span>
-                          <p className="text-white/80 bg-black/40 border border-white/5 p-3 rounded-xl whitespace-pre-wrap leading-relaxed">
+                          <span className="text-white/40 block mb-1.5 font-bold uppercase tracking-wider text-[10px]">
+                            EXPERIENCE / WHY THEY WANT TO JOIN:
+                          </span>
+                          <p className="text-white/90 bg-black/40 border border-white/5 p-3.5 rounded-xl whitespace-pre-wrap leading-relaxed">
                             {selectedResponse.experience}
                           </p>
                         </div>
