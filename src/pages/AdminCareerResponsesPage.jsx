@@ -93,11 +93,14 @@ function ResumePreviewModal({ candidate, onClose }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[300] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md"
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-lg"
+      data-lenis-prevent="true"
+      onWheel={(e) => e.stopPropagation()}
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-5xl h-[90vh] flex flex-col rounded-3xl border border-white/15 bg-[#0e1626] shadow-2xl overflow-hidden"
+        className="relative w-full max-w-5xl h-[92vh] flex flex-col rounded-3xl border border-white/20 bg-[#0e1626] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        data-lenis-prevent="true"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
