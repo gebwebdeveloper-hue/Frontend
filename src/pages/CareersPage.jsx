@@ -225,6 +225,165 @@ export default function CareersPage() {
   const [fileError, setFileError] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
+  const [pinLoading, setPinLoading] = useState(false);
+  const [pinFetchedInfo, setPinFetchedInfo] = useState(null);
+  const [availablePostOffices, setAvailablePostOffices] = useState([]);
+
+  // Auto-fetch Address, State, District, and Block when PIN is entered
+  useEffect(() => {
+    if (!formData.pin || formData.pin.length !== 6 || !/^\d{6}$/.test(formData.pin)) {
+      setPinFetchedInfo(null);
+      setAvailablePostOffices([]);
+      setPinLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    const fetchPinDetails = async () => {
+      setPinLoading(true);
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${formData.pin}`);
+        if (!res.ok) throw new Error("PIN fetch failed");
+        const data = await res.json();
+
+        if (!isMounted) return;
+
+        if (Array.isArray(data) && data[0]?.Status === "Success" && data[0]?.PostOffice?.length > 0) {
+          const postOffices = data[0].PostOffice;
+          const firstPO = postOffices[0];
+          const rawState = firstPO.State;
+          const rawDistrict = firstPO.District;
+          const rawBlock = firstPO.Block !== "NA" ? firstPO.Block : "";
+
+          // Match state with INDIA_STATES
+          const matchedState =
+            INDIA_STATES.find((s) => s.toLowerCase() === rawState?.toLowerCase()) ||
+            rawState;
+
+          // Match district with DISTRICTS_BY_STATE
+          const districtList = DISTRICTS_BY_STATE[matchedState] || [];
+          let matchedDistrict =
+            districtList.find((d) => d.toLowerCase() === rawDistrict?.toLowerCase()) || "";
+
+          // Fallback district matching if district was reorganized (e.g. Khowai / Sepahijala in Tripura)
+          if (!matchedDistrict && matchedState === "Tripura") {
+            for (const d of districtList) {
+              const blocks = BLOCKS_BY_DISTRICT[d] || [];
+              const hasMatch = postOffices.some((po) =>
+                blocks.some(
+                  (b) =>
+                    b.toLowerCase().includes(po.Name.toLowerCase()) ||
+                    (po.Block &&
+                      po.Block !== "NA" &&
+                      b.toLowerCase().includes(po.Block.toLowerCase()))
+                )
+              );
+              if (hasMatch) {
+                matchedDistrict = d;
+                break;
+              }
+            }
+          }
+          if (!matchedDistrict) {
+            matchedDistrict = rawDistrict;
+          }
+
+          // Match Block / Municipality
+          const blockList = BLOCKS_BY_DISTRICT[matchedDistrict] || [];
+          let matchedBlock = "";
+          if (rawBlock) {
+            matchedBlock =
+              blockList.find(
+                (b) =>
+                  b.toLowerCase().includes(rawBlock.toLowerCase()) ||
+                  rawBlock
+                    .toLowerCase()
+                    .includes(
+                      b
+                        .toLowerCase()
+                        .replace(
+                          /\s+(rd\s+block|municipal\s+council|nagar\s+panchayat|amc)/i,
+                          ""
+                        )
+                    )
+              ) || "";
+          }
+          if (!matchedBlock) {
+            for (const po of postOffices) {
+              const found = blockList.find(
+                (b) =>
+                  b.toLowerCase().includes(po.Name.toLowerCase()) ||
+                  po.Name
+                    .toLowerCase()
+                    .includes(
+                      b
+                        .toLowerCase()
+                        .replace(
+                          /\s+(rd\s+block|municipal\s+council|nagar\s+panchayat|amc)/i,
+                          ""
+                        )
+                    )
+              );
+              if (found) {
+                matchedBlock = found;
+                break;
+              }
+            }
+          }
+
+          const primaryPoName = firstPO.Name;
+          const autoAddress = `P.O. ${primaryPoName}${
+            rawBlock && rawBlock !== "NA" && rawBlock !== primaryPoName
+              ? `, ${rawBlock}`
+              : ""
+          }`;
+
+          setAvailablePostOffices(postOffices);
+          setPinFetchedInfo({
+            state: matchedState,
+            district: matchedDistrict,
+            primaryPo: primaryPoName,
+            count: postOffices.length,
+          });
+
+          setFormData((prev) => {
+            const nextState = prev.state || matchedState;
+            const nextDistrict = prev.district || matchedDistrict;
+            const nextBlock = prev.block || matchedBlock;
+            const shouldUpdateAddress =
+              !prev.address.trim() || prev.address.startsWith("P.O.");
+            const nextAddress = shouldUpdateAddress ? autoAddress : prev.address;
+
+            return {
+              ...prev,
+              state: nextState,
+              district: nextDistrict,
+              block: nextBlock,
+              address: nextAddress,
+            };
+          });
+        } else {
+          setPinFetchedInfo({ notFound: true });
+          setAvailablePostOffices([]);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("Error auto-fetching address from PIN:", err);
+          setPinFetchedInfo(null);
+        }
+      } finally {
+        if (isMounted) {
+          setPinLoading(false);
+        }
+      }
+    };
+
+    fetchPinDetails();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [formData.pin]);
 
   const checkAuth = async () => {
     try {
@@ -939,27 +1098,104 @@ export default function CareersPage() {
 
                   {/* PIN Code */}
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
-                      Pin <span className="text-rose-400">*</span>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2 flex items-center justify-between">
+                      <span>Pin <span className="text-rose-400">*</span></span>
+                      {pinLoading && (
+                        <span className="text-[10px] text-cyan-400 font-normal flex items-center gap-1">
+                          <Loader2 size={11} className="animate-spin" /> Fetching...
+                        </span>
+                      )}
                     </label>
-                    <input
-                      type="text"
-                      name="pin"
-                      value={formData.pin}
-                      onChange={handleInputChange}
-                      required
-                      maxLength={6}
-                      placeholder="6-digit PIN"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="pin"
+                        value={formData.pin}
+                        onChange={handleInputChange}
+                        required
+                        maxLength={6}
+                        placeholder="6-digit PIN"
+                        className="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-900/90 border border-slate-700/80 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
+                      />
+                      {pinLoading && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                          <Loader2 size={16} className="animate-spin text-cyan-400" />
+                        </div>
+                      )}
+                      {!pinLoading && pinFetchedInfo && !pinFetchedInfo.notFound && (
+                        <div
+                          className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-emerald-400"
+                          title="Postal details verified"
+                        >
+                          <CheckCircle2 size={16} />
+                        </div>
+                      )}
+                    </div>
+                    {pinFetchedInfo && !pinFetchedInfo.notFound && (
+                      <p className="mt-1 text-[11px] text-emerald-400 font-medium truncate">
+                        ✓ {pinFetchedInfo.primaryPo || pinFetchedInfo.district}, {pinFetchedInfo.state}
+                      </p>
+                    )}
+                    {pinFetchedInfo?.notFound && (
+                      <p className="mt-1 text-[11px] text-amber-400 font-medium">
+                        Postal PIN not found. Please enter address manually.
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 {/* 7. Address */}
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
-                    Address <span className="text-rose-400">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                      Address <span className="text-rose-400">*</span>
+                    </label>
+                    {pinFetchedInfo && !pinFetchedInfo.notFound && (
+                      <span className="text-[11px] text-cyan-400 font-medium flex items-center gap-1">
+                        <Sparkles size={12} /> Auto-filled from PIN
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Post Office Suggestion Pills */}
+                  {availablePostOffices.length > 1 && (
+                    <div className="mb-2.5 p-2.5 rounded-xl bg-cyan-950/30 border border-cyan-500/20">
+                      <div className="text-[11px] text-cyan-300 font-medium mb-1.5 flex items-center gap-1">
+                        <span>Select your Post Office / Area:</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                        {availablePostOffices.map((po) => {
+                          const isSelected = formData.address.toLowerCase().includes(po.Name.toLowerCase());
+                          return (
+                            <button
+                              key={po.Name}
+                              type="button"
+                              onClick={() => {
+                                const poText = `P.O. ${po.Name}${po.Block && po.Block !== "NA" && po.Block !== po.Name ? `, ${po.Block}` : ""}`;
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  address: prev.address
+                                    ? `${poText}, ${prev.address.replace(/^P\.O\.\s*[^,]+(,\s*[^,]+)?,?\s*/i, "")}`.trim()
+                                    : poText,
+                                }));
+                              }}
+                              className={`text-[11px] px-2.5 py-1 rounded-lg border transition cursor-pointer flex items-center gap-1 ${
+                                isSelected
+                                  ? "bg-cyan-500 text-black font-bold border-cyan-400 shadow-sm"
+                                  : "bg-slate-900/80 border-slate-700/80 text-cyan-200 hover:bg-cyan-500/20 hover:border-cyan-400/50"
+                              }`}
+                            >
+                              <span>{po.Name}</span>
+                              <span className="text-[9px] opacity-70">
+                                {po.BranchType === "Head Post Office" ? "(HO)" : po.BranchType === "Sub Post Office" ? "(SO)" : "(BO)"}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="relative">
                     <Home
                       size={18}
