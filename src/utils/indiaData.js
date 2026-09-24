@@ -725,16 +725,521 @@ export const BLOCKS_BY_DISTRICT = {
   "South West Delhi": ["Dwarka Subdivision", "Najafgarh Subdivision", "Kapashera Subdivision", "Najafgarh Zone MCD"],
   "West Delhi": ["Patel Nagar Subdivision", "Punjabi Bagh Subdivision", "Rajouri Garden Subdivision", "West Zone MCD"],
 
-  // Assam (Major Districts)
-  "Cachar": ["Silchar Municipal Board", "Lakhipur Municipal Board", "Banskandi Block", "Katigorah Block", "Narsingpur Block", "Sonai Block", "Udarbond Block", "Raja Bazar Block", "Salchapra Block"],
-  "Kamrup Metropolitan": ["Guwahati Municipal Corporation (GMC)", "Chandrapur Block", "Dimoria Block", "Rani Block", "Dispur", "Beltola", "Panbazar"],
-  "Kamrup": ["Rangia Municipal Board", "Palasbari Municipal Board", "Boko Block", "Chaygaon Block", "Hajo Block", "Kamalpur Block", "Rangia Block", "Sualkuchi Block"],
-  "Karimganj": ["Karimganj Municipal Board", "Badarpur Municipal Board", "Ramkrishna Nagar Block", "Patharkandi Block", "Badarpur Block", "North Karimganj Block", "South Karimganj Block"],
-  "Hailakandi": ["Hailakandi Municipal Board", "Lala Municipal Board", "Algapur Block", "Hailakandi Block", "Katlicherra Block", "Lala Block", "South Hailakandi Block"],
-  "Dibrugarh": ["Dibrugarh Municipal Board", "Naharkatiya Town Committee", "Chabua Town Committee", "Barbaruah Block", "Khowang Block", "Lahowal Block", "Tengakhat Block", "Tingkhong Block"],
-  "Jorhat": ["Jorhat Municipal Board", "Mariani Municipal Board", "Titabor Town Committee", "Central Jorhat Block", "East Jorhat Block", "North West Jorhat Block", "Titabor Block"],
-  "Tinsukia": ["Tinsukia Municipal Board", "Digboi Municipal Board", "Doomdooma Municipal Board", "Margherita Municipal Board", "Guijan Block", "Kakopathar Block", "Margherita Block", "Saikhowa Block"],
-  "Nagaon": ["Nagaon Municipal Board", "Kampur Town Committee", "Raha Town Committee", "Bajiagaon Block", "Batadraba Block", "Dolongghat Block", "Kaliabor Block", "Kampur Block", "Kathiatoli Block", "Raha Block"],
+  // Manipur (All 16 Districts)
+  "Bishnupur": [
+    "Bishnupur Municipal Council",
+    "Nambol Municipal Council",
+    "Moirang Municipal Council",
+    "Ningthoukhong Municipal Council",
+    "Kumbi Municipal Council",
+    "Oinam Municipal Council",
+    "Bishnupur Block",
+    "Nambol Block",
+    "Moirang Block"
+  ],
+  "Chandel": [
+    "Chandel Town",
+    "Chandel Block",
+    "Chakpikarong Block",
+    "Khengjoy Block"
+  ],
+  "Churachandpur": [
+    "Churachandpur Autonomous District Council",
+    "Churachandpur Block",
+    "Singngat Block",
+    "Tuibong Block",
+    "Sangaikot Block",
+    "Saikot Block",
+    "Henglep Block",
+    "Samulamlan Block",
+    "Kangvai Block",
+    "Suangdoh Block"
+  ],
+  "Imphal East": [
+    "Imphal Municipal Corporation (East)",
+    "Porompat Block",
+    "Keirao Bitra Block",
+    "Sawombung Block",
+    "Khundrakpam Block",
+    "Andro Nagar Panchayat",
+    "Lamlai Nagar Panchayat"
+  ],
+  "Imphal West": [
+    "Imphal Municipal Corporation (West)",
+    "Lamphelpat Block",
+    "Wangoi Block",
+    "Patsoi Block",
+    "Lamsang Block",
+    "Mayang Imphal Municipal Council",
+    "Samurou Nagar Panchayat",
+    "Thongkhong Laxmi Bazar Nagar Panchayat",
+    "Lilong (Imphal West) Nagar Panchayat"
+  ],
+  "Jiribam": [
+    "Jiribam Municipal Council",
+    "Jiribam Block",
+    "Borobekra Block"
+  ],
+  "Kakching": [
+    "Kakching Municipal Council",
+    "Kakching Khunou Municipal Council",
+    "Sugnu Municipal Council",
+    "Kakching Block",
+    "Waikhong Block"
+  ],
+  "Kamjong": [
+    "Kamjong Block",
+    "Sahamphung Block",
+    "Kasom Khullen Block",
+    "Phungyar Block"
+  ],
+  "Kangpokpi": [
+    "Kangpokpi Municipal Committee",
+    "Kangpokpi Block",
+    "Champhai Block",
+    "Saitu Gamphazol Block",
+    "Kangchup Geljang Block",
+    "Saikul Block",
+    "Bungte Chiru Block",
+    "Island Block",
+    "T Waichong Block",
+    "Lungtin Block"
+  ],
+  "Noney": [
+    "Noney (Longmai) Block",
+    "Nungba Block",
+    "Khoupum Block",
+    "Haochong Block"
+  ],
+  "Pherzawl": [
+    "Pherzawl Block",
+    "Parbung (Tipaimukh) Block",
+    "Thanlon Block",
+    "Vangai Range Block"
+  ],
+  "Senapati": [
+    "Senapati Town",
+    "Tadubi Block",
+    "Mao-Maram Block",
+    "Paomata Block",
+    "Purul Block",
+    "Willong Block",
+    "Chilivai Phaibung Block",
+    "Song Song Block"
+  ],
+  "Tamenglong": [
+    "Tamenglong Block",
+    "Tamei Block",
+    "Tousem Block",
+    "Khongsang Block"
+  ],
+  "Tengnoupal": [
+    "Tengnoupal Block",
+    "Moreh Town Committee",
+    "Machi Block"
+  ],
+  "Thoubal": [
+    "Thoubal Municipal Council",
+    "Lilong (Thoubal) Municipal Council",
+    "Yairipok Municipal Council",
+    "Wangjing Municipal Council",
+    "Sikhong Sekmai Municipal Council",
+    "Thoubal Block",
+    "Lilong Block",
+    "Wangjing Tentha Block",
+    "Heirok Block"
+  ],
+  "Ukhrul": [
+    "Ukhrul Town",
+    "Ukhrul Block",
+    "Chingai Block",
+    "Jessami Block",
+    "Lungchong Maiphei (LM) Block"
+  ],
+
+  // Assam (All 35 Districts)
+  "Bajali": [
+    "Pathsala Municipal Board",
+    "Bajali Block",
+    "Bhawanipur Block",
+    "Sarupeta Block"
+  ],
+  "Baksa": [
+    "Mushalpur Town",
+    "Tamulpur Block",
+    "Baska Block",
+    "Barama Block",
+    "Jalah Block",
+    "Goreswar Block",
+    "Dhamdhama Block",
+    "Nagrijuli Block",
+    "Simla Block"
+  ],
+  "Barpeta": [
+    "Barpeta Municipal Board",
+    "Sarthebari Municipal Board",
+    "Howly Municipal Board",
+    "Barpeta Block",
+    "Bhabanipur Block",
+    "Chenga Block",
+    "Gobardhana Block",
+    "Mandia Block",
+    "Pakabetbari Block",
+    "Rupshi Block",
+    "Sarukhetri Block"
+  ],
+  "Biswanath": [
+    "Biswanath Chariali Municipal Board",
+    "Gohpur Municipal Board",
+    "Biswanath Block",
+    "Baghmara Block",
+    "Behali Block",
+    "Chaiduar Block",
+    "Pub Chaiduar Block",
+    "Sakomatha Block"
+  ],
+  "Bongaigaon": [
+    "Bongaigaon Municipal Board",
+    "Abhayapuri Municipal Board",
+    "Boitamari Block",
+    "Dangtol Block",
+    "Manikpur Block",
+    "Srijangram Block",
+    "Tapattary Block"
+  ],
+  "Cachar": [
+    "Silchar Municipal Board",
+    "Lakhipur Municipal Board",
+    "Banskandi Block",
+    "Katigorah Block",
+    "Narsingpur Block",
+    "Sonai Block",
+    "Udarbond Block",
+    "Raja Bazar Block",
+    "Salchapra Block",
+    "Borkhola Block",
+    "Kalain Block",
+    "Tapang Block",
+    "Palonghat Block"
+  ],
+  "Charaideo": [
+    "Sonari Municipal Board",
+    "Moranhat Municipal Board",
+    "Sonari Block",
+    "Sapekhati Block",
+    "Mahmora Block",
+    "Lakwa Block"
+  ],
+  "Chirang": [
+    "Bijni Municipal Board",
+    "Kajalgaon Town",
+    "Borobazar Block",
+    "Manikpur Block",
+    "Sidli-Chirang Block"
+  ],
+  "Darrang": [
+    "Mangaldai Municipal Board",
+    "Kharupetia Municipal Board",
+    "Dalgaon-Sialmari Block",
+    "Kalaigaon Block",
+    "Pub Mangaldai Block",
+    "Sipajhar Block",
+    "Pachim Mangaldai Block",
+    "Bechimari Block"
+  ],
+  "Dhemaji": [
+    "Dhemaji Municipal Board",
+    "Silapathar Municipal Board",
+    "Bordoloni Block",
+    "Dhemaji Block",
+    "Machkhowa Block",
+    "Murkongselek (Jonai) Block",
+    "Sissiborgaon Block"
+  ],
+  "Dhubri": [
+    "Dhubri Municipal Board",
+    "Gauripur Municipal Board",
+    "Bilasipara Municipal Board",
+    "Chapar Municipal Board",
+    "Agomoni Block",
+    "Bilasipara Block",
+    "Birshing Jarua Block",
+    "Chapar Salkocha Block",
+    "Debitola Block",
+    "Golakganj Block",
+    "Gauripur Block",
+    "Mahamaya Block",
+    "Nayeralga Block",
+    "Rupsi Block"
+  ],
+  "Dibrugarh": [
+    "Dibrugarh Municipal Corporation",
+    "Naharkatiya Municipal Board",
+    "Chabua Municipal Board",
+    "Namrup Town",
+    "Barbaruah Block",
+    "Joypur Block",
+    "Khowang Block",
+    "Lahowal Block",
+    "Panitola Block",
+    "Tengakhat Block",
+    "Tingkhong Block"
+  ],
+  "Dima Hasao": [
+    "Haflong Municipal Board",
+    "Maibang Municipal Board",
+    "Diyungbra Block",
+    "Harangajao Block",
+    "Jatinga Valley Block",
+    "Mahur Block",
+    "New Sangbar Block"
+  ],
+  "Goalpara": [
+    "Goalpara Municipal Board",
+    "Lakhipur Municipal Board",
+    "Balijana Block",
+    "Jaleswar Block",
+    "Kharmuza Block",
+    "Krishnai Block",
+    "Kuchdhowa Block",
+    "Lakhipur Block",
+    "Matia Block",
+    "Rangjuli Block"
+  ],
+  "Golaghat": [
+    "Golaghat Municipal Board",
+    "Bokakhat Municipal Board",
+    "Sarupathar Municipal Board",
+    "Dergaon Municipal Board",
+    "Bokakhat Block",
+    "Golaghat Central Block",
+    "Golaghat East Block",
+    "Golaghat North Block",
+    "Golaghat South Block",
+    "Golaghat West Block",
+    "Kakodonga Block",
+    "Morongi Block",
+    "Sarupathar Block"
+  ],
+  "Hailakandi": [
+    "Hailakandi Municipal Board",
+    "Lala Municipal Board",
+    "Algapur Block",
+    "Hailakandi Block",
+    "Katlicherra Block",
+    "Lala Block",
+    "South Hailakandi Block"
+  ],
+  "Hojai": [
+    "Hojai Municipal Board",
+    "Doboka Municipal Board",
+    "Lanka Municipal Board",
+    "Lumding Municipal Board",
+    "Binnakandi Block",
+    "Dhalpukhuri Block",
+    "Jugijan Block",
+    "Lumding Block",
+    "Odali Block"
+  ],
+  "Jorhat": [
+    "Jorhat Municipal Board",
+    "Mariani Municipal Board",
+    "Titabor Municipal Board",
+    "Teok Municipal Board",
+    "Central Jorhat Block",
+    "East Jorhat Block",
+    "Jorhat Block",
+    "Kaliapani Block",
+    "North West Jorhat Block",
+    "Titabor Block"
+  ],
+  "Kamrup Metropolitan": [
+    "Guwahati Municipal Corporation (GMC)",
+    "Chandrapur Block",
+    "Dimoria Block",
+    "Rani Block",
+    "Dispur",
+    "Beltola",
+    "Panbazar",
+    "Jalukbari",
+    "Noonmati"
+  ],
+  "Kamrup": [
+    "Rangia Municipal Board",
+    "Palasbari Municipal Board",
+    "North Guwahati Municipal Board",
+    "Boko Block",
+    "Chaygaon Block",
+    "Hajo Block",
+    "Kamalpur Block",
+    "Rangia Block",
+    "Sualkuchi Block",
+    "Bezera Block",
+    "Rampur Block",
+    "Chamaria Block",
+    "Goroimari Block"
+  ],
+  "Karbi Anglong": [
+    "Diphu Municipal Board",
+    "Bokajan Municipal Board",
+    "Howraghat Municipal Board",
+    "Bokajan Block",
+    "Chinthong Block",
+    "Lumbajong Block",
+    "Nilip Block",
+    "Rongmongwe Block",
+    "Samelangso Block",
+    "Socheng Block"
+  ],
+  "Karimganj": [
+    "Karimganj Municipal Board",
+    "Badarpur Municipal Board",
+    "Ramkrishna Nagar Municipal Board",
+    "Badarpur Block",
+    "North Karimganj Block",
+    "South Karimganj Block",
+    "Patharkandi Block",
+    "Ramkrishna Nagar Block",
+    "Lowairpoa Block",
+    "Dullavcherra Block"
+  ],
+  "Kokrajhar": [
+    "Kokrajhar Municipal Board",
+    "Gossaigaon Municipal Board",
+    "Dotma Block",
+    "Gossaigaon Block",
+    "Hatidhura Block",
+    "Kachugaon Block",
+    "Kokrajhar Block",
+    "Mahamaya Block",
+    "Rupshi Block",
+    "Debitola Block"
+  ],
+  "Lakhimpur": [
+    "North Lakhimpur Municipal Board",
+    "Bihpuria Municipal Board",
+    "Narayanpur Municipal Board",
+    "Dhakuakhana Municipal Board",
+    "Bihpuria Block",
+    "Boginadi Block",
+    "Dhakuakhana Block",
+    "Ghilamara Block",
+    "Karunabari Block",
+    "Lakhimpur Block",
+    "Narayanpur Block",
+    "Nowboicha Block",
+    "Telahi Block"
+  ],
+  "Majuli": [
+    "Garmur Town",
+    "Kamalabari",
+    "Majuli Block",
+    "Ujoni Majuli Block"
+  ],
+  "Morigaon": [
+    "Morigaon Municipal Board",
+    "Bhuragaon Block",
+    "Batadraba Block",
+    "Kapili Block",
+    "Laharighat Block",
+    "Mayong Block",
+    "Moirabari Block"
+  ],
+  "Nagaon": [
+    "Nagaon Municipal Board",
+    "Kampur Municipal Board",
+    "Raha Municipal Board",
+    "Dhing Municipal Board",
+    "Bajiagaon Block",
+    "Barhampur Block",
+    "Batadraba Block",
+    "Dolongghat Block",
+    "Kaliabor Block",
+    "Kampur Block",
+    "Kathiatoli Block",
+    "Khagarijan Block",
+    "Laokhowa Block",
+    "Pachim Kaliabor Block",
+    "Raha Block",
+    "Rupahihat Block"
+  ],
+  "Nalbari": [
+    "Nalbari Municipal Board",
+    "Tihu Municipal Board",
+    "Borigog Banbhag Block",
+    "Barkhetri Block",
+    "Madhupur Block",
+    "Paschim Nalbari Block",
+    "Pub Nalbari Block",
+    "Tihu Block"
+  ],
+  "Sivasagar": [
+    "Sivasagar Municipal Board",
+    "Nazira Municipal Board",
+    "Amguri Municipal Board",
+    "Demow Municipal Board",
+    "Amguri Block",
+    "Demow Block",
+    "Gaurisagar Block",
+    "Nazira Block",
+    "Sivasagar Block"
+  ],
+  "Sonitpur": [
+    "Tezpur Municipal Board",
+    "Dhekiajuli Municipal Board",
+    "Rangapara Municipal Board",
+    "Balipara Block",
+    "Barchala Block",
+    "Bihaguri Block",
+    "Dhekiajuli Block",
+    "Gabharu Block",
+    "Naduar Block"
+  ],
+  "South Salmara-Mankachar": [
+    "Mankachar Town",
+    "South Salmara Block",
+    "Mankachar Block",
+    "Fekamari Block"
+  ],
+  "Tamulpur": [
+    "Tamulpur Municipal Board",
+    "Tamulpur Block",
+    "Nagrijuli Block",
+    "Goreswar Block",
+    "Kumarikata Block"
+  ],
+  "Tinsukia": [
+    "Tinsukia Municipal Board",
+    "Digboi Municipal Board",
+    "Doomdooma Municipal Board",
+    "Margherita Municipal Board",
+    "Chapakhowa Town",
+    "Guijan Block",
+    "Hapjan Block",
+    "Itakhooli Block",
+    "Kakopathar Block",
+    "Margherita Block",
+    "Saikhowa Block",
+    "Sadiya Block"
+  ],
+  "Udalguri": [
+    "Udalguri Municipal Board",
+    "Tangla Municipal Board",
+    "Bhergaon Block",
+    "Mazbat Block",
+    "Kalaigaon Block",
+    "Khoirabari Block",
+    "Odalguri Block",
+    "Rowta Block"
+  ],
+  "West Karbi Anglong": [
+    "Hamren Municipal Board",
+    "Baithalangso Town",
+    "Amri Block",
+    "Chinthong Block",
+    "Rongkhang Block",
+    "Socheng Block"
+  ],
 
   // West Bengal (All Districts)
   "Kolkata": ["Kolkata Municipal Corporation (KMC)", "Borough I - XVI"],
