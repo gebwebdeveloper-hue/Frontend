@@ -34,7 +34,7 @@ import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import AuthModal from "../components/AuthModal.jsx";
 import { API_BASE } from "../config.js";
-import { INDIA_STATES } from "../utils/indiaData.js";
+import { INDIA_STATES, DISTRICTS_BY_STATE } from "../utils/indiaData.js";
 
 const openRoles = [
   {
@@ -212,6 +212,7 @@ export default function CareersPage() {
     number: initialUser?.phone || initialUser?.number || "",
     email: initialUser?.email || "",
     state: "",
+    district: "",
     hometown: "",
     pin: "",
     address: "",
@@ -314,7 +315,9 @@ export default function CareersPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === "number") {
+    if (name === "state") {
+      setFormData((prev) => ({ ...prev, state: value, district: "" }));
+    } else if (name === "number") {
       const cleanVal = value.replace(/\D/g, "").slice(0, 10);
       setFormData((prev) => ({ ...prev, number: cleanVal }));
     } else if (name === "pin") {
@@ -392,7 +395,11 @@ export default function CareersPage() {
       return;
     }
     if (!formData.state.trim()) {
-      setSubmitStatus({ type: "error", message: "Please enter your State." });
+      setSubmitStatus({ type: "error", message: "Please select your State." });
+      return;
+    }
+    if (!formData.district.trim()) {
+      setSubmitStatus({ type: "error", message: "Please select or enter your District." });
       return;
     }
     if (!formData.hometown.trim()) {
@@ -441,6 +448,7 @@ export default function CareersPage() {
       payload.append("number", formData.number.trim());
       payload.append("email", formData.email.trim().toLowerCase());
       payload.append("state", formData.state.trim());
+      payload.append("district", formData.district.trim());
       payload.append("hometown", formData.hometown.trim());
       payload.append("pin", formData.pin.trim());
       payload.append("address", formData.address.trim());
@@ -792,8 +800,14 @@ export default function CareersPage() {
                   </div>
                 </div>
 
-                {/* 4, 5, 6. State, Hometown, Pin */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* 4, 5, 6. State, District, Hometown, Pin */}
+                <div
+                  className={`grid gap-4 transition-all duration-300 ${
+                    formData.state
+                      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+                      : "grid-cols-1 sm:grid-cols-3"
+                  }`}
+                >
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
                       State <span className="text-rose-400">*</span>
@@ -821,6 +835,53 @@ export default function CareersPage() {
                       />
                     </div>
                   </div>
+
+                  {/* District (Appears dynamically once state is chosen) */}
+                  {formData.state && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-cyan-300 mb-2">
+                        District <span className="text-rose-400">*</span>
+                      </label>
+                      <div className="relative">
+                        {DISTRICTS_BY_STATE[formData.state]?.length > 0 ? (
+                          <select
+                            name="district"
+                            value={formData.district}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-cyan-500/40 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white text-sm outline-none transition appearance-none cursor-pointer pr-10 font-medium"
+                          >
+                            <option value="" disabled className="bg-slate-900 text-slate-500">
+                              Select District
+                            </option>
+                            {DISTRICTS_BY_STATE[formData.state].map((d) => (
+                              <option key={d} value={d} className="bg-slate-900 text-white">
+                                {d}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            name="district"
+                            value={formData.district}
+                            onChange={handleInputChange}
+                            required
+                            placeholder="Enter District"
+                            className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-cyan-500/40 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
+                          />
+                        )}
+                        <ChevronDown
+                          size={16}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-cyan-400 pointer-events-none"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
 
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
