@@ -34,7 +34,12 @@ import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import AuthModal from "../components/AuthModal.jsx";
 import { API_BASE } from "../config.js";
-import { INDIA_STATES, DISTRICTS_BY_STATE, BLOCKS_BY_DISTRICT } from "../utils/indiaData.js";
+import {
+  INDIA_STATES,
+  DISTRICTS_BY_STATE,
+  BLOCKS_BY_DISTRICT,
+  getBlocksForDistrict,
+} from "../utils/indiaData.js";
 
 const openRoles = [
   {
@@ -289,7 +294,7 @@ export default function CareersPage() {
           }
 
           // Match Block / Municipality
-          const blockList = BLOCKS_BY_DISTRICT[matchedDistrict] || [];
+          const blockList = getBlocksForDistrict(matchedDistrict, matchedState);
           let matchedBlock = "";
           if (rawBlock) {
             matchedBlock =
@@ -1060,34 +1065,22 @@ export default function CareersPage() {
                         Block / Municipality <span className="text-rose-400">*</span>
                       </label>
                       <div className="relative">
-                        {BLOCKS_BY_DISTRICT[formData.district]?.length > 0 ? (
-                          <select
-                            name="block"
-                            value={formData.block}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-cyan-500/40 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white text-sm outline-none transition appearance-none cursor-pointer pr-10 font-medium"
-                          >
-                            <option value="" disabled className="bg-slate-900 text-slate-500">
-                              Select Block / Municipality
+                        <select
+                          name="block"
+                          value={formData.block}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-cyan-500/40 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white text-sm outline-none transition appearance-none cursor-pointer pr-10 font-medium"
+                        >
+                          <option value="" disabled className="bg-slate-900 text-slate-500">
+                            Select Block / Municipality
+                          </option>
+                          {getBlocksForDistrict(formData.district, formData.state).map((b) => (
+                            <option key={b} value={b} className="bg-slate-900 text-white">
+                              {b}
                             </option>
-                            {BLOCKS_BY_DISTRICT[formData.district].map((b) => (
-                              <option key={b} value={b} className="bg-slate-900 text-white">
-                                {b}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type="text"
-                            name="block"
-                            value={formData.block}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="Enter Block / Municipality"
-                            className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-cyan-500/40 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 text-white placeholder-slate-500 text-sm outline-none transition"
-                          />
-                        )}
+                          ))}
+                        </select>
                         <ChevronDown
                           size={16}
                           className="absolute right-3.5 top-1/2 -translate-y-1/2 text-cyan-400 pointer-events-none"
