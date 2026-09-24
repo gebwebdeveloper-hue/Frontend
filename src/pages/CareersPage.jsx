@@ -192,14 +192,24 @@ export default function CareersPage() {
   const formRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  const [currentUser, setCurrentUser] = useState(null);
-  const [authChecking, setAuthChecking] = useState(true);
+  const getStoredUser = () => {
+    try {
+      const saved = localStorage.getItem("lekhok_auth_user") || localStorage.getItem("story_reader_info");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const initialUser = getStoredUser();
+  const [currentUser, setCurrentUser] = useState(initialUser);
+  const [authChecking, setAuthChecking] = useState(!initialUser);
   const [authModal, setAuthModal] = useState({ isOpen: false, tab: "login" });
 
   const [formData, setFormData] = useState({
-    name: "",
-    number: "",
-    email: "",
+    name: initialUser?.name || "",
+    number: initialUser?.phone || initialUser?.number || "",
+    email: initialUser?.email || "",
     state: "",
     hometown: "",
     pin: "",
@@ -220,6 +230,9 @@ export default function CareersPage() {
       const data = await res.json();
       if (res.ok && data.success && data.user) {
         setCurrentUser(data.user);
+        try {
+          localStorage.setItem("lekhok_auth_user", JSON.stringify(data.user));
+        } catch {}
         setFormData((prev) => ({
           ...prev,
           name: prev.name || data.user.name || "",
@@ -227,10 +240,24 @@ export default function CareersPage() {
           number: prev.number || (data.user.phone || data.user.number || ""),
         }));
       } else {
-        setCurrentUser(null);
+        if (res.status === 401) {
+          setCurrentUser(null);
+          try {
+            localStorage.removeItem("lekhok_auth_user");
+          } catch {}
+        }
       }
     } catch {
-      setCurrentUser(null);
+      const savedUser = getStoredUser();
+      if (savedUser) {
+        setCurrentUser(savedUser);
+        setFormData((prev) => ({
+          ...prev,
+          name: prev.name || savedUser.name || "",
+          email: prev.email || savedUser.email || "",
+          number: prev.number || (savedUser.phone || savedUser.number || ""),
+        }));
+      }
     } finally {
       setAuthChecking(false);
     }
@@ -238,12 +265,39 @@ export default function CareersPage() {
 
   useEffect(() => {
     checkAuth();
-    const handleAuthEvent = () => checkAuth();
+
+    const handleAuthEvent = (e) => {
+      if (e?.detail) {
+        setCurrentUser(e.detail);
+        setFormData((prev) => ({
+          ...prev,
+          name: prev.name || e.detail.name || "",
+          email: prev.email || e.detail.email || "",
+          number: prev.number || (e.detail.phone || e.detail.number || ""),
+        }));
+        setAuthChecking(false);
+      } else {
+        checkAuth();
+      }
+    };
+
+    const handleLogoutEvent = () => {
+      setCurrentUser(null);
+      setAuthChecking(false);
+    };
+
+    window.addEventListener("lekhak:auth-user", handleAuthEvent);
     window.addEventListener("lekhok:login", handleAuthEvent);
-    window.addEventListener("lekhok:logout", handleAuthEvent);
+    window.addEventListener("lekhak:login", handleAuthEvent);
+    window.addEventListener("lekhak:logout", handleLogoutEvent);
+    window.addEventListener("focus", checkAuth);
+
     return () => {
+      window.removeEventListener("lekhak:auth-user", handleAuthEvent);
       window.removeEventListener("lekhok:login", handleAuthEvent);
-      window.removeEventListener("lekhok:logout", handleAuthEvent);
+      window.removeEventListener("lekhak:login", handleAuthEvent);
+      window.removeEventListener("lekhak:logout", handleLogoutEvent);
+      window.removeEventListener("focus", checkAuth);
     };
   }, []);
 

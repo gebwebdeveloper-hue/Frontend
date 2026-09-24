@@ -60,11 +60,28 @@ export default function Navbar() {
       .then((data) => {
         if (data?.success && data.user) {
           setAuthUser(data.user);
+          try {
+            localStorage.setItem("lekhok_auth_user", JSON.stringify(data.user));
+            window.dispatchEvent(new CustomEvent("lekhak:auth-user", { detail: data.user }));
+          } catch {}
         } else {
           setAuthUser(false);
+          try {
+            localStorage.removeItem("lekhok_auth_user");
+            window.dispatchEvent(new CustomEvent("lekhak:auth-user", { detail: null }));
+          } catch {}
         }
       })
-      .catch(() => setAuthUser(false));
+      .catch(() => {
+        try {
+          const saved = localStorage.getItem("lekhok_auth_user");
+          if (saved) {
+            setAuthUser(JSON.parse(saved));
+            return;
+          }
+        } catch {}
+        setAuthUser(false);
+      });
   };
 
   useEffect(() => {

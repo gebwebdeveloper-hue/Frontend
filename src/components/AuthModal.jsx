@@ -86,6 +86,10 @@ function LoginForm({ onSuccess, onForgot, onRegister, onPublisherAuthorLogin }) 
       });
       const data = await res.json();
       if (data.success) {
+        try {
+          localStorage.setItem("lekhok_auth_user", JSON.stringify(data.user));
+          window.dispatchEvent(new CustomEvent("lekhak:auth-user", { detail: data.user }));
+        } catch {}
         window.dispatchEvent(new Event("lekhak:login"));
         onSuccess(data.user);
       } else {
@@ -324,6 +328,10 @@ function RegisterForm({ onSuccess, onLogin }) {
       });
       const data = await res.json();
       if (data.success) {
+        try {
+          localStorage.setItem("lekhok_auth_user", JSON.stringify(data.user));
+          window.dispatchEvent(new CustomEvent("lekhak:auth-user", { detail: data.user }));
+        } catch {}
         window.dispatchEvent(new Event("lekhak:login"));
         onSuccess(data.user);
       } else {
@@ -454,6 +462,10 @@ function ForgotPasswordForm({ onBack, onSuccess }) {
       });
       const data = await res.json();
       if (data.success) {
+        try {
+          localStorage.setItem("lekhok_auth_user", JSON.stringify(data.user));
+          window.dispatchEvent(new CustomEvent("lekhak:auth-user", { detail: data.user }));
+        } catch {}
         window.dispatchEvent(new Event("lekhak:login"));
         onSuccess(data.user);
       } else {
@@ -591,6 +603,10 @@ function GoogleAuthButton({ mode = "login", onSuccess }) {
       });
       const data = await res.json();
       if (data.success) {
+        try {
+          localStorage.setItem("lekhok_auth_user", JSON.stringify(data.user));
+          window.dispatchEvent(new CustomEvent("lekhak:auth-user", { detail: data.user }));
+        } catch {}
         window.dispatchEvent(new Event("lekhak:login"));
         onSuccess(data.user);
       } else {
