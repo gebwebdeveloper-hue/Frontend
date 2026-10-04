@@ -583,12 +583,12 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
   return (
     <>
       <motion.article
-        className="premium-book-card group relative overflow-hidden rounded-lg p-3 animate-fade-in cursor-pointer select-none"
-        whileHover={{ y: -10, rotateX: 4, rotateY: -4, scale: 1.02 }}
+        className="premium-book-card group relative overflow-hidden rounded-xl p-2.5 sm:p-3 animate-fade-in cursor-pointer select-none"
+        whileHover={{ y: -6, scale: 1.02 }}
         transition={{ type: "spring", stiffness: 220, damping: 18 }}
         onClick={handleOpenPreview}
       >
-        <div className="book-cover-frame relative mb-3 aspect-[3/4] overflow-hidden rounded-md bg-zinc-900 shadow-md">
+        <div className="book-cover-frame relative mb-2.5 sm:mb-3 aspect-[3/4] overflow-hidden rounded-lg bg-zinc-900 shadow-md">
           {book.cover?.url ? (
             <img
               src={book.cover.url.startsWith("http") ? book.cover.url : `${SERVER_URL}${book.cover.url}`}
@@ -596,18 +596,18 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
               className="h-full w-full object-cover transition duration-700 group-hover:scale-105 group-hover:saturate-[1.08]"
             />
           ) : (
-            <div className={`h-full w-full bg-gradient-to-br ${book.gradient || "from-cyan-400 to-indigo-600"} p-5 relative flex flex-col justify-between`}>
+            <div className={`h-full w-full bg-gradient-to-br ${book.gradient || "from-cyan-400 to-indigo-600"} p-3 sm:p-5 relative flex flex-col justify-between`}>
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.5),transparent_26%)]" />
-              <div className="relative flex h-full flex-col justify-between rounded border border-white/[0.24] p-4 text-white">
-                <p className="text-xs uppercase tracking-[0.32em]">{book.category}</p>
-                <h3 className="text-3xl font-semibold leading-none">{book.title}</h3>
-                <p className="text-sm text-white/75">{book.author}</p>
+              <div className="relative flex h-full flex-col justify-between rounded border border-white/[0.24] p-2.5 sm:p-4 text-white">
+                <p className="text-[9px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.32em] line-clamp-1">{book.category}</p>
+                <h3 className="text-sm sm:text-2xl md:text-3xl font-semibold leading-tight line-clamp-3">{book.title}</h3>
+                <p className="text-[10px] sm:text-sm text-white/75 line-clamp-1">{book.author}</p>
               </div>
             </div>
           )}
           {/* Hover overlay details button */}
-          <div className="absolute inset-0 bg-black/60 opacity-0 transition-all duration-300 group-hover:opacity-100 flex items-center justify-center pointer-events-none">
-            <span className="rounded-full bg-white/95 px-5 py-2.5 text-[11px] font-extrabold uppercase tracking-wider text-black shadow-glow transform translate-y-3 transition-all duration-300 group-hover:translate-y-0">
+          <div className="absolute inset-0 bg-black/60 opacity-0 transition-all duration-300 group-hover:opacity-100 hidden sm:flex items-center justify-center pointer-events-none">
+            <span className="rounded-full bg-white/95 px-4 py-2 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-black shadow-glow transform translate-y-3 transition-all duration-300 group-hover:translate-y-0">
               {accessStatus === "approved" ? "Read Ebook" : "Preview Ebook"}
             </span>
           </div>
@@ -615,8 +615,8 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
           <button
             type="button"
             onClick={handleShareBook}
-            className={`absolute z-20 flex h-7 w-7 items-center justify-center rounded-full backdrop-blur-md transition-all shadow-md ${
-              book.comingSoon ? "top-10 right-2" : "top-2 right-2"
+            className={`absolute z-20 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full backdrop-blur-md transition-all shadow-md ${
+              book.comingSoon ? "top-8 sm:top-10 right-1.5 sm:right-2" : "top-1.5 sm:top-2 right-1.5 sm:right-2"
             } ${
               shareCopied
                 ? "bg-emerald-500 text-black scale-110"
@@ -624,38 +624,38 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
             }`}
             title="Share book link"
           >
-            {shareCopied ? <Check size={12} strokeWidth={2.5} /> : <Share2 size={12} />}
+            {shareCopied ? <Check size={11} strokeWidth={2.5} /> : <Share2 size={11} />}
           </button>
 
           {/* Coming Soon badge */}
           {book.comingSoon && (
-            <div className="absolute top-2 right-2 z-10 rounded-full bg-amber-400/90 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-black shadow-lg">
+            <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 z-10 rounded-full bg-amber-400/90 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[10px] font-extrabold uppercase tracking-wider text-black shadow-lg">
               Coming Soon
             </div>
           )}
 
           {/* Book Rental Status Badge */}
           {book.isRentalAvailable && !book.comingSoon && (
-            <div className="absolute top-2 left-2 z-10">
+            <div className="absolute top-1.5 sm:top-2 left-1.5 sm:left-2 z-10">
               {book.rentalStatus === "available" ? (
-                <span className="rounded-full border border-emerald-400/50 bg-emerald-950/90 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-emerald-300 shadow-lg backdrop-blur-md">
-                  📖 RENT: ₹{book.rentalPrice || 50}
+                <span className="rounded-full border border-emerald-400/50 bg-emerald-950/90 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-emerald-300 shadow-lg backdrop-blur-md">
+                  📖 ₹{book.rentalPrice || 50}
                 </span>
               ) : book.rentalStatus === "on_rent" ? (
-                <span className="rounded-full border border-red-400/50 bg-red-950/90 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-red-300 shadow-lg backdrop-blur-md">
-                  🔴 ON RENT
+                <span className="rounded-full border border-red-400/50 bg-red-950/90 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-red-300 shadow-lg backdrop-blur-md">
+                  🔴 RENTED
                 </span>
               ) : (
-                <span className="rounded-full border border-amber-400/50 bg-amber-950/90 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-amber-300 shadow-lg backdrop-blur-md">
-                  🟡 RETURN PENDING
+                <span className="rounded-full border border-amber-400/50 bg-amber-950/90 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-amber-300 shadow-lg backdrop-blur-md">
+                  🟡 PENDING
                 </span>
               )}
             </div>
           )}
         </div>
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h3 className="truncate text-base font-bold text-white transition-colors duration-300 group-hover:text-cyan-50">{book.title}</h3>
+        <div className="flex items-start justify-between gap-1.5 sm:gap-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-xs sm:text-sm md:text-base font-bold text-white transition-colors duration-300 group-hover:text-cyan-50" title={book.title}>{book.title}</h3>
             <button
               type="button"
               onClick={(e) => {
@@ -666,7 +666,7 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
                   navigate(`/author/${encodeURIComponent(book.author)}`);
                 }
               }}
-              className={`mt-1 max-w-full truncate text-left text-xs font-semibold transition ${
+              className={`mt-0.5 block max-w-full truncate text-left text-[10px] sm:text-xs font-semibold transition ${
                 isAuthorActive
                   ? "text-fuchsia-200 drop-shadow-[0_0_14px_rgba(217,70,239,0.48)]"
                   : "text-cyan-200/85 hover:text-fuchsia-200 hover:drop-shadow-[0_0_12px_rgba(34,211,238,0.5)]"
@@ -677,23 +677,23 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
           </div>
           {!book.comingSoon && (
             accessStatus === "approved" ? (
-              <span className="shrink-0 rounded-full border border-emerald-400/40 bg-emerald-400/15 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.3)]">
+              <span className="shrink-0 rounded-full border border-emerald-400/40 bg-emerald-400/15 px-1.5 sm:px-2.5 py-0.5 text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.3)]">
                 Owned
               </span>
             ) : accessStatus === "pending" ? (
-              <span className="shrink-0 rounded-full border border-amber-400/40 bg-amber-400/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+              <span className="shrink-0 rounded-full border border-amber-400/40 bg-amber-400/15 px-1.5 sm:px-2.5 py-0.5 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-amber-300">
                 Pending
               </span>
             ) : (
-              <span className="shrink-0 text-xs font-bold text-cyan-200 drop-shadow-[0_0_14px_rgba(103,232,249,0.45)] group-hover:text-cyan-50 transition">
+              <span className="shrink-0 text-[10px] sm:text-xs font-bold text-cyan-200 drop-shadow-[0_0_14px_rgba(103,232,249,0.45)] group-hover:text-cyan-50 transition">
                 Buy now
               </span>
             )
           )}
         </div>
-        <div className="mt-2 flex items-center justify-between text-xs text-white/[0.58]">
-          <span className="book-rating-pill flex items-center gap-1 text-amber-100"><Star size={12} fill="currentColor" /> {book.rating || "4.9"}</span>
-          <span>{book.pages} pages</span>
+        <div className="mt-1 sm:mt-2 flex items-center justify-between text-[10px] sm:text-xs text-white/[0.58]">
+          <span className="book-rating-pill flex items-center gap-1 text-amber-100 text-[9px] sm:text-xs px-1.5 py-0.5"><Star size={10} fill="currentColor" /> {book.rating || "4.9"}</span>
+          <span>{book.pages ? `${book.pages} pages` : ""}</span>
         </div>
       </motion.article>
 

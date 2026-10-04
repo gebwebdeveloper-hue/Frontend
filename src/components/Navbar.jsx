@@ -32,6 +32,8 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [hasPromptedLogin, setHasPromptedLogin] = useState(false);
+
   const updateCartCount = () => {
     setCartCount(getCart().length);
   };
@@ -54,7 +56,7 @@ export default function Navbar() {
     };
   }, [authUser]);
 
-  const checkSession = () => {
+  const checkSession = (isInitial = false) => {
     fetch(`${API_BASE}/auth/me`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -70,6 +72,11 @@ export default function Navbar() {
             localStorage.removeItem("lekhok_auth_user");
             window.dispatchEvent(new CustomEvent("lekhak:auth-user", { detail: null }));
           } catch {}
+          if (isInitial && !hasPromptedLogin) {
+            setHasPromptedLogin(true);
+            setAuthModalTab("login");
+            setShowAuthModal(true);
+          }
         }
       })
       .catch(() => {
@@ -81,6 +88,11 @@ export default function Navbar() {
           }
         } catch {}
         setAuthUser(false);
+        if (isInitial && !hasPromptedLogin) {
+          setHasPromptedLogin(true);
+          setAuthModalTab("login");
+          setShowAuthModal(true);
+        }
       });
   };
 
@@ -91,7 +103,7 @@ export default function Navbar() {
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener("scroll", onScroll, { passive: true });
-    checkSession();
+    checkSession(true);
 
     // Re-check session when the window regains focus
     const onFocus = () => checkSession();

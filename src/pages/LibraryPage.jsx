@@ -12,6 +12,8 @@ import {
   Filter,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Sparkles
 } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
@@ -68,6 +70,8 @@ export default function LibraryPage() {
   const [allBooks, setAllBooks] = useState([]);
   const [loadingAllBooks, setLoadingAllBooks] = useState(false);
   const [categoriesList, setCategoriesList] = useState(["All"]);
+  const [showAllBooks, setShowAllBooks] = useState(false);
+  const INITIAL_VISIBLE_COUNT = 8;
 
   // Category scroll navigation state
   const categoryScrollRef = useRef(null);
@@ -228,7 +232,7 @@ export default function LibraryPage() {
         <div className="pointer-events-none absolute left-0 top-0 h-[600px] w-[600px] rounded-full bg-cyan-500/8 blur-[180px]" />
         <div className="pointer-events-none absolute right-0 top-40 h-[400px] w-[400px] rounded-full bg-indigo-500/8 blur-[150px]" />
 
-        <div className="mx-auto max-w-7xl px-5 pb-24 pt-32">
+        <div className="mx-auto max-w-7xl px-3.5 sm:px-6 lg:px-8 pb-24 pt-24 sm:pt-32">
 
           {/* ─────────── HERO BANNER ─────────── */}
           <div className="mb-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
@@ -407,9 +411,9 @@ export default function LibraryPage() {
               </div>
 
               {loadingAllBooks ? (
-                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="h-96 animate-pulse rounded-3xl border border-white/10 bg-white/5" />
+                    <div key={i} className="h-64 sm:h-96 animate-pulse rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5" />
                   ))}
                 </div>
               ) : filteredBooks.length === 0 ? (
@@ -430,7 +434,7 @@ export default function LibraryPage() {
                   </button>
                 </div>
               ) : (
-                <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {filteredBooks.map((book) => (
                     <motion.div
                       key={book._id}
@@ -504,8 +508,8 @@ export default function LibraryPage() {
                     <span className="text-xs text-white/40">{allBooks.length} titles</span>
                   </div>
 
-                  <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                    {allBooks.map((book) => (
+                  <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    {(showAllBooks ? allBooks : allBooks.slice(0, INITIAL_VISIBLE_COUNT)).map((book) => (
                       <motion.div
                         key={book._id}
                         whileHover={{ y: -4 }}
@@ -515,6 +519,30 @@ export default function LibraryPage() {
                       </motion.div>
                     ))}
                   </div>
+
+                  {/* ─────────── VIEW ALL BOOKS TOGGLE BUTTON ─────────── */}
+                  {allBooks.length > INITIAL_VISIBLE_COUNT && (
+                    <div className="mt-10 flex flex-col items-center justify-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setShowAllBooks((prev) => !prev)}
+                        className="group relative flex items-center gap-2.5 rounded-full border border-cyan-400/40 bg-gradient-to-r from-cyan-500/15 via-indigo-500/15 to-fuchsia-500/15 px-8 py-3.5 text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white shadow-xl backdrop-blur-md transition-all duration-300 hover:scale-105 hover:border-cyan-300 hover:bg-cyan-400/20 hover:shadow-cyan-500/25 cursor-pointer"
+                      >
+                        <Sparkles size={16} className="text-cyan-300 transition group-hover:rotate-12" />
+                        <span>{showAllBooks ? "Show Less Books" : `View All Books (${allBooks.length} Titles)`}</span>
+                        {showAllBooks ? (
+                          <ChevronUp size={16} className="text-cyan-300 transition group-hover:-translate-y-0.5" />
+                        ) : (
+                          <ChevronDown size={16} className="text-cyan-300 transition group-hover:translate-y-0.5" />
+                        )}
+                      </button>
+                      {!showAllBooks && (
+                        <p className="text-xs text-white/40 font-medium">
+                          Showing {INITIAL_VISIBLE_COUNT} of {allBooks.length} titles
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </motion.div>
               )}
             </>

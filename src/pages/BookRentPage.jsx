@@ -458,9 +458,9 @@ export default function BookRentPage() {
           {/* ════════════ RENTAL CATALOG GRID ════════════ */}
           <div className="mt-8">
             {loading ? (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-96 animate-pulse rounded-3xl border border-white/10 bg-white/5" />
+                  <div key={i} className="h-64 sm:h-96 animate-pulse rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5" />
                 ))}
               </div>
             ) : filteredBooks.length === 0 ? (
@@ -472,7 +472,7 @@ export default function BookRentPage() {
                 </p>
               </div>
             ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredBooks.map((book) => {
                   const isAvailable = book.rentalStatus === "available";
                   const isOnRent = book.rentalStatus === "on_rent";
