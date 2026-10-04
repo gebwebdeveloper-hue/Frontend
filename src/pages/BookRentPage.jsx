@@ -6,6 +6,7 @@ import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
 import RentalCheckoutModal from "../components/RentalCheckoutModal.jsx";
 import AuthModal from "../components/AuthModal.jsx";
+import { BookCardSkeleton } from "../components/BookCard.jsx";
 import { API_BASE, SERVER_URL, SITE_URL } from "../config.js";
 
 export default function BookRentPage() {
@@ -459,8 +460,8 @@ export default function BookRentPage() {
           <div className="mt-8">
             {loading ? (
               <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-64 sm:h-96 animate-pulse rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5" />
+                {[...Array(8)].map((_, i) => (
+                  <BookCardSkeleton key={i} />
                 ))}
               </div>
             ) : filteredBooks.length === 0 ? (

@@ -1,12 +1,30 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Star, Loader2, AlertCircle, CheckCircle2, Copy, Smartphone, Mail, KeyRound, ShieldCheck, Coins, X, ShoppingCart, Share2, Check, ExternalLink } from "lucide-react";
+import { Star, Loader2, AlertCircle, CheckCircle2, Copy, Smartphone, Mail, KeyRound, ShieldCheck, Coins, X, ShoppingCart, Share2, Check, ExternalLink, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE, SERVER_URL, SITE_URL } from "../config.js";
 import AuthModal from "./AuthModal.jsx";
 import { addToCart } from "../utils/cart.js";
 import { INDIA_STATES, DISTRICTS_BY_STATE } from "../utils/indiaData.js";
+
+export function BookCardSkeleton() {
+  return (
+    <div className="premium-book-card rounded-xl p-2.5 sm:p-3 select-none">
+      <div className="skeleton-shimmer aspect-[3/4] rounded-lg mb-2.5 sm:mb-3 flex flex-col items-center justify-center gap-1.5 bg-white/[0.04]">
+        <BookOpen className="h-7 w-7 text-white/15" />
+      </div>
+      <div className="space-y-2 pt-0.5">
+        <div className="skeleton-shimmer h-3.5 w-3/4 rounded-md" />
+        <div className="skeleton-shimmer h-2.5 w-1/2 rounded-md" />
+        <div className="flex items-center justify-between pt-1">
+          <div className="skeleton-shimmer h-3 w-1/3 rounded-full" />
+          <div className="skeleton-shimmer h-2.5 w-1/4 rounded-md" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function BookCard({ book, onAuthorClick, isAuthorActive = false, autoOpen = false }) {
   const location = useLocation();
@@ -33,6 +51,8 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
   const [physicalSuccess, setPhysicalSuccess] = useState("");
   const [cartFeedback, setCartFeedback] = useState({ type: "", text: "" });
   const [currentUser, setCurrentUser] = useState(null);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const fetchCurrentUser = async () => {
     try {
@@ -589,19 +609,32 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
         onClick={handleOpenPreview}
       >
         <div className="book-cover-frame relative mb-2.5 sm:mb-3 aspect-[3/4] overflow-hidden rounded-lg bg-zinc-900 shadow-md">
-          {book.cover?.url ? (
+          {/* Skeleton Shimmer while cover image is downloading */}
+          {book.cover?.url && !imgLoaded && !imgError && (
+            <div className="skeleton-shimmer absolute inset-0 z-0 flex flex-col items-center justify-center gap-1.5 bg-white/[0.04]">
+              <BookOpen className="h-7 w-7 text-white/15 animate-pulse" />
+              <span className="text-[8px] font-black uppercase tracking-widest text-white/20">Loading</span>
+            </div>
+          )}
+
+          {book.cover?.url && !imgError ? (
             <img
               src={book.cover.url.startsWith("http") ? book.cover.url : `${SERVER_URL}${book.cover.url}`}
               alt={book.title}
-              className="h-full w-full object-cover transition duration-700 group-hover:scale-105 group-hover:saturate-[1.08]"
+              loading="lazy"
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgError(true)}
+              className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:saturate-[1.08] ${
+                imgLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
+              }`}
             />
           ) : (
-            <div className={`h-full w-full bg-gradient-to-br ${book.gradient || "from-cyan-400 to-indigo-600"} p-3 sm:p-5 relative flex flex-col justify-between`}>
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.5),transparent_26%)]" />
-              <div className="relative flex h-full flex-col justify-between rounded border border-white/[0.24] p-2.5 sm:p-4 text-white">
-                <p className="text-[9px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.32em] line-clamp-1">{book.category}</p>
-                <h3 className="text-sm sm:text-2xl md:text-3xl font-semibold leading-tight line-clamp-3">{book.title}</h3>
-                <p className="text-[10px] sm:text-sm text-white/75 line-clamp-1">{book.author}</p>
+            <div className={`h-full w-full bg-gradient-to-br ${book.gradient || "from-cyan-950 via-slate-900 to-indigo-950"} p-3 sm:p-4 relative flex flex-col justify-between`}>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_35%)]" />
+              <div className="relative flex h-full flex-col justify-between rounded border border-white/[0.18] p-2.5 sm:p-3.5 text-white">
+                <p className="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.32em] line-clamp-1 text-cyan-300 font-bold">{book.category || "E-Book"}</p>
+                <h3 className="text-xs sm:text-base md:text-lg font-bold leading-snug line-clamp-3">{book.title}</h3>
+                <p className="text-[9px] sm:text-xs text-white/70 line-clamp-1">{book.author}</p>
               </div>
             </div>
           )}

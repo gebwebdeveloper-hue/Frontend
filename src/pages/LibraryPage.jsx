@@ -22,7 +22,7 @@ import ContinueReadingSection from "../sections/ContinueReadingSection.jsx";
 import PopularAuthorsSection from "../sections/PopularAuthorsSection.jsx";
 import PublicationsAuthorsSection from "../sections/PublicationsAuthorsSection.jsx";
 import LibraryFeaturedSection from "../sections/LibraryFeaturedSection.jsx";
-import BookCard from "../components/BookCard.jsx";
+import BookCard, { BookCardSkeleton } from "../components/BookCard.jsx";
 import CartModal from "../components/CartModal.jsx";
 import MyOrdersModal from "../components/MyOrdersModal.jsx";
 import { getCart } from "../utils/cart.js";
@@ -412,8 +412,8 @@ export default function LibraryPage() {
 
               {loadingAllBooks ? (
                 <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="h-64 sm:h-96 animate-pulse rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5" />
+                  {[...Array(8)].map((_, i) => (
+                    <BookCardSkeleton key={i} />
                   ))}
                 </div>
               ) : filteredBooks.length === 0 ? (
