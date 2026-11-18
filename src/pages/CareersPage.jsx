@@ -29,6 +29,7 @@ import {
   LogIn,
   UserPlus,
   UserCheck,
+  Database,
 } from "lucide-react";
 import PageTransition from "../components/PageTransition.jsx";
 import FooterSection from "../sections/FooterSection.jsx";
@@ -182,6 +183,26 @@ const openRoles = [
       "Assist editorial, marketing, and sales departments with day-to-day administrative tasks.",
     ],
   },
+  {
+    id: "data-entry-operator",
+    title: "Data entry operator",
+    badge: "Operations & Cataloging",
+    icon: Database,
+    iconColor: "text-sky-400",
+    iconBg: "bg-sky-400/10 border-sky-400/20",
+    gradient: "from-sky-500/10 via-sky-500/5 to-transparent",
+    border: "hover:border-sky-400/40",
+    location: "Agartala, Tripura / Hybrid",
+    type: "Full-Time / Part-Time",
+    summary:
+      "Maintain, organize, and digitize publishing catalog data, author metadata, inventory records, and manuscript archives with high precision and speed.",
+    responsibilities: [
+      "Input and verify manuscript metadata, ISBN records, book pricing, and publication details in digital systems.",
+      "Maintain accurate spreadsheets and inventory databases for physical books and digital e-book distribution.",
+      "Digitize physical documents, author records, and archived manuscripts with fast and accurate typing.",
+      "Coordinate with editorial, logistics, and finance teams to ensure seamless data consistency.",
+    ],
+  },
 ];
 
 const roleOptions = [
@@ -192,6 +213,7 @@ const roleOptions = [
   "Accountant",
   "Designer role",
   "Office assistant",
+  "Data entry operator",
 ];
 
 export default function CareersPage() {

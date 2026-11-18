@@ -202,6 +202,8 @@ const ROLE_COLORS = {
   Accountant: "text-violet-400 bg-violet-400/10 border-violet-400/30",
   "Designer role": "text-rose-400 bg-rose-400/10 border-rose-400/30",
   "Office assistant": "text-teal-400 bg-teal-400/10 border-teal-400/30",
+  "Data entry operator": "text-sky-400 bg-sky-400/10 border-sky-400/30",
+  "Data Entry Operator": "text-sky-400 bg-sky-400/10 border-sky-400/30",
 };
 
 export default function AdminCareerResponsesPage() {
@@ -549,6 +551,7 @@ export default function AdminCareerResponsesPage() {
                 <option value="Accountant">Accountant</option>
                 <option value="Designer role">Designer role</option>
                 <option value="Office assistant">Office assistant</option>
+                <option value="Data entry operator">Data entry operator</option>
               </select>
             </div>
 
