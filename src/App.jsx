@@ -132,10 +132,14 @@ export default function App() {
           <Route path="/rent/:slug" element={<BookRentPage />} />
           <Route path="/book-rent" element={<Navigate to="/rentals" replace />} />
           <Route path="/club" element={<ClubPage />} />
-          <Route path="/read-stories" element={<NewsletterListingPage />} />
+          <Route path="/e-book" element={<NewsletterListingPage />} />
+          <Route path="/e-book/:slug" element={<NewsletterReaderPage />} />
+          <Route path="/ebook" element={<Navigate to="/e-book" replace />} />
+          <Route path="/ebook/:slug" element={<NewsletterReaderPage />} />
+          <Route path="/read-stories" element={<Navigate to="/e-book" replace />} />
           <Route path="/read-stories/:slug" element={<NewsletterReaderPage />} />
           <Route path="/read-story/:slug" element={<NewsletterReaderPage />} />
-          <Route path="/short-stories" element={<Navigate to="/read-stories" replace />} />
+          <Route path="/short-stories" element={<Navigate to="/e-book" replace />} />
           <Route path="/short-stories/:slug" element={<NewsletterReaderPage />} />
           <Route path="/story/:slug" element={<NewsletterReaderPage />} />
           {/* Publisher & Author Dashboard */}
@@ -173,7 +177,7 @@ export default function App() {
           <Route path="/story-of-success" element={<Navigate to="/news" replace />} />
           <Route path="/april-2022" element={<Navigate to="/news" replace />} />
           <Route path="/news-updates" element={<Navigate to="/news" replace />} />
-          <Route path="/free-stories" element={<Navigate to="/read-stories" replace />} />
+          <Route path="/free-stories" element={<Navigate to="/e-book" replace />} />
 
           {/* ── CAFE SECTION ── */}
           <Route path="/cafe/admin" element={<CafeAdminPage />} />

@@ -8,6 +8,68 @@ import AuthModal from "./AuthModal.jsx";
 import { addToCart } from "../utils/cart.js";
 import { INDIA_STATES, DISTRICTS_BY_STATE } from "../utils/indiaData.js";
 
+// Shared cache across all BookCard instances to eliminate network spam & 429 rate limit errors
+let cachedCurrentUser = undefined;
+let currentUserPromise = null;
+let cachedPurchases = null;
+let purchasesPromise = null;
+
+const getSharedCurrentUser = async () => {
+  if (cachedCurrentUser !== undefined) return cachedCurrentUser;
+  if (currentUserPromise) return currentUserPromise;
+
+  currentUserPromise = fetch(`${API_BASE}/auth/me`, { credentials: "include" })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      cachedCurrentUser = data?.success && data.user ? data.user : null;
+      return cachedCurrentUser;
+    })
+    .catch(() => {
+      cachedCurrentUser = null;
+      return null;
+    })
+    .finally(() => {
+      currentUserPromise = null;
+    });
+
+  return currentUserPromise;
+};
+
+const getSharedPurchases = async () => {
+  if (cachedPurchases !== null) return cachedPurchases;
+  if (purchasesPromise) return purchasesPromise;
+
+  purchasesPromise = fetch(`${API_BASE}/purchase/me`, { credentials: "include" })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      cachedPurchases = data?.success && Array.isArray(data.purchases) ? data.purchases : [];
+      return cachedPurchases;
+    })
+    .catch(() => {
+      cachedPurchases = [];
+      return [];
+    })
+    .finally(() => {
+      purchasesPromise = null;
+    });
+
+  return purchasesPromise;
+};
+
+if (typeof window !== "undefined") {
+  window.addEventListener("lekhak:login", () => {
+    cachedCurrentUser = undefined;
+    cachedPurchases = null;
+  });
+  window.addEventListener("lekhak:logout", () => {
+    cachedCurrentUser = null;
+    cachedPurchases = [];
+  });
+  window.addEventListener("lekhak:cart-updated", () => {
+    cachedPurchases = null;
+  });
+}
+
 export function BookCardSkeleton() {
   return (
     <div className="premium-book-card rounded-xl p-2.5 sm:p-3 select-none">
@@ -54,24 +116,133 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  const fetchCurrentUser = async () => {
+  // Book Rating State
+  const [averageRating, setAverageRating] = useState(() => {
+    if (typeof book.averageRating === "number" && book.averageRating > 0) return book.averageRating;
+    return book.rating ? parseFloat(book.rating) : 4.9;
+  });
+  const [ratingCount, setRatingCount] = useState(book.ratingCount || 0);
+  const [userRating, setUserRating] = useState(book.userRating || null);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [ratingFeedback, setRatingFeedback] = useState({ type: "", text: "" });
+
+  const displayRating = averageRating ? Number(averageRating).toFixed(1) : (book.rating || "4.9");
+
+  const fetchRatings = async () => {
     try {
-      const res = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
+      const id = book._id || book.id || book.slug;
+      if (!id) return;
+      const res = await fetch(`${API_BASE}/books/${encodeURIComponent(id)}/ratings`, { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        if (data.success && data.user) {
-          setCurrentUser(data.user);
-          return data.user;
+        if (data.success) {
+          if (typeof data.averageRating === "number" && data.ratingCount > 0) {
+            setAverageRating(data.averageRating);
+            setRatingCount(data.ratingCount);
+          }
+          if (data.userRating) {
+            setUserRating(data.userRating);
+          }
         }
       }
     } catch {}
-    return null;
   };
 
   useEffect(() => {
-    fetchCurrentUser();
-    window.addEventListener("lekhak:login", fetchCurrentUser);
-    return () => window.removeEventListener("lekhak:login", fetchCurrentUser);
+    if (showReader) {
+      fetchRatings();
+    }
+  }, [showReader, currentUser]);
+
+  useEffect(() => {
+    const onBookRated = (e) => {
+      const detail = e.detail;
+      if (!detail) return;
+      const myId = String(book._id || book.id || "");
+      const mySlug = String(book.slug || "");
+      if (
+        (detail.bookId && String(detail.bookId) === myId) ||
+        (detail.slug && String(detail.slug) === mySlug)
+      ) {
+        if (typeof detail.averageRating === "number") setAverageRating(detail.averageRating);
+        if (typeof detail.ratingCount === "number") setRatingCount(detail.ratingCount);
+        if (typeof detail.userRating === "number") setUserRating(detail.userRating);
+      }
+    };
+    window.addEventListener("lekhak:book-rated", onBookRated);
+    return () => window.removeEventListener("lekhak:book-rated", onBookRated);
+  }, [book]);
+
+  const handleRateBook = async (starValue) => {
+    if (!currentUser) {
+      setShowAuthModal(true);
+      return;
+    }
+    setIsSubmittingRating(true);
+    setRatingFeedback({ type: "", text: "" });
+    try {
+      const id = book._id || book.id || book.slug;
+      const res = await fetch(`${API_BASE}/books/${encodeURIComponent(id)}/rate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: starValue }),
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setUserRating(starValue);
+        if (typeof data.averageRating === "number") setAverageRating(data.averageRating);
+        if (typeof data.ratingCount === "number") setRatingCount(data.ratingCount);
+        setRatingFeedback({ type: "success", text: data.message || "Thank you for rating!" });
+
+        // Broadcast to all components displaying this book
+        window.dispatchEvent(
+          new CustomEvent("lekhak:book-rated", {
+            detail: {
+              bookId: book._id || book.id,
+              slug: book.slug,
+              averageRating: data.averageRating,
+              ratingCount: data.ratingCount,
+              userRating: starValue
+            }
+          })
+        );
+
+        setTimeout(() => setRatingFeedback({ type: "", text: "" }), 3500);
+      } else {
+        setRatingFeedback({ type: "error", text: data.message || "Failed to submit rating." });
+        setTimeout(() => setRatingFeedback({ type: "", text: "" }), 3500);
+      }
+    } catch {
+      setRatingFeedback({ type: "error", text: "Error submitting rating. Please try again." });
+      setTimeout(() => setRatingFeedback({ type: "", text: "" }), 3500);
+    } finally {
+      setIsSubmittingRating(false);
+    }
+  };
+
+  const fetchCurrentUser = async () => {
+    const user = await getSharedCurrentUser();
+    if (user) setCurrentUser(user);
+    return user;
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    getSharedCurrentUser().then((u) => {
+      if (isMounted && u) setCurrentUser(u);
+    });
+    const onLogin = () => {
+      getSharedCurrentUser().then((u) => {
+        if (isMounted) setCurrentUser(u);
+      });
+    };
+    window.addEventListener("lekhak:login", onLogin);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("lekhak:login", onLogin);
+    };
   }, []);
 
   const handleAddToCartAction = async () => {
@@ -136,36 +307,31 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
     }
 
     const checkAccess = () => {
-      fetch(`${API_BASE}/purchase/me`, { credentials: "include" })
-        .then((res) => res.json())
-        .then((data) => {
-          if (!isMounted) return;
-          if (data.success && Array.isArray(data.purchases)) {
-            const bookId = book._id || book.id;
-            const userPurchase = data.purchases.find((p) => {
-              const pid = p.bookId?._id?.toString() || p.bookId?.toString();
-              return pid === bookId?.toString();
-            });
-            if (userPurchase) {
-              if (userPurchase.status === "approved") {
-                setAccessStatus("approved");
-              } else if (userPurchase.status === "pending" && userPurchase.paymentMethod !== "razorpay") {
-                setAccessStatus("pending");
-              }
+      getSharedPurchases().then((purchases) => {
+        if (!isMounted) return;
+        if (Array.isArray(purchases)) {
+          const bookId = book._id || book.id;
+          const userPurchase = purchases.find((p) => {
+            const pid = p.bookId?._id?.toString() || p.bookId?.toString();
+            return pid === bookId?.toString();
+          });
+          if (userPurchase) {
+            if (userPurchase.status === "approved") {
+              setAccessStatus("approved");
+            } else if (userPurchase.status === "pending" && userPurchase.paymentMethod !== "razorpay") {
+              setAccessStatus("pending");
             }
           }
-        })
-        .catch(() => {});
+        }
+      });
     };
 
     checkAccess();
     window.addEventListener("lekhak:cart-updated", checkAccess);
-    window.addEventListener("focus", checkAccess);
 
     return () => {
       isMounted = false;
       window.removeEventListener("lekhak:cart-updated", checkAccess);
-      window.removeEventListener("focus", checkAccess);
     };
   }, [book]);
 
@@ -241,13 +407,13 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
   const handleOpenPreview = async (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
     
-    // Sync URL parameter cleanly
+    // Sync URL parameter cleanly without triggering component re-mounts
     try {
       const url = new URL(window.location.href);
       const identifier = book.slug || book._id;
       if (identifier && url.searchParams.get("book") !== identifier) {
         url.searchParams.set("book", identifier);
-        navigate(`${location.pathname}${url.search}${url.hash}`, { replace: true });
+        window.history.replaceState(null, "", `${location.pathname}${url.search}${url.hash}`);
       }
     } catch {}
 
@@ -480,7 +646,9 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
         navigate("/library", { replace: true });
       } else if (url.searchParams.get("book") === identifier) {
         url.searchParams.delete("book");
-        navigate(`${location.pathname}${url.search}${url.hash}`, { replace: true });
+        const newSearch = url.searchParams.toString();
+        const newUrl = `${location.pathname}${newSearch ? `?${newSearch}` : ""}${url.hash}`;
+        window.history.replaceState(null, "", newUrl);
       }
     } catch {}
 
@@ -725,7 +893,10 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
           )}
         </div>
         <div className="mt-1 sm:mt-2 flex items-center justify-between text-[10px] sm:text-xs text-white/[0.58]">
-          <span className="book-rating-pill flex items-center gap-1 text-amber-100 text-[9px] sm:text-xs px-1.5 py-0.5"><Star size={10} fill="currentColor" /> {book.rating || "4.9"}</span>
+          <span className="book-rating-pill flex items-center gap-1 text-amber-100 text-[9px] sm:text-xs px-1.5 py-0.5">
+            <Star size={10} fill="currentColor" className="text-amber-400" />
+            <span className="font-semibold">{displayRating}</span>
+          </span>
           <span>{book.pages ? `${book.pages} pages` : ""}</span>
         </div>
       </motion.article>
@@ -836,7 +1007,10 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
                           <span className="text-white/40">•</span>
                           <span className="text-white/60">{book.pages} pages</span>
                           <span className="text-white/40">•</span>
-                          <span className="book-rating-pill flex items-center gap-1 text-amber-100"><Star size={12} fill="currentColor" /> {book.rating || "4.9"}</span>
+                          <span className="book-rating-pill flex items-center gap-1 text-amber-100 font-semibold">
+                            <Star size={12} fill="currentColor" className="text-amber-400" />
+                            <span>{displayRating}</span>
+                          </span>
                           <span className="text-white/40">•</span>
                           <span className="text-white/60">{book.language || "English"}</span>
                         </div>
@@ -880,6 +1054,93 @@ export default function BookCard({ book, onAuthorClick, isAuthorActive = false, 
                               </div>
                             );
                           })()}
+                        </div>
+
+                        {/* Rate Book Box — Interactive for registered users, view/sign-in for guests */}
+                        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-md">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                            {/* Average rating summary (visible to non-registered & registered alike) */}
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1 text-amber-400">
+                                <Star size={16} fill="currentColor" />
+                                <span className="text-base font-black text-white">{displayRating}</span>
+                                <span className="text-[10px] text-white/40">/ 5</span>
+                              </div>
+                              <div className="h-3.5 w-px bg-white/10" />
+                              <span className="text-[11px] font-medium text-white/60">
+                                Verified Reader Rating
+                              </span>
+                            </div>
+
+                            {/* Registered User Rating vs Non-Registered User CTA */}
+                            {currentUser ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-white/70 font-medium">
+                                  {userRating ? "Your rating:" : "Rate book:"}
+                                </span>
+                                <div className="flex items-center gap-0.5">
+                                  {[1, 2, 3, 4, 5].map((star) => {
+                                    const active = (hoverRating || userRating || 0) >= star;
+                                    return (
+                                      <button
+                                        key={star}
+                                        type="button"
+                                        disabled={isSubmittingRating}
+                                        onMouseEnter={() => setHoverRating(star)}
+                                        onMouseLeave={() => setHoverRating(0)}
+                                        onClick={() => handleRateBook(star)}
+                                        className="p-1 text-white/30 hover:scale-125 transition-transform duration-150 focus:outline-none"
+                                        title={`Rate ${star} star${star > 1 ? "s" : ""}`}
+                                      >
+                                        <Star
+                                          size={17}
+                                          className={
+                                            active
+                                              ? "text-amber-400 fill-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]"
+                                              : "text-white/30 hover:text-amber-200"
+                                          }
+                                          fill={active ? "currentColor" : "none"}
+                                        />
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                {isSubmittingRating && <Loader2 size={13} className="animate-spin text-cyan-400" />}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setShowAuthModal(true)}
+                                  className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-[11px] font-bold text-amber-300 hover:bg-amber-400/20 hover:border-amber-400/50 transition shadow-sm"
+                                  title="Sign in to rate this book"
+                                >
+                                  <Star size={11} fill="currentColor" />
+                                  <span>Sign in to rate</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Feedback toast */}
+                          {ratingFeedback.text && (
+                            <div
+                              className={`mt-2.5 flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold ${
+                                ratingFeedback.type === "success"
+                                  ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
+                                  : "bg-red-500/10 text-red-300 border border-red-500/20"
+                              }`}
+                            >
+                              <CheckCircle2 size={13} />
+                              <span>{ratingFeedback.text}</span>
+                            </div>
+                          )}
+
+                          {!currentUser && (
+                            <p className="mt-1.5 text-[10px] text-white/40">
+                              Only registered users can rate books. Sign in to submit your rating.
+                            </p>
+                          )}
                         </div>
 
                         {/* Description */}

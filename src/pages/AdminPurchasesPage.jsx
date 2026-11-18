@@ -705,7 +705,7 @@ export default function AdminPurchasesPage() {
                         : "bg-white/5 border border-white/10 text-white/70 hover:bg-white/10"
                     }`}
                   >
-                    Read Stories ({metrics.storyCount})
+                    E-Books ({metrics.storyCount})
                   </button>
                   <button
                     onClick={() => setFormatFilter("paperback")}

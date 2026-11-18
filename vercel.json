@@ -13,6 +13,28 @@
       "destination": "https://lekhok.onrender.com/api/newsletter/:slug/og"
     },
     {
+      "source": "/e-book/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|Twitterbot|TelegramBot|Slackbot|LinkedInBot|Discordbot).*"
+        }
+      ],
+      "destination": "https://lekhok.onrender.com/api/newsletter/:slug/og"
+    },
+    {
+      "source": "/ebook/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|Twitterbot|TelegramBot|Slackbot|LinkedInBot|Discordbot).*"
+        }
+      ],
+      "destination": "https://lekhok.onrender.com/api/newsletter/:slug/og"
+    },
+    {
       "source": "/read-stories/:slug",
       "has": [
         {

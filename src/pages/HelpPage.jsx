@@ -76,7 +76,7 @@ const faqs = [
       },
       {
         q: "Are there free books and stories available?",
-        a: "Yes! Visit Read Stories from the navigation bar to enjoy stories, essays, and excerpts from our authors.",
+        a: "Yes! Visit E-Book from the navigation bar to enjoy stories, essays, and excerpts from our authors.",
       },
     ],
   },
@@ -168,7 +168,7 @@ const faqs = [
 
 const quickLinks = [
   { label: "Buy Books", to: "/library", icon: BookOpen },
-  { label: "Read Stories", to: "/read-stories", icon: FileText },
+  { label: "E-Book", to: "/e-book", icon: FileText },
   { label: "Publish with Us", to: "/reader", icon: Zap },
   { label: "Join Club", to: "/club", icon: HeadphonesIcon },
 ];

@@ -15,7 +15,7 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal, auth
 
   const handleShareStory = async (e) => {
     if (e && e.stopPropagation) e.stopPropagation();
-    const shareUrl = `${SITE_URL}/read-stories/${story.slug}`;
+    const shareUrl = `${SITE_URL}/e-book/${story.slug}`;
     const shareTitle = story.title || "Story";
     const shareAuthor = story.author ? ` by ${story.author}` : "";
 
@@ -71,7 +71,7 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal, auth
           .then((res) => res.json())
           .then((data) => {
             if (data.success && data.approved) {
-              navigate(`/read-stories/${story.slug}`);
+              navigate(`/e-book/${story.slug}`);
             } else {
               onOpenPayModal(story);
             }
@@ -81,7 +81,7 @@ function StoryCard({ story, index, getCoverUrl, formatDate, onOpenPayModal, auth
         onOpenPayModal(story);
       }
     } else {
-      navigate(`/read-stories/${story.slug}`);
+      navigate(`/e-book/${story.slug}`);
     }
   };
 
@@ -379,7 +379,7 @@ export default function NewsletterListingPage() {
               className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300 sm:text-sm"
             >
               <BookOpen size={14} className="animate-pulse" />
-              Read Stories
+              E-Book
             </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 10 }}
@@ -731,7 +731,7 @@ export default function NewsletterListingPage() {
         onOpenAuthModal={() => setShowAuthModal(true)}
         onSuccess={() => {
           if (payModalStory?.slug) {
-            navigate(`/read-stories/${payModalStory.slug}`);
+            navigate(`/e-book/${payModalStory.slug}`);
           }
           setPayModalStory(null);
         }}

@@ -11,9 +11,7 @@ import { API_BASE } from "../config.js";
 
 const baseLinks = [
   { label: "Buy Books", to: "/library" },
-  { label: "Book Rent", to: "/rentals" },
-  { label: "Read Stories", to: "/read-stories" },
-  { label: "News & Updates", to: "/news" },
+  { label: "E-Book", to: "/e-book" },
   { label: "About Us", to: "/about-us" },
 ];
 
@@ -476,9 +474,7 @@ export default function Navbar() {
                 {[
                   { label: "Home", to: "/", icon: BookOpen, subtitle: "E-Books & Literature Hub" },
                   { label: "Buy Books", to: "/library", icon: ShoppingBag, subtitle: "Digital & Physical Book Store" },
-                  { label: "Book Rental Club", to: "/rentals", icon: Sparkles, subtitle: "Unlimited Reading Memberships" },
-                  { label: "Read Stories", to: "/read-stories", icon: Feather, subtitle: "Stories, Essays & Articles" },
-                  { label: "News & Updates", to: "/news", icon: Bell, subtitle: "Literary News & Announcements" },
+                  { label: "E-Book", to: "/e-book", icon: Feather, subtitle: "Digital E-Books & Stories" },
                   { label: "Join VIP Club", to: "/club", icon: Users, subtitle: "Exclusive Membership Perks" },
                   { label: "Publish With Us", to: "/reader", icon: PenTool, subtitle: "Author Portal & Book Publishing" },
                   {

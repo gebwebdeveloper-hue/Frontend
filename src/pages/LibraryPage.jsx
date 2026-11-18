@@ -98,11 +98,17 @@ export default function LibraryPage() {
     setTimeout(checkCategoryScroll, 300);
   };
 
+  const initialDeepLinkDone = useRef(false);
+
   useEffect(() => {
     if (!targetBookParam) {
       setSharedBook(null);
       return;
     }
+
+    // Only fetch for direct incoming external link on first load
+    if (initialDeepLinkDone.current) return;
+    initialDeepLinkDone.current = true;
 
     let isMounted = true;
     fetch(`${API_BASE}/books/${encodeURIComponent(targetBookParam)}`)

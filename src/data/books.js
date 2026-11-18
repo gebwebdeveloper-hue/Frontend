@@ -104,6 +104,6 @@ export const faqItems = [
   },
   {
     question: "Are there stories to read on the platform?",
-    answer: "Yes! In our 'Read Stories' section, we publish weekly stories, essays, and literary discussions every Friday and Sunday, available for everyone to read."
+    answer: "Yes! In our 'E-Book' section, we publish weekly stories, essays, and literary discussions every Friday and Sunday, available for everyone to read."
   }
 ];
